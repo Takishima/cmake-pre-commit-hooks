@@ -1,5 +1,7 @@
 # pre-commit hooks
 
+[![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks)
+
 This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ linters/formatters to work with CMake-based projects.
 > [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html),
 [clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
@@ -81,14 +83,18 @@ Runnning pre-commit on the above project will lead to an output similar to this 
     int main() { int i; return 10; }
                      ^
 
-Note that your mileage may vary depending on the version of the tools. The example above was generated using `clang-format` 12.0.0, `clang-tidy` 12.0.0 and `cppcheck` 2.4.1.
+Note that your mileage may vary depending on the version of the tools. The example above was generated using
+`clang-format` 12.0.0, `clang-tidy` 12.0.0 and `cppcheck` 2.4.1.
 
 ## Using the Hooks
 
-Python 3.6+ is required to use these hooks as all 5 invoking scripts are written in it. As this is also the minimum
+Python 3.6+ is required to use these hooks as all 3 invoking scripts are written in it. As this is also the minimum
 version of pre-commit, this should not be an issue.
 
-Running multiple hooks in parallel is currently supported by using the `fastener` Python package. If the hooks are run in parallel, only one of the hooks will run the CMake configure step while the others will simply wait until the call to CMake ends to continue. In the case where the hooks are run serially, all the hooks will be running the CMake configure step. However, if nothing changed in your CMake configuration, this should not cost too much time.
+Running multiple hooks in parallel is currently supported by using the `fastener` Python package. If the hooks are run
+in parallel, only one of the hooks will run the CMake configure step while the others will simply wait until the call to
+CMake ends to continue. In the case where the hooks are run serially, all the hooks will be running the CMake configure
+step. However, if nothing changed in your CMake configuration, this should not cost too much time.
 
 
 ### Installation
