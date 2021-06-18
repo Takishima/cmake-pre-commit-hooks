@@ -1,0 +1,74 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+      - develop
+      - v*
+
+jobs:
+  standard:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        python:
+        - 3.6
+        - 3.7
+        - 3.8
+        - 3.9
+
+    name: "🐍 ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Get history and tags for SCM versioning to work
+      run: |
+        git fetch --prune --unshallow
+        git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+    - name: Setup Python ${{ matrix.python }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ matrix.python }}
+        architecture: 'x64'
+
+    - name: Get pip cache dir
+      id: pip-cache
+      run: |
+        echo "::set-output name=dir::$(python -m pip  cache dir)"
+
+    - name: Cache wheels
+      uses: actions/cache@v2
+      with:
+        path: ${{ steps.pip-cache.outputs.dir }}
+        key: ${{ runner.os }}-${{ matrix.python }}-pip-${{ hashFiles('setup.cfg', 'pyproject.toml', 'requirements_tests.txt') }}
+
+    - name: Prepare env (Linux)
+      if: runner.os == 'Linux'
+      run: |
+        apt-get update
+        apt-get install -y clang clang-format clang-tidy cppcheck
+        python -m pip install pytest-github-actions-annotate-failures
+
+    - name: Prepare env (Mac OS)
+      if: runner.os == 'macOS'
+      run: |
+        brew install clang clang-format clang-tidy cppcheck
+
+    - name: Prepare env (Windows)
+      if: runner.os == 'Windows'
+      run: |
+        choco install -y llvm cppcheck
+
+    - name: Prepare env
+      run: |
+        python -m pip install -U wheel
+
+    - name: Build and install package
+      run: python -m pip install -e .
