@@ -65,6 +65,13 @@ jobs:
       if: runner.os == 'Windows'
       run: |
         choco install -y llvm cppcheck
+        if (!(Test-Path -Path $PROFILE)) {
+            New-Item -ItemType File -Path $PROFILE -Force
+        }
+        Write-Output 'Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"' | Out-File -FilePath $PROFILE -Append -Encoding utf8
+        Write-Output 'Update-SessionEnvironment' | Out-File -FilePath $PROFILE -Append -Encoding utf8
+        . $PROFILE
+        Get-Command @("python", "clang-format", "clang-tidy", "cppcheck")
 
     - name: Prepare env
       run: |
@@ -79,4 +86,7 @@ jobs:
 
     - name: Run test (Windows)
       if: runner.os == 'Windows'
-      run: ./tests/run_tests.ps1
+      run: |
+        . $PROFILE
+        Get-Command @("python", "clang-format", "clang-tidy", "cppcheck")
+        ./tests/run_tests.ps1
