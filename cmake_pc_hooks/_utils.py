@@ -138,8 +138,8 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
             parser.add_argument('--clean', action='store_true', help='Start from a clean build directory')
         known_args, args = parser.parse_known_args(args)
         self.clean_build = known_args.clean
-        self.source_dir = Path(known_args.source_dir)
-        self.build_dir = Path(known_args.build_dir)
+        self.source_dir = Path(known_args.source_dir).resolve()
+        self.build_dir = Path(known_args.build_dir).resolve()
         self._setup_cmake_args(known_args)
 
         if not self.source_dir.exists() and not self.source_dir.is_dir():
