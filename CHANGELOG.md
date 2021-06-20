@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2021-06-20
+
+### Added
+
+- Support for GitHub actions
+- Small test scripts for Linux, MacOS and Windows (only partial testing)
+
+### Updated
+
+- Slightly more verbose output on certain failures
+
+### Fixed
+
+- Issue when passing paths to `subprocess.run()` on Windows
+- CMake arguments being parsed more than once
+
 ## [1.0.0] - 2021-06-18
 
 Initial release with support for:
