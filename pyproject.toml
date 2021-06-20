@@ -35,7 +35,10 @@ build-backend = "setuptools.build_meta"
     'MANIFEST.in',
     'docs/*',
     'docs/images/*',
-    'misc/*'
+    'misc/*',
+    'tests/*',
+    'tests/cmake_bad/*',
+    'tests/cmake_good/*'
     ]
 
 
