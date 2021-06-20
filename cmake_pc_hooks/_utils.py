@@ -174,7 +174,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                             path.unlink()
                 try:
                     sp.run(
-                        self.cmake + [self.source_dir] + self.cmake_args,
+                        self.cmake + [str(self.source_dir)] + self.cmake_args,
                         cwd=self.build_dir,
                         check=True,
                         stdout=sp.PIPE,
