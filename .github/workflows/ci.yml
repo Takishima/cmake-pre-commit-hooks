@@ -72,6 +72,8 @@ jobs:
         Write-Output 'Update-SessionEnvironment' | Out-File -FilePath $PROFILE -Append -Encoding utf8
         . $PROFILE
         Get-Command @("python", "clang-format", "clang-tidy", "cppcheck")
+        echo "CC=cl.exe" >> $GITHUB_ENV
+        echo "CXX=cl.exe" >> $GITHUB_ENV
 
     - name: Prepare env
       run: |

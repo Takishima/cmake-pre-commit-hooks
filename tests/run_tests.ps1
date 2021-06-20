@@ -10,8 +10,8 @@ Function run_hook
     rm -Recurse -Force $build_dir/*
 
     if ($GenCompileDB -eq 1) {
-        Write-Output "$hook -S $Src -B $build_dir $Args"
-        & $hook -S $Src -B $build_dir -G Ninja -DCMAKE_C_COMPILER="cl.exe" -DCMAKE_CXX_COMPILER="cl.exe" @Args
+        Write-Output "$hook -S $Src -B $build_dir -G Ninja $Args"
+        & $hook -S $Src -B $build_dir -G Ninja @Args
     }
     else {
         Write-Output "$hook $Args"
