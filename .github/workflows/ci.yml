@@ -73,3 +73,11 @@ jobs:
 
     - name: Build and install package
       run: python -m pip install -e .
+
+    - name: Run test (Unix)
+      if: runner.os != 'Windows'
+      run: ./tests/run_tests.sh
+
+    - name: Run test (Windows)
+      if: runner.os == 'Windows'
+      run: ./tests/run_tests.ps1

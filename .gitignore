@@ -173,6 +173,7 @@ dmypy.json
 # ==============================================================================
 
 VERSION.txt
+compile_commands.json
 
 # Windows artifacts
 thumbs.db
