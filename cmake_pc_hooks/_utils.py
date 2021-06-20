@@ -173,7 +173,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                         elif path != configuring:
                             path.unlink()
                 try:
-                    sp.run(
+                    sp_child = sp.run(
                         self.cmake + [str(self.source_dir)] + self.cmake_args,
                         cwd=self.build_dir,
                         check=True,
@@ -181,11 +181,13 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                         stderr=sp.PIPE,
                     )
                 except sp.CalledProcessError as e:
-                    self.stdout = f'Running CMake with: {self.cmake + self.cmake_args}' + e.output.decode()
+                    self.stdout = f'Running CMake with: {self.cmake + self.cmake_args}\n' + e.output.decode()
                     self.stderr = e.stderr.decode()
                     self.returncode = e.returncode
                 else:
-                    self.returncode = 0
+                    self.stdout += f'Running CMake with: {self.cmake + self.cmake_args}\n' + sp_child.stdout.decode()
+                    self.stderr += sp_child.stderr.decode()
+                    self.returncode = sp_child.returncode
 
                 compiledb = Path(self.build_dir, 'compile_commands.json')
                 if self.returncode == 0:
@@ -193,11 +195,13 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                         shutil.copy(compiledb, self.source_dir)
                     else:
                         self.returncode = 1
-                        self.stderr += f'Unable to locate {compiledb}\n\n'
+                        self.stderr += f'\nUnable to locate {compiledb}\n\n'
 
                 if self.returncode != 0:
                     sys.stdout.write(self.stdout + '\n')
                     sys.stderr.write(self.stderr)
+                    sys.stdout.flush()
+                    sys.stderr.flush()
         else:
             with rw_lock.read_lock():
                 pass
