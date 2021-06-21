@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Updated
+
+- Added Python 3.9 in the package's metadata
+
 ## [1.0.1] - 2021-06-20
 
 ### Added
