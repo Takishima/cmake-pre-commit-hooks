@@ -102,6 +102,24 @@ in parallel, only one of the hooks will run the CMake configure step while the o
 CMake ends to continue. In the case where the hooks are run serially, all the hooks will be running the CMake configure
 step. However, if nothing changed in your CMake configuration, this should not cost too much time.
 
+## Passing CMake options (since v1.1.0)
+
+If you have options to pass to CMake, you can do so by simply adding those to the hooks' arguments. Those arguments will then be passed onto to CMake when configuring the project. For example:
+
+```yaml
+repos:
+- repo: /Users/damien/code/pre-commit/cmake-pre-commit-hooks
+  rev: 1.0.0
+  hooks:
+    - id: cppcheck
+      args: [-DBUILD_TESTING=ON,
+             -DCMAKE_CXX_COMPILER=g++-10,
+             -Bpath/to/build_dir,
+             -Bpath/to/other_build_dir,
+             -Spath/to/src_dir]
+```
+
+One important thing to note (particularly for those that intend to use this on CIs), you may specify the build directory argument (`-B`) multiple times. The hooks will then simply cycle through all of the values provided and choose the first directory that contains a configured CMake project (by looking at the presence of the `CMakeCache.txt` file). This may be useful if you already have a build directory available somewhere that you would like to re-use. In the case where none of the provided options is viable, the first one will automatically be selected as the build directory.
 
 ### Installation
 
