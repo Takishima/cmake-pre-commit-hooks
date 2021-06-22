@@ -61,7 +61,7 @@ jobs:
       # Code below inspired from this action:
       # - uses: taiki-e/create-gh-release-action@v1
       #   with:
-      #     title: ProjectQ $tag
+      #     title: cmake-pre-commit-hooks $tag
       #     changelog: CHANGELOG.md
       #   env:
       #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -80,7 +80,7 @@ jobs:
           if [[ "${tag}" =~ ^v?[0-9\.]+-[a-zA-Z_0-9\.-]+(\+[a-zA-Z_0-9\.-]+)?$ ]]; then
             prerelease="--prerelease"
           fi
-          gh release create "v${RELEASE_VERSION}" ${prerelease:-} --title "ProjectQ v${RELEASE_VERSION}" --notes "${notes:-}" dist/*
+          gh release create "v${RELEASE_VERSION}" ${prerelease:-} --title "cmake-pre-commit-hooks v${RELEASE_VERSION}" --notes "${notes:-}" dist/*
 
       - name: Setup Python for Pypi upload
         uses: actions/setup-python@v2
