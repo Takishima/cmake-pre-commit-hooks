@@ -115,16 +115,18 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
         parser = argparse.ArgumentParser()
         parser.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default=self.source_dir)
         parser.add_argument('-B', '--build-dir', type=str, help='Path to build directory', default=self.build_dir)
-        parser.add_argument('-D', dest='defines', nargs='*', type=str, help='Create or update a cmake cache entry.')
         parser.add_argument(
-            '-U', dest='undefines', nargs='*', type=str, help='Remove matching entries from CMake cache.'
+            '-D', dest='defines', action='append', type=str, help='Create or update a cmake cache entry.'
+        )
+        parser.add_argument(
+            '-U', dest='undefines', action='append', type=str, help='Remove matching entries from CMake cache.'
         )
         parser.add_argument('-G', dest='generator', type=str, help='Specify a build system generator.')
         parser.add_argument('-T', dest='toolset', type=str, help='Specify toolset name if supported by generator.')
         parser.add_argument('-A', dest='platform', type=str, help='Specify platform if supported by generator.')
-        parser.add_argument('-Werror', dest='errors', nargs='*', type=str, help='Make developer warnings errors.')
+        parser.add_argument('-Werror', dest='errors', action='append', type=str, help='Make developer warnings errors.')
         parser.add_argument(
-            '-Wno-error', dest='no_error', nargs='*', type=str, help='Make developer warnings not errors.'
+            '-Wno-error', dest='no_error', action='append', type=str, help='Make developer warnings not errors.'
         )
         parser.add_argument(
             '--cmake', type=executable_path, help='Make developer warnings not errors.', default=self.cmake
@@ -180,11 +182,19 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                         stderr=sp.PIPE,
                     )
                 except sp.CalledProcessError as e:
-                    self.stdout = f'Running CMake with: {self.cmake + self.cmake_args}\n' + e.output.decode()
+                    self.stdout = (
+                        f'Running CMake with: {self.cmake + self.cmake_args}\n'
+                        + f'  from within {self.build_dir}\n'
+                        + e.output.decode()
+                    )
                     self.stderr = e.stderr.decode()
                     self.returncode = e.returncode
                 else:
-                    self.stdout += f'Running CMake with: {self.cmake + self.cmake_args}\n' + sp_child.stdout.decode()
+                    self.stdout += (
+                        f'Running CMake with: {self.cmake + self.cmake_args}\n'
+                        + f'  from within {self.build_dir}\n'
+                        + sp_child.stdout.decode()
+                    )
                     self.stderr += sp_child.stderr.decode()
                     self.returncode = sp_child.returncode
 

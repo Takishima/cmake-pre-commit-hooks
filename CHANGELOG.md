@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added Python 3.9 in the package's metadata
 
+### Fixed
+
+- Issues with arguments parsing for arguments that are specified more than once
+
 ### Repository
 
 - Update pre-commit configuration
