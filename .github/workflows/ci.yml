@@ -70,10 +70,15 @@ jobs:
         }
         Write-Output 'Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"' | Out-File -FilePath $PROFILE -Append -Encoding utf8
         Write-Output 'Update-SessionEnvironment' | Out-File -FilePath $PROFILE -Append -Encoding utf8
+        Write-Output '$id = vswhere -property instanceId' | Out-File -FilePath $PROFILE -Append -Encoding utf8
+        Write-Output 'Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"' `
+        | Out-File -FilePath $PROFILE -Append -Encoding utf8
+        Write-Output 'Enter-VsDevShell -InstanceId $id' | Out-File -FilePath $PROFILE -Append -Encoding utf8
+
         . $PROFILE
+        Write-Output "CMAKE_PREFIX_PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+
         Get-Command @("python", "clang-format", "clang-tidy", "cppcheck")
-        echo "CC=cl.exe" >> $GITHUB_ENV
-        echo "CXX=cl.exe" >> $GITHUB_ENV
 
     - name: Prepare env
       run: |
@@ -89,6 +94,4 @@ jobs:
     - name: Run test (Windows)
       if: runner.os == 'Windows'
       run: |
-        . $PROFILE
-        Get-Command @("python", "clang-format", "clang-tidy", "cppcheck")
         ./tests/run_tests.ps1
