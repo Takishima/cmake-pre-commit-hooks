@@ -193,7 +193,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                     )
                 except sp.CalledProcessError as e:
                     self.stdout = (
-                        f'Running CMake with: {self.cmake + self.cmake_args}\n'
+                        f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
                         + f'  from within {self.build_dir}\n'
                         + e.output.decode()
                     )
@@ -201,7 +201,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
                     self.returncode = e.returncode
                 else:
                     self.stdout += (
-                        f'Running CMake with: {self.cmake + self.cmake_args}\n'
+                        f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
                         + f'  from within {self.build_dir}\n'
                         + sp_child.stdout.decode()
                     )
