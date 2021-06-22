@@ -46,6 +46,16 @@ run_hook cmake-pc-clang-format-hook tests/cmake_good 1 0 tests/cmake_good/good.c
 run_hook cmake-pc-clang-tidy-hook tests/cmake_good 1 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_good/good.cpp
 run_hook cmake-pc-cppcheck-hook tests/cmake_good 1 1 tests/cmake_good/good.cpp
 
+# Test multiple build directory options
+mkdir -p $build_dir
+rm -rf $build_dir/*
+cmake -B other_build -S tests/cmake_good
+cmake-pc-cppcheck-hook -S tests/cmake_good -B build -B other_build tests/cmake_good/good.cpp
+if [ ! -f other_build/compile_commands.json ]; then
+    echo "Failed to generate compile database in other_build"
+    exit 1
+fi
+
 run_hook cmake-pc-clang-format-hook tests/cmake_bad 0 0 tests/cmake_bad/bad.cpp
 run_hook cmake-pc-clang-tidy-hook tests/cmake_bad 0 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_bad/bad.cpp
 run_hook cmake-pc-cppcheck-hook tests/cmake_bad 0 1 tests/cmake_bad/bad.cpp

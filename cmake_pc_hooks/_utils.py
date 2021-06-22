@@ -114,7 +114,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
         """
         parser = argparse.ArgumentParser()
         parser.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default=self.source_dir)
-        parser.add_argument('-B', '--build-dir', type=str, help='Path to build directory', default=self.build_dir)
+        parser.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
         parser.add_argument(
             '-D', dest='defines', action='append', type=str, help='Create or update a cmake cache entry.'
         )
@@ -140,7 +140,17 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
         known_args, args = parser.parse_known_args(args)
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
-        self.build_dir = Path(known_args.build_dir).resolve()
+
+        if not known_args.build_dir:
+            known_args.build_dir = [self.build_dir]  # default value
+
+        # Try all the passed build directories if one already exists, use that one, otherwise take the first one
+        for build_dir in [Path(path) for path in known_args.build_dir]:
+            if build_dir.exists() and Path(build_dir, 'CMakeCache.txt').exists():
+                self.build_dir = build_dir.resolve()
+                break
+        else:
+            self.build_dir = Path(known_args.build_dir[0]).resolve()
         self._setup_cmake_args(known_args)
 
         if not self.source_dir.exists() and not self.source_dir.is_dir():
