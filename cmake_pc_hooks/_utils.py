@@ -101,7 +101,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
         super().__init__(command, look_behind, args)
         self.cmake = get_cmake_command()
         self.clean_build = False
-        self.source_dir = '..'
+        self.source_dir = '.'
         self.build_dir = '.cmake_build'
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
 
