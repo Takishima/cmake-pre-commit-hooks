@@ -7,17 +7,17 @@
   name: clang-format
   entry: cmake-pc-clang-format-hook
   description: Formats C/CPP code
-  files: \.(c|cc|cxx|cpp|h|hpp|hxx|m)$
+  files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
 - id: clang-tidy
   name: clang-tidy
   entry: cmake-pc-clang-tidy-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|cc|cxx|cpp|h|hpp|hxx|m)$
+  files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
 - id: cppcheck
   name: cppcheck
   entry: cmake-pc-cppcheck-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|cc|cxx|cpp|h|hpp|hxx|m)$
+  files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
