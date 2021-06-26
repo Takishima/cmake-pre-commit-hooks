@@ -37,6 +37,7 @@ jobs:
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#release/}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          git tag v${RELEASE_VERSION}
 
       - name: Extract version from branch name (for hotfix branches)
         if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
@@ -44,9 +45,7 @@ jobs:
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix/}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Set tag for setuptools-scm
-        run: git tag v${RELEASE_VERSION} main
+          git tag v${RELEASE_VERSION}
 
       - name: Build wheel
         run: |

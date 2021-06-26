@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.1] - 2021-06-26
+
 ### Updated
 
 -   Added support for CUDA files by default
@@ -14,6 +16,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   Default source directory is now correctly set to the current directory
+
+### Repository
+
+-   Fix automatic release publication workflow
 
 ## [1.1.0] - 2021-06-22
 
@@ -56,6 +62,8 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/1.1.0...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.1...HEAD
 
-[1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/1.0.1...1.1.0
+[1.1.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.0...v1.1.1
+
+[1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
