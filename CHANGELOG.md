@@ -7,14 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Updated
+
+-   Added support for CUDA files by default
+
+### Fixed
+
+-   Default source directory is now correctly set to the current directory
+
 ## [1.1.0] - 2021-06-22
 
 ### Updated
 
 -   Added Python 3.9 in the package's metadata
 -   Support for specifying more than one build direcory
-    If one of those exists and contains a configured CMake directory, that one will be chosen. If none already exist, the
-    first specified alternative will be chosen.
+    If one of those exists and contains a configured CMake directory, that one will be chosen. If none already exist,
+    the first specified alternative will be chosen.
 
 ### Fixed
 
