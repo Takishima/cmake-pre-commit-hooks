@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added debug command line option to show the exact commands being run when using pre-commit regardless of exit status
+
 ### Fixed
 
 -   Properly handle double-dash arguments for clang-tidy when multiple files are passed to the hook

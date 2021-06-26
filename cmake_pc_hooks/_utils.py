@@ -105,6 +105,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.source_dir = '.'
         self.build_dir = '.cmake_build'
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
+        self.debug = False
 
     def parse_args(self, args):
         """
@@ -136,6 +137,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         parser.add_argument('-Wdev', action='store_true', help='Enable developer warnings.')
         parser.add_argument('-Wno-dev', action='store_true', help='Suppress developer warnings.')
 
+        parser.add_argument('--debug', action='store_true', help='Enable debug output')
 
         parser.add_argument('positionals', metavar='filenames', nargs="*", help='Filenames to check')
         parser.add_argument('--version', type=str, help='Version check')
@@ -147,6 +149,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
+        self.debug = known_args.debug
 
         if not known_args.build_dir:
             known_args.build_dir = [self.build_dir]  # default value
@@ -189,6 +192,12 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             self.stderr += sp_child.stderr.decode()
             self.returncode = sp_child.returncode
 
+        if self.debug:
+            print(f'DEBUG ran command {[self.command, filename] + self.args}')
+            for line in self.stdout.split('\n'):
+                print(f'DEBUG (out) {line}')
+            for line in self.stderr.split('\n'):
+                print(f'DEBUG (err) {line}')
 
     def run_cmake_configure(self):  # pylint: disable=too-many-branches
         """Run a CMake configure step"""
@@ -245,6 +254,12 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                     sys.stderr.write(stderr)
                     sys.stdout.flush()
                     sys.stderr.flush()
+                elif self.debug:
+                    for line in stdout.split('\n'):
+                        print(f'DEBUG (out) {line}')
+                    for line in stderr.split('\n'):
+                        print(f'DEBUG (err) {line}')
+
         else:
             with rw_lock.read_lock():
                 pass
