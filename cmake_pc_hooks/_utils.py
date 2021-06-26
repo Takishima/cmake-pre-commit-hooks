@@ -99,6 +99,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
     def __init__(self, command, look_behind, args):
         super().__init__(command, look_behind, args)
+        self.ddash_args = []
         self.cmake = get_cmake_command()
         self.clean_build = False
         self.source_dir = '.'
@@ -135,9 +136,15 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         parser.add_argument('-Wdev', action='store_true', help='Enable developer warnings.')
         parser.add_argument('-Wno-dev', action='store_true', help='Suppress developer warnings.')
 
+
+        parser.add_argument('positionals', metavar='filenames', nargs="*", help='Filenames to check')
+        parser.add_argument('--version', type=str, help='Version check')
+
         if not self.clean_build:
             parser.add_argument('--clean', action='store_true', help='Start from a clean build directory')
-        known_args, args = parser.parse_known_args(args)
+
+        known_args, self.args = parser.parse_known_args(args)
+
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
 
@@ -157,17 +164,34 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             sys.stderr.write(f'{self.source_dir} is not a valid source directory\n')
             sys.exit(1)
 
-        super().parse_args(args)
+        if known_args.version:
+            actual_version = self.get_version_str()
+            self.assert_version(actual_version, known_args.version)
+
+        # NB: if '--' may be present on the command line, the command class for that particular command needs to call
+        #     handle_ddash_args() in order to properly handle the filenames in those cases.
+        self.files = known_args.positionals
 
     def run_command(self, filename):
         """Run the command and check for errors"""
 
-        # Always try to configure using CMake before any other commands
-        self._run_cmake_configure()
+        try:
+            sp_child = sp.run(
+                [self.command, filename] + self.args + self.ddash_args, check=True, stdout=sp.PIPE, stderr=sp.PIPE
+            )
+        except sp.CalledProcessError as e:
+            self.stdout += e.stdout.decode()
+            self.stderr += e.stderr.decode()
+            self.returncode = e.returncode
+        else:
+            # Set class stdout/stderr/retcode so there's a local copy for testing
+            self.stdout += sp_child.stdout.decode()
+            self.stderr += sp_child.stderr.decode()
+            self.returncode = sp_child.returncode
 
-        super().run_command(filename)
 
-    def _run_cmake_configure(self):  # pylint: disable=disable=too-many-branches
+    def run_cmake_configure(self):  # pylint: disable=too-many-branches
+        """Run a CMake configure step"""
         configuring = Path(self.build_dir, '_configuring')
         has_lock = False
 
@@ -192,20 +216,20 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                         stderr=sp.PIPE,
                     )
                 except sp.CalledProcessError as e:
-                    self.stdout = (
+                    stdout = (
                         f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
                         + f'  from within {self.build_dir}\n'
                         + e.output.decode()
                     )
-                    self.stderr = e.stderr.decode()
+                    stderr = e.stderr.decode()
                     self.returncode = e.returncode
                 else:
-                    self.stdout += (
+                    stdout = (
                         f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
                         + f'  from within {self.build_dir}\n'
                         + sp_child.stdout.decode()
                     )
-                    self.stderr += sp_child.stderr.decode()
+                    stderr = sp_child.stderr.decode()
                     self.returncode = sp_child.returncode
 
                 compiledb = Path(self.build_dir, 'compile_commands.json')
@@ -214,11 +238,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                         shutil.copy(compiledb, self.source_dir)
                     else:
                         self.returncode = 1
-                        self.stderr += f'\nUnable to locate {compiledb}\n\n'
+                        stderr += f'\nUnable to locate {compiledb}\n\n'
 
                 if self.returncode != 0:
-                    sys.stdout.write(self.stdout + '\n')
-                    sys.stderr.write(self.stderr)
+                    sys.stdout.write(stdout + '\n')
+                    sys.stderr.write(stderr)
                     sys.stdout.flush()
                     sys.stderr.flush()
         else:
@@ -259,8 +283,35 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             self.cmake_args.append('-Wno-dev')
 
 
-class ClangAnalyzerCmd(Command, hooks.utils.ClangAnalyzerCmd):
+class ClangAnalyzerCmd(Command):
     """Commands that statically analyze code: clang-tidy, oclint"""
+
+    def handle_ddash_args(self):
+        """
+        Pre-commit sends a list of files as the last argument which may cause problems with -- and some programs such as
+        clang-tidy. This function converts the filename arguments in order to make everything work as expected.
+
+        Example:
+
+            clang-tidy --checks=* -- -std=c++17 file1.cpp file2.cpp
+            will be turned into:
+            clang-tidy file1.cpp file2.cpp --checks=* -- -std=c++17
+
+            In the case above, the content of self.files would be: ['-std=c++17', 'file1.cpp', 'file2.cpp'] which needs
+            to be converted to: ['file1.cpp', 'file2.cpp'] while ['--', '-std=c++17'] should be added to `self.args`.
+        """
+        idx = -1
+        files = []
+        for idx, fname in enumerate(reversed(self.files)):
+            if Path(fname).is_file():
+                files.append(fname)
+            else:
+                break
+
+        if idx != len(files) - 1:
+            # We have more than just filenames after '--'
+            self.ddash_args.extend(['--'] + self.files[0:-idx])
+        self.files = files
 
 
 class FormatterCmd(Command, hooks.utils.FormatterCmd):

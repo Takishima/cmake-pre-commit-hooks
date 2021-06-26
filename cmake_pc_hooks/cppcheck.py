@@ -45,6 +45,7 @@ class CppcheckCmd(Command):
 
     def run(self):
         """Run cppcheck"""
+        self.run_cmake_configure()
         for filename in self.files:
             self.run_command(filename)
             # Useless error see https://stackoverflow.com/questions/6986033

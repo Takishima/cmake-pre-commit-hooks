@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   Properly handle double-dash arguments for clang-tidy when multiple files are passed to the hook
+
 ## [1.1.1] - 2021-06-26
 
 ### Updated

@@ -16,6 +16,7 @@
 """Wrapper script for clang-tidy."""
 
 from pathlib import Path
+import sys
 
 from hooks.clang_tidy import ClangTidyCmd as ClangTidyCmdBase
 from ._utils import ClangAnalyzerCmd
@@ -31,22 +32,25 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         super().__init__(self.command, self.lookbehind, args)
         self.parse_args(args)
         self.edit_in_place = "-fix" in self.args or "--fix-errors" in self.args
-        self.parse_ddash_args()
+        self.handle_ddash_args()
 
         # Force location of compile database
         self.add_if_missing([f'-p={Path(self.build_dir, "compile_commands.json")}'])
 
-    run = ClangTidyCmdBase.run
+    def run(self):
+        """Run clang-tidy"""
+        self.run_cmake_configure()
+        ClangTidyCmdBase.run(self)
 
 
-def main(argv=None):
+def main():
     """
     Main function
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
-    cmd = ClangTidyCmd(argv)
+    cmd = ClangTidyCmd(sys.argv[1:])
     cmd.run()
 
 
