@@ -92,7 +92,7 @@ def executable_path(path):
     raise argparse.ArgumentTypeError(f'{path} is not a valid file and/or does not appear executable')
 
 
-class Command(hooks.utils.Command):  # pylint: disable=R0902
+class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attributes
     """
     Super class that all commands inherit.
     """
@@ -167,7 +167,7 @@ class Command(hooks.utils.Command):  # pylint: disable=R0902
 
         super().run_command(filename)
 
-    def _run_cmake_configure(self):  # pylint: disable=R0912
+    def _run_cmake_configure(self):  # pylint: disable=disable=too-many-branches
         configuring = Path(self.build_dir, '_configuring')
         has_lock = False
 
