@@ -15,10 +15,11 @@
 
 """Wrapper script for clang-tidy."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
 
 from hooks.clang_tidy import ClangTidyCmd as ClangTidyCmdBase
+
 from ._utils import ClangAnalyzerCmd
 
 

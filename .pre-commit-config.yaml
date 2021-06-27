@@ -39,6 +39,12 @@ repos:
     # This is a slow hook, so only run this if --hook-stage manual is passed
     stages: [manual]
 
+- repo: https://github.com/PyCQA/isort
+  rev: 5.9.1
+  hooks:
+    - id: isort
+      name: isort (python)
+
 - repo: https://github.com/PyCQA/flake8
   rev: 3.9.2
   hooks:

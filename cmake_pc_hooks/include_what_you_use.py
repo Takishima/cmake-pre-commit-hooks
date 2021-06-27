@@ -15,10 +15,11 @@
 
 """Wrapper script for cppcheck."""
 
-from pathlib import Path
-import sys
+import re
 import shutil
-
+import subprocess as sp
+import sys
+from pathlib import Path
 
 from ._utils import ClangAnalyzerCmd
 

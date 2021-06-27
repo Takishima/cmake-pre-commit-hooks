@@ -15,12 +15,13 @@
 
 """Wrapper script for cppcheck."""
 
-from pathlib import Path
 import sys
+from pathlib import Path
+
+from ._utils import Command
 
 # from hooks.cppcheck import CppcheckCmd as CppCheckCmdBase
 
-from ._utils import Command
 
 
 class CppcheckCmd(Command):
