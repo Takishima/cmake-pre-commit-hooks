@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   Double-dash arguments not present in debug output
+
 ## [1.1.2] - 2021-06-26
 
 ### Added

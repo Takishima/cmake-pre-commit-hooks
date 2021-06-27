@@ -193,7 +193,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             self.returncode = sp_child.returncode
 
         if self.debug:
-            print(f'DEBUG ran command {[self.command, filename] + self.args}')
+            print(f'DEBUG ran command {[self.command, filename] + self.args + self.ddash_args}')
             for line in self.stdout.split('\n'):
                 print(f'DEBUG (out) {line}')
             for line in self.stderr.split('\n'):
