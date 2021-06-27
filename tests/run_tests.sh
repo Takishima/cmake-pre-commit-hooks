@@ -74,7 +74,7 @@ pushd tests/cmake_good
 git init \
     && git config user.name 'Test' \
     && git config user.email 'test@test.com' \
-    && git add *.txt *.cpp .pre-commit-config.yaml \
+    && git add *.txt *.cpp .pre-commit*.yaml \
     && git commit -m 'Initial commit' \
     && pre-commit run --all-files && success=1 || success=0
 rm -rf .git
@@ -88,7 +88,7 @@ pushd tests/cmake_bad
 git init \
     && git config user.name 'Test' \
     && git config user.email 'test@test.com' \
-    && git add *.txt *.cpp .pre-commit-config.yaml \
+    && git add *.txt *.cpp .pre-commit*.yaml \
     && git commit -m 'Initial commit' \
     && pre-commit run --all-files && success=0 || success=1
 rm -rf .git

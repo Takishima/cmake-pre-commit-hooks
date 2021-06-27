@@ -4,6 +4,9 @@ repos:
     hooks:
       - id: clang-format
       - id: clang-tidy
-        args: [--checks=readability-magic-numbers,--warnings-as-errors=*,--,-std=c++11]
+        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe",
+               --checks=readability-magic-numbers,--warnings-as-errors=*,--,-std=c++11]
       - id: cppcheck
+        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe"]
       - id: include-what-you-use
+        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe"]

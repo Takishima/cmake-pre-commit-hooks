@@ -17,6 +17,7 @@
 
 import argparse
 import os
+import platform
 import shutil
 import subprocess as sp
 import sys
@@ -77,6 +78,23 @@ def get_cmake_command(cmake_names=None):
     return None
 
 
+def _append_in_namespace(namespace, key, values):
+    current = getattr(namespace, key, [])
+    if current is None:
+        current = []
+    current.append(values)
+    setattr(namespace, key, current)
+
+
+class _OSSpecificAction(argparse.Action):
+    def __call__(self, parser, namespace, values, options_string=None):
+        if self.dest == 'unix':
+            _append_in_namespace(namespace, 'linux', values)
+            _append_in_namespace(namespace, 'mac', values)
+
+        _append_in_namespace(namespace, self.dest, values)
+
+
 def executable_path(path):
     """
     Argparse validation function
@@ -115,6 +133,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             args (:obj:`list` of :obj:`str`): list of arguments
         """
         parser = argparse.ArgumentParser()
+
+        # CMake-related options
         parser.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default=self.source_dir)
         parser.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
         parser.add_argument(
@@ -139,6 +159,17 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         parser.add_argument('--debug', action='store_true', help='Enable debug output')
 
+        parser.add_argument(
+            '--unix',
+            action=_OSSpecificAction,
+            type=str,
+            help='Unix-only (ie. Linux and MacOS) options for CMake',
+        )
+        parser.add_argument('--linux', action=_OSSpecificAction, type=str, help='Linux-only options for CMake')
+        parser.add_argument('--mac', action=_OSSpecificAction, type=str, help='Mac-only options for CMake')
+        parser.add_argument('--win', action=_OSSpecificAction, type=str, help='Windows-only options for CMake')
+
+        # Other options
         parser.add_argument('positionals', metavar='filenames', nargs="*", help='Filenames to check')
         parser.add_argument('--version', type=str, help='Version check')
 
@@ -255,7 +286,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         return ret
 
-    def _setup_cmake_args(self, args):
+    def _setup_cmake_args(self, args):  # pylint: disable=too-many-branches
         self.cmake = args.cmake if isinstance(args.cmake, list) else [args.cmake]
         if not self.cmake:
             raise RuntimeError('Unable to locate CMake command')
@@ -281,6 +312,12 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             self.cmake_args.append('-Wdev')
         if args.Wno_dev:
             self.cmake_args.append('-Wno-dev')
+
+        for system, attr in (('Linux', 'linux'), ('Darwin', 'mac'), ('Windows', 'win')):
+            platform_args = getattr(args, attr)
+            if platform.system() == system and platform_args:
+                for arg in platform_args:
+                    self.cmake_args.append(arg.strip('"\''))
 
 
 class ClangAnalyzerCmd(Command):
