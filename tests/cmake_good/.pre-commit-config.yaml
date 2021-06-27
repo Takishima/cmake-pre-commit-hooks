@@ -1,0 +1,9 @@
+repos:
+  - repo: ../../
+    rev: main
+    hooks:
+      - id: clang-format
+      - id: clang-tidy
+        args: [--checks=readability-magic-numbers,--warnings-as-errors=*,--,-std=c++11]
+      - id: cppcheck
+      - id: include-what-you-use

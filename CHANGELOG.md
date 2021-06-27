@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Double-dash arguments not present in debug output
 
+### Repository
+
+-   Add tests that use pre-commit directly
+
 ## [1.1.2] - 2021-06-26
 
 ### Added

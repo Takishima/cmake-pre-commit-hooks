@@ -42,6 +42,8 @@ function run_hook()
     fi
 }
 
+# ==============================================================================
+
 run_hook cmake-pc-clang-format-hook tests/cmake_good 1 0 tests/cmake_good/good.cpp
 run_hook cmake-pc-clang-tidy-hook tests/cmake_good 1 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_good/good.cpp
 run_hook cmake-pc-cppcheck-hook tests/cmake_good 1 1 tests/cmake_good/good.cpp
@@ -57,7 +59,39 @@ if [ ! -f other_build/compile_commands.json ]; then
     exit 1
 fi
 
+# ------------------------------------------------------------------------------
+
 run_hook cmake-pc-clang-format-hook tests/cmake_bad 0 0 tests/cmake_bad/bad.cpp
 run_hook cmake-pc-clang-tidy-hook tests/cmake_bad 0 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_bad/bad.cpp
 run_hook cmake-pc-cppcheck-hook tests/cmake_bad 0 1 tests/cmake_bad/bad.cpp
 run_hook cmake-pc-include-what-you-use-hook tests/cmake_bad 0 1 tests/cmake_bad/bad.cpp
+
+# ==============================================================================
+
+pushd tests/cmake_good
+git init \
+    && git config user.name 'Test' \
+    && git config user.email 'test@test.com' \
+    && git add *.txt *.cpp .pre-commit-config.yaml \
+    && git commit -m 'Initial commit' \
+    && pre-commit run --all-files && success=1 || success=0
+rm -rf .git
+
+if [ $success -eq 0 ]; then
+    exit 1
+fi
+popd
+
+pushd tests/cmake_bad
+git init \
+    && git config user.name 'Test' \
+    && git config user.email 'test@test.com' \
+    && git add *.txt *.cpp .pre-commit-config.yaml \
+    && git commit -m 'Initial commit' \
+    && pre-commit run --all-files && success=0 || success=1
+rm -rf .git
+
+if [ $success -eq 0 ]; then
+    exit 1
+fi
+popd

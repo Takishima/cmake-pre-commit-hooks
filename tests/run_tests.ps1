@@ -45,6 +45,8 @@ Function run_hook
     }
 }
 
+# ==============================================================================
+
 run_hook -Hook cmake-pc-clang-format-hook -Src tests/cmake_good -ExpectSuccess 1 -GenCompileDB 0 tests/cmake_good/good.cpp
 run_hook -Hook cmake-pc-clang-tidy-hook -Src tests/cmake_good -ExpectSuccess 1 -GenCompileDB 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_good/good.cpp
 run_hook -Hook cmake-pc-cppcheck-hook -Src tests/cmake_good -ExpectSuccess 1 -GenCompileDB 1 tests/cmake_good/good.cpp
@@ -58,9 +60,42 @@ if (-not (Test-Path -Path other_build/compile_commands.json -PathType Leaf)) {
     Exit 1
 }
 
+# ------------------------------------------------------------------------------
 
 run_hook -Hook cmake-pc-clang-format-hook -Src tests/cmake_bad -ExpectSuccess 0 -GenCompileDB 0 tests/cmake_bad/bad.cpp
 run_hook -Hook cmake-pc-clang-tidy-hook -Src tests/cmake_bad -ExpectSuccess 0 -GenCompileDB 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_bad/bad.cpp
 run_hook -Hook cmake-pc-cppcheck-hook -Src tests/cmake_bad -ExpectSuccess 0 -GenCompileDB 1 tests/cmake_bad/bad.cpp
+
+# ==============================================================================
+
+# Commented out since Include-What-You-Use is currently not installable on Windows
+# (at least that I know of)
+# cd tests/cmake_good
+# git init
+# git config user.name 'Test'
+# git config user.email 'test@test.com'
+# git add *.txt *.cpp .pre-commit-config.yaml
+# git commit -m 'Initial commit'
+# pre-commit run --all-files
+# rm -Force -Recurse .git
+# if ($? -eq 0) {
+#     echo "Pre-commit on tests/cmake_good failed!"
+#     Exit 1
+# }
+# cd ..
+
+# cd tests/cmake_bad
+# git init
+# git config user.name 'Test'
+# git config user.email 'test@test.com'
+# git add *.txt *.cpp .pre-commit-config.yaml
+# git commit -m 'Initial commit'
+# pre-commit run --all-files
+# rm -Force -Recurse .git
+# if ($? -eq 1) {
+#     echo "Pre-commit on tests/cmake_good unexpectedly passed!"
+#     Exit 1
+# }
+# cd ..
 
 Exit 0
