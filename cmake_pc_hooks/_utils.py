@@ -178,26 +178,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
     def run_command(self, filename):
         """Run the command and check for errors"""
 
-        try:
-            sp_child = sp.run(
-                [self.command, filename] + self.args + self.ddash_args, check=True, stdout=sp.PIPE, stderr=sp.PIPE
-            )
-        except sp.CalledProcessError as e:
-            self.stdout += e.stdout.decode()
-            self.stderr += e.stderr.decode()
-            self.returncode = e.returncode
-        else:
-            # Set class stdout/stderr/retcode so there's a local copy for testing
-            self.stdout += sp_child.stdout.decode()
-            self.stderr += sp_child.stderr.decode()
-            self.returncode = sp_child.returncode
-
-        if self.debug:
-            print(f'DEBUG ran command {[self.command, filename] + self.args + self.ddash_args}')
-            for line in self.stdout.split('\n'):
-                print(f'DEBUG (out) {line}')
-            for line in self.stderr.split('\n'):
-                print(f'DEBUG (err) {line}')
+        stdout, stderr, self.returncode = self._call_process([self.command, filename] + self.args + self.ddash_args)
+        self.stdout += stdout
+        self.stderr += stderr
 
     def run_cmake_configure(self):  # pylint: disable=too-many-branches
         """Run a CMake configure step"""
@@ -216,30 +199,15 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                             shutil.rmtree(path)
                         elif path != configuring:
                             path.unlink()
-                try:
-                    sp_child = sp.run(
-                        self.cmake + [str(self.source_dir)] + self.cmake_args,
-                        cwd=self.build_dir,
-                        check=True,
-                        stdout=sp.PIPE,
-                        stderr=sp.PIPE,
-                    )
-                except sp.CalledProcessError as e:
-                    stdout = (
-                        f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
-                        + f'  from within {self.build_dir}\n'
-                        + e.output.decode()
-                    )
-                    stderr = e.stderr.decode()
-                    self.returncode = e.returncode
-                else:
-                    stdout = (
-                        f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
-                        + f'  from within {self.build_dir}\n'
-                        + sp_child.stdout.decode()
-                    )
-                    stderr = sp_child.stderr.decode()
-                    self.returncode = sp_child.returncode
+
+                stdout, stderr, self.returncode = self._call_process(
+                    self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir
+                )
+                stdout = (
+                    f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
+                    + f'  from within {self.build_dir}\n'
+                    + stdout
+                )
 
                 compiledb = Path(self.build_dir, 'compile_commands.json')
                 if self.returncode == 0:
@@ -269,6 +237,23 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         if self.returncode != 0:
             sys.exit(self.returncode)
+
+    def _call_process(self, args, **kwargs):
+        try:
+            sp_child = sp.run(args, check=True, stdout=sp.PIPE, stderr=sp.PIPE, **kwargs)
+        except sp.CalledProcessError as e:
+            ret = e.stdout.decode(), e.stderr.decode(), e.returncode
+        else:
+            ret = sp_child.stdout.decode(), sp_child.stderr.decode(), sp_child.returncode
+
+        if self.debug:
+            print(f'DEBUG ran command {" ".join(args)}')
+            for line in self.stdout.split('\n'):
+                print(f'DEBUG (out) {line}')
+            for line in self.stderr.split('\n'):
+                print(f'DEBUG (err) {line}')
+
+        return ret
 
     def _setup_cmake_args(self, args):
         self.cmake = args.cmake if isinstance(args.cmake, list) else [args.cmake]

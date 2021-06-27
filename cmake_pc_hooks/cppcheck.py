@@ -23,7 +23,6 @@ from ._utils import Command
 # from hooks.cppcheck import CppcheckCmd as CppCheckCmdBase
 
 
-
 class CppcheckCmd(Command):
     """Class for the cppcheck command."""
 

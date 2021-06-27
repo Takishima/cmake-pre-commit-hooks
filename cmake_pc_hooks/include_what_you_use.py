@@ -17,7 +17,6 @@
 
 import re
 import shutil
-import subprocess as sp
 import sys
 from pathlib import Path
 
@@ -87,9 +86,9 @@ class IWYUToolCmd(ClangAnalyzerCmd):
 
     def get_version_str(self):
         """Get the version string like 8.0.0 for a given command."""
-        args = [self.command_for_version, '--version']
-        sp_child = sp.run(args, stdout=sp.PIPE, stderr=sp.PIPE)
-        version_str = str(sp_child.stdout, encoding='utf-8')
+
+        version_str, _, _ = self._call_process([self.command_for_version, '--version'])
+
         # After version like `8.0.0` is expected to be '\n' or ' '
         if not re.search(self.look_behind, version_str):
             self.raise_error(
