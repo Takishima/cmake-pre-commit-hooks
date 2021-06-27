@@ -21,3 +21,9 @@
   description: Find warnings/errors in C/CPP code
   files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
+- id: include-what-you-use
+  name: include-what-you-use
+  entry: cmake-pc-include-what-you-use-hook
+  description: Find unused include directives in C/CPP code
+  files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
+  language: python

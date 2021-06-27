@@ -44,6 +44,7 @@ __.pre-commit-config.yaml__
           - id: clang-tidy
             args: [--checks=readability-magic-numbers,--warnings-as-errors=*]
           - id: cppcheck
+          - id: include-what-you-use
 
 
 __CMakeLists.txt__
@@ -88,9 +89,20 @@ Runnning pre-commit on the above project will lead to an output similar to this 
     /tmp/temp/src/err.cpp:2:18: style: Unused variable: i [unusedVariable]
     int main() { int i; return 10; }
                      ^
+    include-what-you-use.....................................................Failed
+    - hook id: include-what-you-use
+    - exit code: 1
+
+    Problem with /usr/local/bin/iwyu_tool.py: Include-What-You-Use violations found
+
+    /tmp/temp/src/err.cpp should add these lines:
+    /tmp/temp/src/err.cpp should remove these lines:
+    - #include <string>  // lines 1-1
+    The full include-list for /tmp/temp/src/err.cpp:
+    ---
 
 Note that your mileage may vary depending on the version of the tools. The example above was generated using
-`clang-format` 12.0.0, `clang-tidy` 12.0.0 and `cppcheck` 2.4.1.
+`clang-format` 12.0.0, `clang-tidy` 12.0.0, `cppcheck` 2.4.1 and `include-what-you-use` 0.16.
 
 ## Using the Hooks
 

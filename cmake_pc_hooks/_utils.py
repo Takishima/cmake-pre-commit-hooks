@@ -17,10 +17,10 @@
 
 import argparse
 import os
-import subprocess as sp
-from pathlib import Path
 import shutil
+import subprocess as sp
 import sys
+from pathlib import Path
 
 import fasteners
 import hooks.utils

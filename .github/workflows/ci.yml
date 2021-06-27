@@ -52,13 +52,13 @@ jobs:
       if: runner.os == 'Linux'
       run: |
         sudo apt-get update
-        sudo apt-get install -y clang clang-format clang-tidy cppcheck
+        sudo apt-get install -y clang clang-format clang-tidy cppcheck iwyu
         python -m pip install pytest-github-actions-annotate-failures
 
     - name: Prepare env (Mac OS)
       if: runner.os == 'macOS'
       run: |
-        brew install llvm clang-format cppcheck
+        brew install llvm clang-format cppcheck include-what-you-use
         ln -s "$(brew --prefix llvm)/bin/clang-tidy" /usr/local/bin/clang-tidy
 
     - name: Prepare env (Windows)
