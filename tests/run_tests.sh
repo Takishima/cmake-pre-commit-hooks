@@ -68,6 +68,8 @@ run_hook cmake-pc-include-what-you-use-hook tests/cmake_bad 0 1 tests/cmake_bad/
 
 # ==============================================================================
 
+export CC=clang CXX=clang++
+
 pushd tests/cmake_good
 git init \
     && git config user.name 'Test' \
