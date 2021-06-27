@@ -7,9 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.3.0] - 2021-06-27
+
 ### Added
 
 -   Support for platform-specific CMake options
+    Use `--linux`, `--mac` and `--win` to specify CMake flags that need to be provided only on the specific
+    platform. `--unix` can be used as a shortcut to specifying `--linux` and `--mac`.
 
 ## [1.2.0] - 2021-06-27
 
@@ -91,7 +95,9 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.2.0...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.3.0...HEAD
+
+[1.3.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.2.0...v1.3.0
 
 [1.2.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.2...v1.2.0
 
@@ -100,3 +106,5 @@ Initial release with support for:
 [1.1.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.0...v1.1.1
 
 [1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
+
+[1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1

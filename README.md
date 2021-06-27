@@ -37,7 +37,7 @@ with the following file contents:
 __.pre-commit-config.yaml__
 
     repos:
-      - repo: /Users/damien/code/pre-commit/cmake-pre-commit-hooks
+      - repo: https://github.com/Takishima/cmake-pre-commit-hooks
         rev: 1.0.0
         hooks:
           - id: clang-format
@@ -114,24 +114,6 @@ in parallel, only one of the hooks will run the CMake configure step while the o
 CMake ends to continue. In the case where the hooks are run serially, all the hooks will be running the CMake configure
 step. However, if nothing changed in your CMake configuration, this should not cost too much time.
 
-## Passing CMake options (since v1.1.0)
-
-If you have options to pass to CMake, you can do so by simply adding those to the hooks' arguments. Those arguments will then be passed onto to CMake when configuring the project. For example:
-
-```yaml
-repos:
-- repo: /Users/damien/code/pre-commit/cmake-pre-commit-hooks
-  rev: 1.0.0
-  hooks:
-    - id: cppcheck
-      args: [-DBUILD_TESTING=ON,
-             -DCMAKE_CXX_COMPILER=g++-10,
-             -Bpath/to/build_dir,
-             -Bpath/to/other_build_dir,
-             -Spath/to/src_dir]
-```
-
-One important thing to note (particularly for those that intend to use this on CIs), you may specify the build directory argument (`-B`) multiple times. The hooks will then simply cycle through all of the values provided and choose the first directory that contains a configured CMake project (by looking at the presence of the `CMakeCache.txt` file). This may be useful if you already have a build directory available somewhere that you would like to re-use. In the case where none of the provided options is viable, the first one will automatically be selected as the build directory.
 
 ### Installation
 
@@ -141,20 +123,81 @@ For installing the various utilities, refer to your package manager documentatio
 
 ### Hook Info
 
-| Hook Info                                                                | Type                 | Languages                             |
-| ------------------------------------------------------------------------ | -------------------- | ------------------------------------- |
-| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | Formatter            | C, C++, ObjC                          |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | Static code analyzer | C, C++, ObjC                          |
-| [cppcheck](http://cppcheck.sourceforge.net/)                             | Static code analyzer | C, C++                                |
+| Hook Info                                                                | Type                 | Languages    |
+|--------------------------------------------------------------------------|----------------------|--------------|
+| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | Formatter            | C, C++, ObjC |
+| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | Static code analyzer | C, C++, ObjC |
+| [cppcheck](http://cppcheck.sourceforge.net/)                             | Static code analyzer | C, C++       |
+| [include-what-you-use](https://include-what-you-use.org/)                | Static code analyzer | C, C++       |
 
+
+### Hook CMake options
+
+Since v1.1.0 all hooks that depend on a compilation database (e.g. `clang-tidy`, `cppcheck`, `include-what-you-use`)
+will attempt to generate a CMake build directory before running the actual command.
+
+These hooks accept all the common CMake options:
+
+| Hook Options / CMake options | Description                                      |
+|------------------------------|--------------------------------------------------|
+| `-S <path-to-source>`        | Explicitly specify a source directory.           |
+| `-B <path-to-build>`         | Explicitly specify a build directory.            |
+| `-D <var>[:<type>]=<value>`  | Create or update a cmake cache entry.            |
+| `-U <globbing_expr>`         | Remove matching entries from CMake cache.        |
+| `-G <generator-name>`        | Specify a build system generator.                |
+| `-T <toolset-name>`          | Specify toolset name if supported by generator.  |
+| `-A <platform-name>`         | Specify platform name if supported by generator. |
+| `-Wdev`                      | Enable developer warnings.                       |
+| `-Wno-dev`                   | Suppress developer warnings.                     |
+| `-Werror=dev`                | Make developer warnings errors.                  |
+| `-Wno-error=dev`             | Make developer warnings not errors.              |
+
+One important thing to note (particularly for those that intend to use this on CIs), you may specify the build directory
+argument (`-B`) multiple times. The hooks will then simply cycle through all of the values provided and choose the first
+directory that contains a configured CMake project (by looking at the presence of the `CMakeCache.txt` file). This may
+be useful if you already have a build directory available somewhere that you would like to re-use. In the case where
+none of the provided options is viable, the first one will automatically be selected as the build directory.
+
+In addition, since v1.3.0, you can also specify platform specific CMake flags by using one of:
+- `--linux`
+- `--mac`
+- `--win`
+- `--unix` (shortcut for `--linux` and `--mac`)
+
+Usage example:
+
+```yaml
+repos:
+- repo: https://github.com/Takishima/cmake-pre-commit-hooks
+  rev: 1.0.0
+  hooks:
+    - id: cppcheck
+      args: [-DBUILD_TESTING=ON,
+             --unix="-DCMAKE_CXX_COMPILER=g++-10",
+             --win="-DCMAKE_CXX_COMPILER=cl.exe"
+             -Bpath/to/build_dir,
+             -Bpath/to/other_build_dir,
+             -Spath/to/src_dir
+             ]
+```
+
+In the example above, the any hooks requiring a compilation database will first search for a build directory
+`path/to/build_dir` and then `path/to/other_build_dir`. If any of those is deemed valid (ie. is a CMake build directory
+that contains some CMake cache files), then it will be used. If none qualify, the hooks will default to using
+`path/to/build_dir` as a build directory, creating it as necessary.
+
+Also, builds on Linux and MacOS will set the C++ compiler to `g++-10`, while builds on Windows will be using
+`cl.exe`. This is done by looking at the value returned by
+[`platform.system()`](https://docs.python.org/3/library/platform.html#platform.system).
 
 ### Hook Option Comparison
 
-| Hook Options                                                             | Fix In Place | Enable all Checks                             | Set key/value |
-| ------------------------------------------------------------------------ | ------------ | --------------------------------------------- | --------------- |
-| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | `-i`         |                   | |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | `--fix-errors` [1] | `-checks=*` `-warnings-as-errors=*` [2] | |
-| [cppcheck](http://cppcheck.sourceforge.net/)                             |  | `-enable=all` | |
+| Hook Options                                                             | Fix In Place       | Enable all Checks                       | Set key/value |
+|--------------------------------------------------------------------------|--------------------|-----------------------------------------|---------------|
+| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | `-i`               |                                         |               |
+| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | `--fix-errors` [1] | `-checks=*` `-warnings-as-errors=*` [2] |               |
+| [cppcheck](http://cppcheck.sourceforge.net/)                             |                    | `-enable=all`                           |               |
+| [include-what-you-use](https://include-what-you-use.org/)                |                    |                                         |               |
 
 [1]: `-fix` will fail if there are compiler errors. `-fix-errors` will `-fix` and fix compiler errors if it can, like missing semicolons.
 
@@ -170,7 +213,5 @@ the `--` argument in the hook's args list.
 ### Standalone Hooks
 
 If you want to have predictable return codes for your C linters outside of pre-commit, these hooks are available via
-[PyPI](https://pypi.org/project/CLinters/).  Install it with `pip install CLinters`.  They are named as `cmake-pc-$cmd-hook`, so
-`clang-format` becomes `cmake-pc-clang-format-hook`.
-
-If you want to run the tests below, you will need to install them from PyPI or locally with `pip install .`.
+[PyPI](https://pypi.org/project/cmake-pre-commit-hooks/).  Install it with `pip install cmake-pre-commit-hooks`.  They
+are named as `cmake-pc-$cmd-hook`, so `clang-format` becomes `cmake-pc-clang-format-hook`.
