@@ -25,7 +25,7 @@ from ._utils import ClangAnalyzerCmd
 
 def get_iwyu_tool_command(iwyu_tool_names=None):
     """
-    Get the path to the iwyu-tool.py executable on the PATH or in the virtual environment
+    Get the path to the iwyu-tool.py executable on the PATH or in the virtual environment.
 
     Args:
         iwyu_tool_names (:obj:`list` of :obj:`str`): Names for the CMake command
@@ -45,7 +45,7 @@ def get_iwyu_tool_command(iwyu_tool_names=None):
 
 def get_iwyu_command(iwyu_names=None):
     """
-    Get the path to the include-what-you-use executable on the PATH or in the virtual environment
+    Get the path to the include-what-you-use executable on the PATH or in the virtual environment.
 
     Args:
         iwyu_names (:obj:`list` of :obj:`str`): Names for the CMake command
@@ -71,6 +71,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
     lookbehind = "include-what-you-use "
 
     def __init__(self, args):
+        """Initialize an IWYUToolCmd object."""
         if self.command is None:
             raise RuntimeError('Unable to locate path to iwyu-tool')
         if self.command_for_version is None:
@@ -86,7 +87,6 @@ class IWYUToolCmd(ClangAnalyzerCmd):
 
     def get_version_str(self):
         """Get the version string like 8.0.0 for a given command."""
-
         result = self._call_process([self.command_for_version, '--version'])
         version_str = result.stdout
 
@@ -121,7 +121,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
 
 def main():
     """
-    Main function
+    Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments

@@ -27,6 +27,7 @@ class CppcheckCmd(Command):
     lookbehind = "Cppcheck "
 
     def __init__(self, args):
+        """Initialize a CppcheckCmd object."""
         super().__init__(self.command, self.lookbehind, args)
         self.parse_args(args)
         # quiet for stdout purposes
@@ -57,7 +58,7 @@ class CppcheckCmd(Command):
 
 def main(argv=None):
     """
-    Main function
+    Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments

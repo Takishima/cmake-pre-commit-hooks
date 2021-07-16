@@ -28,6 +28,7 @@ class ClangTidyCmd(ClangAnalyzerCmd):
     lookbehind = "LLVM version "
 
     def __init__(self, args):
+        """Initialize a ClangTidyCmd object."""
         super().__init__(self.command, self.lookbehind, args)
         self.parse_args(args)
         self.edit_in_place = "-fix" in self.args or "--fix-errors" in self.args
@@ -57,7 +58,7 @@ class ClangTidyCmd(ClangAnalyzerCmd):
 
 def main():
     """
-    Main function
+    Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments

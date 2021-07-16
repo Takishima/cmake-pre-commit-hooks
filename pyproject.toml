@@ -73,6 +73,10 @@ minversion = '6.0'
 addopts = '-pno:warnings'
 testpaths = ['cmake_pc_hooks']
 
+[tool.isort]
+
+profile = "black"
+
 [tool.setuptools_scm]
 write_to = 'VERSION.txt'
 write_to_template = '{version}'

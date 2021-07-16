@@ -13,7 +13,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-""""Base classes and functions for C/C++ linters and formatters"""
+"""Base classes and functions for C/C++ linters and formatters."""
 
 import argparse
 import os
@@ -29,7 +29,7 @@ import hooks.utils
 
 def get_cmake_command(cmake_names=None):
     """
-    Get the path to a CMake executable on the PATH or in the virtual environment
+    Get the path to a CMake executable on the PATH or in the virtual environment.
 
     Args:
         cmake_names (:obj:`list` of :obj:`str`): Names for the CMake command
@@ -86,7 +86,7 @@ def _append_in_namespace(namespace, key, values):
     setattr(namespace, key, current)
 
 
-class _History:
+class _History:  # pylint: disable=too-few-public-methods
     __slots__ = ('stdout', 'stderr', 'returncode')
 
     def __init__(self, stdout, stderr, returncode):
@@ -106,7 +106,7 @@ class _OSSpecificAction(argparse.Action):
 
 def executable_path(path):
     """
-    Argparse validation function
+    Argparse validation function.
 
     Args:
         path (str): Path to some file or directory
@@ -120,11 +120,10 @@ def executable_path(path):
 
 
 class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attributes
-    """
-    Super class that all commands inherit.
-    """
+    """Super class that all commands inherit."""
 
     def __init__(self, command, look_behind, args):
+        """Initialize a Command object."""
         super().__init__(command, look_behind, args)
         self.ddash_args = []
         self.cmake = get_cmake_command()
@@ -133,12 +132,13 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.build_dir = '.cmake_build'
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
         self.debug = False
+        self.all_at_once = False
 
         self.history = []
 
     def parse_args(self, args):
         """
-        Parse some arguments into some usable variables
+        Parse some arguments into some usable variables.
 
         Args:
             args (:obj:`list` of :obj:`str`): list of arguments
@@ -239,12 +239,12 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if has_errors:
             sys.exit(1)
 
-    def run_command(self, filenames):
-        """Run the command and check for errors"""
+    def run_command(self, filenames):  # pylint: disable=arguments-differ
+        """Run the command and check for errors."""
         self.history.append(self._call_process([self.command] + filenames + self.args + self.ddash_args))
 
     def run_cmake_configure(self):  # pylint: disable=too-many-branches
-        """Run a CMake configure step"""
+        """Run a CMake configure step."""
         configuring = Path(self.build_dir, '_configuring')
         has_lock = False
 
@@ -298,6 +298,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if returncode != 0:
             sys.exit(returncode)
 
+    def _parse_output(self, result):  # pylint: disable=no-self-use,unused-argument
+        return NotImplemented
+
     def _call_process(self, args, **kwargs):
         try:
             sp_child = sp.run(args, check=True, stdout=sp.PIPE, stderr=sp.PIPE, **kwargs)
@@ -350,15 +353,16 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
 
 class ClangAnalyzerCmd(Command):
-    """Commands that statically analyze code: clang-tidy, oclint"""
+    """Commands that statically analyze code: clang-tidy, oclint."""
 
     def handle_ddash_args(self):
         """
+        Handle arguments after a '--'.
+
         Pre-commit sends a list of files as the last argument which may cause problems with -- and some programs such as
         clang-tidy. This function converts the filename arguments in order to make everything work as expected.
 
         Example:
-
             clang-tidy --checks=* -- -std=c++17 file1.cpp file2.cpp
             will be turned into:
             clang-tidy file1.cpp file2.cpp --checks=* -- -std=c++17
@@ -381,4 +385,4 @@ class ClangAnalyzerCmd(Command):
 
 
 class FormatterCmd(Command, hooks.utils.FormatterCmd):
-    """Commands that format code: clang-format, uncrustify"""
+    """Commands that format code: clang-format, uncrustify."""

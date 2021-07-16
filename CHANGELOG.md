@@ -20,6 +20,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Do not attempt to copy the compilation database in the source directory if it exists and is a symbolic link
 
+### Repository
+
+-   Cleanup of `pre-commit-config.yaml` and added:
+-   Added some more flake8 plugins to the list used by `pre-commit`:
+    + flake8-breakpoint
+    + flake8-comprehensions
+    + flake8-docstrings
+    + flake8-eradicate
+    + flake8-mutable
+
 ## [1.3.0] - 2021-06-27
 
 ### Added
