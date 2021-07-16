@@ -80,7 +80,7 @@ git init
 git config user.name 'Test'
 git config user.email 'test@test.com'
 cp .pre-commit-win.yaml .pre-commit-win.yaml.bak
-((Get-Content -path .pre-commit-win.yaml -Raw) -replace '^[ ]+rev:.*','    rev: $LATEST_SHA') | Set-Content -Path .pre-commit-win.yaml
+((Get-Content -path .pre-commit-win.yaml -Raw) -replace 'rev:.*',"rev: $LATEST_SHA") | Set-Content -Path .pre-commit-win.yaml
 git add *.txt *.cpp .pre-commit*.yaml
 git commit -m 'Initial commit'
 pre-commit run -c .pre-commit-win.yaml --all-files
@@ -98,7 +98,7 @@ git init
 git config user.name 'Test'
 git config user.email 'test@test.com'
 cp .pre-commit-win.yaml .pre-commit-win.yaml.bak
-((Get-Content -path .pre-commit-win.yaml -Raw) -replace '^[ ]+rev:.*','    rev: $LATEST_SHA') | Set-Content -Path .pre-commit-win.yaml
+((Get-Content -path .pre-commit-win.yaml -Raw) -replace 'rev:.*',"rev: $LATEST_SHA") | Set-Content -Path .pre-commit-win.yaml
 git add *.txt *.cpp .pre-commit*.yaml
 git commit -m 'Initial commit'
 pre-commit run -c .pre-commit-win.yaml --all-files
