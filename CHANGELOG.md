@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   Do not attempt to copy the compilation database in the source directory if it exists and is a symbolic link
+-   Properly handle the `--cmake` command line option
 
 ### Repository
 

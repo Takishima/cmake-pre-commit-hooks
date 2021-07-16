@@ -162,14 +162,16 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             '-Wno-error', dest='no_error', action='append', type=str, help='Make developer warnings not errors.'
         )
         parser.add_argument(
-            '--cmake', type=executable_path, help='Make developer warnings not errors.', default=self.cmake
+            '--cmake', type=executable_path, help='Specify path to CMake executable.', default=self.cmake
         )
 
         parser.add_argument('-Wdev', action='store_true', help='Enable developer warnings.')
         parser.add_argument('-Wno-dev', action='store_true', help='Suppress developer warnings.')
 
         parser.add_argument(
-            '--all-at-once', action='store_true', help='Pass all filenames at once to the linter/formatter'
+            '--all-at-once',
+            action='store_true',
+            help='Pass all filenames at once to the linter/formatter instead of calling the command once for each file',
         )
         parser.add_argument('--debug', action='store_true', help='Enable debug output')
 
@@ -192,6 +194,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         known_args, self.args = parser.parse_known_args(args)
 
+        self.cmake = known_args.cmake
         self.all_at_once = known_args.all_at_once
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
