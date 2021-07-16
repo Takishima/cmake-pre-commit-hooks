@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+-   Update version of `isort` pre-commit hook
+
 ## [1.4.0] - 2021-07-16
 
 ### Added
@@ -25,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
--   Cleanup of `pre-commit-config.yaml` and added:
+-   Cleanup of `pre-commit-config.yaml` and added
 -   Added some more flake8 plugins to the list used by `pre-commit`:
     + flake8-breakpoint
     + flake8-comprehensions
