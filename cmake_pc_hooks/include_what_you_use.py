@@ -87,7 +87,8 @@ class IWYUToolCmd(ClangAnalyzerCmd):
     def get_version_str(self):
         """Get the version string like 8.0.0 for a given command."""
 
-        version_str, _, _ = self._call_process([self.command_for_version, '--version'])
+        result = self._call_process([self.command_for_version, '--version'])
+        version_str = result.stdout
 
         # After version like `8.0.0` is expected to be '\n' or ' '
         if not re.search(self.look_behind, version_str):
@@ -100,36 +101,22 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         version = re.search(regex, version_str).group(1)
         return version
 
-    def run(self):
-        """Run iwyu_tool command"""
-        self.run_cmake_configure()
-        error_output = []
-        for filename in self.files:
-            self.run_command(filename)
-            error_output.extend(self.parse_output())
-
-        if error_output:
-            self.raise_error("Include-What-You-Use violations found\n", ''.join(error_output))
-
-    def parse_output(self):
+    def _parse_output(self, result):  # pylint: disable=no-self-use
         """
-        Include-What-You-Use return code is never 0
-        Figure out what it is based on stdout and return that instead
-        """
-        is_correct = "has correct #includes/fwd-decls" in self.stdout
+        Parse output and check whether some errors occurred.
 
-        if not is_correct and self.stdout:
-            output = ''
-            for line in self.stdout.split('\n'):
-                if line and not line[0] == '#':
-                    output += line + '\n'
-            for line in self.stderr.split('\n'):
-                if line and not line[0] == '#':
-                    output += line + '\n'
-            self.stdout = ''
-            self.stderr = ''
-            return [output]
-        return []
+        Args:
+            result (namedtuple): Result from calling a command
+
+        Returns:
+            False if no errors were detected, True in all other cases.
+
+        Notes:
+            Include-What-You-Use return code is never 0
+        """
+        is_correct = "has correct #includes/fwd-decls" in result.stdout
+
+        return result.stdout and not is_correct
 
 
 def main():

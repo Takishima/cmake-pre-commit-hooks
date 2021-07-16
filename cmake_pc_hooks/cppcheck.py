@@ -15,12 +15,9 @@
 
 """Wrapper script for cppcheck."""
 
-import sys
 from pathlib import Path
 
 from ._utils import Command
-
-# from hooks.cppcheck import CppcheckCmd as CppCheckCmdBase
 
 
 class CppcheckCmd(Command):
@@ -41,23 +38,21 @@ class CppcheckCmd(Command):
         # Force location of compile database
         self.add_if_missing([f'--project={Path(self.build_dir, "compile_commands.json")}'])
 
-    # run = CppCheckCmdBase.run
+    def _parse_output(self, result):
+        """
+        Parse output and check whether some errors occurred.
 
-    def run(self):
-        """Run cppcheck"""
-        self.run_cmake_configure()
-        for filename in self.files:
-            self.run_command(filename)
-            # Useless error see https://stackoverflow.com/questions/6986033
-            useless_error_part = "Cppcheck cannot find all the include files"
-            err_lines = self.stderr.splitlines(keepends=True)
-            for idx, line in enumerate(err_lines):
-                if useless_error_part in line:
-                    err_lines[idx] = ''
-            self.stderr = ''.join(err_lines)
-            if self.returncode != 0:
-                sys.stderr.write(self.stdout + self.stderr)
-                sys.exit(self.returncode)
+        Args:
+            result (namedtuple): Result from calling a command
+
+        Returns:
+            False if no errors were detected, True in all other cases.
+        """
+        # Useless error see https://stackoverflow.com/questions/6986033
+        useless_error_part = "Cppcheck cannot find all the include files"
+        result.stderr = [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
+
+        return result.returncode != 0
 
 
 def main(argv=None):

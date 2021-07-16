@@ -86,6 +86,15 @@ def _append_in_namespace(namespace, key, values):
     setattr(namespace, key, current)
 
 
+class _History:
+    __slots__ = ('stdout', 'stderr', 'returncode')
+
+    def __init__(self, stdout, stderr, returncode):
+        self.stdout = stdout
+        self.stderr = stderr
+        self.returncode = returncode
+
+
 class _OSSpecificAction(argparse.Action):
     def __call__(self, parser, namespace, values, options_string=None):
         if self.dest == 'unix':
@@ -125,6 +134,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
         self.debug = False
 
+        self.history = []
+
     def parse_args(self, args):
         """
         Parse some arguments into some usable variables
@@ -157,6 +168,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         parser.add_argument('-Wdev', action='store_true', help='Enable developer warnings.')
         parser.add_argument('-Wno-dev', action='store_true', help='Suppress developer warnings.')
 
+        parser.add_argument(
+            '--all-at-once', action='store_true', help='Pass all filenames at once to the linter/formatter'
+        )
         parser.add_argument('--debug', action='store_true', help='Enable debug output')
 
         parser.add_argument(
@@ -178,6 +192,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         known_args, self.args = parser.parse_known_args(args)
 
+        self.all_at_once = known_args.all_at_once
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
         self.debug = known_args.debug
@@ -206,12 +221,27 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         #     handle_ddash_args() in order to properly handle the filenames in those cases.
         self.files = known_args.positionals
 
-    def run_command(self, filename):
-        """Run the command and check for errors"""
+    def run(self):
+        """Run the command."""
+        self.run_cmake_configure()
+        if self.all_at_once:
+            self.run_command(self.files)
+        else:
+            for filename in self.files:
+                self.run_command([filename])
 
-        stdout, stderr, self.returncode = self._call_process([self.command, filename] + self.args + self.ddash_args)
-        self.stdout += stdout
-        self.stderr += stderr
+        has_errors = False
+        for res in self.history[1:]:
+            sys.stdout.write(res.stdout)
+            sys.stderr.write(res.stderr)
+            has_errors |= self._parse_output(res)
+
+        if has_errors:
+            sys.exit(1)
+
+    def run_command(self, filenames):
+        """Run the command and check for errors"""
+        self.history.append(self._call_process([self.command] + filenames + self.args + self.ddash_args))
 
     def run_cmake_configure(self):  # pylint: disable=too-many-branches
         """Run a CMake configure step"""
@@ -231,57 +261,56 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                         elif path != configuring:
                             path.unlink()
 
-                stdout, stderr, self.returncode = self._call_process(
-                    self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir
-                )
-                stdout = (
-                    f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}\n'
-                    + f'  from within {self.build_dir}\n'
-                    + stdout
+                result = self._call_process(self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir)
+                result.stdout = '\n'.join(
+                    [
+                        f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}',
+                        f'  from within {self.build_dir}',
+                        result.stdout,
+                        '',
+                    ]
                 )
 
                 compiledb = Path(self.build_dir, 'compile_commands.json')
-                if self.returncode == 0:
-                    if compiledb.exists():
+                if result.returncode == 0:
+                    if compiledb.exists() and not Path(self.source_dir, 'compile_commands.json').is_symlink():
                         shutil.copy(compiledb, self.source_dir)
                     else:
-                        self.returncode = 1
-                        stderr += f'\nUnable to locate {compiledb}\n\n'
+                        result.returncode = 1
+                        result.stderr += f'\nUnable to locate {compiledb}\n\n'
 
-                if self.returncode != 0:
-                    sys.stdout.write(stdout + '\n')
-                    sys.stderr.write(stderr)
+                if result.returncode != 0:
+                    sys.stdout.write(result.stdout)
+                    sys.stderr.write(result.stderr)
                     sys.stdout.flush()
                     sys.stderr.flush()
-                elif self.debug:
-                    for line in stdout.split('\n'):
-                        print(f'DEBUG (out) {line}')
-                    for line in stderr.split('\n'):
-                        print(f'DEBUG (err) {line}')
 
+                self.history.append(result)
+                returncode = result.returncode
         else:
+            returncode = 0
             with rw_lock.read_lock():
                 pass
 
         if has_lock and configuring.exists():
             configuring.unlink()
 
-        if self.returncode != 0:
-            sys.exit(self.returncode)
+        if returncode != 0:
+            sys.exit(returncode)
 
     def _call_process(self, args, **kwargs):
         try:
             sp_child = sp.run(args, check=True, stdout=sp.PIPE, stderr=sp.PIPE, **kwargs)
         except sp.CalledProcessError as e:
-            ret = e.stdout.decode(), e.stderr.decode(), e.returncode
+            ret = _History(e.stdout.decode(), e.stderr.decode(), e.returncode)
         else:
-            ret = sp_child.stdout.decode(), sp_child.stderr.decode(), sp_child.returncode
+            ret = _History(sp_child.stdout.decode(), sp_child.stderr.decode(), sp_child.returncode)
 
         if self.debug:
-            print(f'DEBUG ran command {" ".join(args)}')
-            for line in self.stdout.split('\n'):
+            print(f'DEBUG command {" ".join(args)} exitted with {ret.returncode}')
+            for line in ret.stdout.split('\n'):
                 print(f'DEBUG (out) {line}')
-            for line in self.stderr.split('\n'):
+            for line in ret.stderr.split('\n'):
                 print(f'DEBUG (err) {line}')
 
         return ret

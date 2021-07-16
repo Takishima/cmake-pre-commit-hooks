@@ -18,8 +18,6 @@
 import sys
 from pathlib import Path
 
-from hooks.clang_tidy import ClangTidyCmd as ClangTidyCmdBase
-
 from ._utils import ClangAnalyzerCmd
 
 
@@ -38,10 +36,23 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         # Force location of compile database
         self.add_if_missing([f'-p={Path(self.build_dir, "compile_commands.json")}'])
 
-    def run(self):
-        """Run clang-tidy"""
-        self.run_cmake_configure()
-        ClangTidyCmdBase.run(self)
+    def _parse_output(self, result):
+        """
+        Parse output and check whether some errors occurred.
+
+        Args:
+            result (namedtuple): Result from calling a command
+
+        Returns:
+            False if no errors were detected, True in all other cases.
+        """
+        # Reset stderr if it's complaining about problems in system files
+        if result.stdout and 'non-user code' not in result.stderr:
+            pass
+        else:
+            result.stderr = ''
+
+        return 'error generated.' in result.stderr or 'errors generated.' in result.stderr
 
 
 def main():

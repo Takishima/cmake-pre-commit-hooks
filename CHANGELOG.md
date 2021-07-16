@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Support for simultaneous processing of all files using `--all-at-once`
+
+### Updated
+
+-   Improved code handling standard output and error stream in case of multiple files
+-   Minor improvements to debugging output
+
+### Fixed
+
+-   Do not attempt to copy the compilation database in the source directory if it exists and is a symbolic link
+
 ## [1.3.0] - 2021-06-27
 
 ### Added
