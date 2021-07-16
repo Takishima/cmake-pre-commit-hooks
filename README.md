@@ -131,14 +131,14 @@ For installing the various utilities, refer to your package manager documentatio
 | [include-what-you-use](https://include-what-you-use.org/)                | Static code analyzer | C, C++       |
 
 
-### Hook CMake options
+### Hook options
 
 Since v1.1.0 all hooks that depend on a compilation database (e.g. `clang-tidy`, `cppcheck`, `include-what-you-use`)
 will attempt to generate a CMake build directory before running the actual command.
 
-These hooks accept all the common CMake options:
+These hooks accept all the most common CMake options:
 
-| Hook Options / CMake options | Description                                      |
+| CMake options                | Description                                      |
 |------------------------------|--------------------------------------------------|
 | `-S <path-to-source>`        | Explicitly specify a source directory.           |
 | `-B <path-to-build>`         | Explicitly specify a build directory.            |
@@ -158,11 +158,19 @@ directory that contains a configured CMake project (by looking at the presence o
 be useful if you already have a build directory available somewhere that you would like to re-use. In the case where
 none of the provided options is viable, the first one will automatically be selected as the build directory.
 
-In addition, since v1.3.0, you can also specify platform specific CMake flags by using one of:
-- `--linux`
-- `--mac`
-- `--win`
-- `--unix` (shortcut for `--linux` and `--mac`)
+In addition to the above CMake options, the hooks also accept the following:
+
+| Other hook options           | Description                                      | Note         |
+|------------------------------|--------------------------------------------------|--------------|
+| `--all-at-once`              | Pass all filenames to the command at once        | Since v1.4.0 |
+| `--cmake`                    | Specify path to CMake executable                 | Since v1.4.0 |
+| `--debug`                    | Enable debug output                              | Since v1.3.0 |
+| `--linux`                    | Linux-only CMake options                         | Since v1.3.0 |
+| `--mac`                      | MacOS-only CMake options                         | Since v1.3.0 |
+| `--win`                      | Windows-only CMake options                       | Since v1.3.0 |
+
+NB: by specifying `--all-at-once` the linter/formatter command will only be called once for all the files instead of
+calling the command once per file.
 
 Usage example:
 
