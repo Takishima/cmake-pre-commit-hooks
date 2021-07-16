@@ -70,10 +70,28 @@ run_hook cmake-pc-include-what-you-use-hook tests/cmake_bad 0 1 --debug tests/cm
 
 export CC=clang CXX=clang++
 
+
+if [ -z "$GITHUB_SHA" ]; then
+    LATEST_SHA=$(git rev-parse HEAD)
+else
+    LATEST_SHA=$GITHUB_SHA
+fi
+
+call_sed()
+{
+    if [[ "$OSTYPE" == "darwin"* ]]; then
+        gsed "$@"
+    else
+        sed "$@"
+    fi
+}
+
+
 pushd tests/cmake_good
 git init \
     && git config user.name 'Test' \
     && git config user.email 'test@test.com' \
+    && call_sed -i "/rev: /c\\    rev: ${LATEST_SHA}" .pre-commit-config.yaml \
     && git add *.txt *.cpp .pre-commit*.yaml \
     && git commit -m 'Initial commit' \
     && pre-commit run --all-files && success=1 || success=0
@@ -88,6 +106,7 @@ pushd tests/cmake_bad
 git init \
     && git config user.name 'Test' \
     && git config user.email 'test@test.com' \
+    && call_sed -i "/rev: /c\\    rev: ${LATEST_SHA}" .pre-commit-config.yaml \
     && git add *.txt *.cpp .pre-commit*.yaml \
     && git commit -m 'Initial commit' \
     && pre-commit run --all-files && success=0 || success=1

@@ -68,14 +68,24 @@ run_hook -Hook cmake-pc-cppcheck-hook -Src tests/cmake_bad -ExpectSuccess 0 -Gen
 
 # ==============================================================================
 
+if (-not (Test-Path env:GITHUB_SHA)) {
+    $LATEST_SHA = git rev-parse HEAD
+}
+else {
+    $LATEST_SHA = $env:GITHUB_SHA
+}
+
 cd tests/cmake_good
 git init
 git config user.name 'Test'
 git config user.email 'test@test.com'
+cp .pre-commit-win.yaml .pre-commit-win.yaml.bak
+((Get-Content -path .pre-commit-win.yaml -Raw) -replace '^[ ]+rev:.*','    rev: $LATEST_SHA') | Set-Content -Path .pre-commit-win.yaml
 git add *.txt *.cpp .pre-commit*.yaml
 git commit -m 'Initial commit'
 pre-commit run -c .pre-commit-win.yaml --all-files
 $ret=$?
+mv -Force .pre-commit-win.yaml.bak .pre-commit-win.yaml
 rm -Force -Recurse .git
 if ($ret -eq 0) {
     echo "Pre-commit on tests/cmake_good failed!"
@@ -87,10 +97,13 @@ cd tests/cmake_bad
 git init
 git config user.name 'Test'
 git config user.email 'test@test.com'
+cp .pre-commit-win.yaml .pre-commit-win.yaml.bak
+((Get-Content -path .pre-commit-win.yaml -Raw) -replace '^[ ]+rev:.*','    rev: $LATEST_SHA') | Set-Content -Path .pre-commit-win.yaml
 git add *.txt *.cpp .pre-commit*.yaml
 git commit -m 'Initial commit'
 pre-commit run -c .pre-commit-win.yaml --all-files
 $ret=$?
+mv -Force .pre-commit-win.yaml.bak .pre-commit-win.yaml
 rm -Force -Recurse .git
 if ($ret -eq 1) {
     echo "Pre-commit on tests/cmake_bad unexpectedly passed!"

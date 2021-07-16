@@ -53,7 +53,15 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         else:
             result.stderr = ''
 
-        return 'error generated.' in result.stderr or 'errors generated.' in result.stderr
+        return result.returncode != 0 or any(
+            msg in result.stderr
+            for msg in (
+                'error generated.',
+                'errors generated.',
+                'warning treated as error',
+                'warnings treated as errors',
+            )
+        )
 
 
 def main():
