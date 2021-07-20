@@ -242,7 +242,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if has_errors:
             sys.exit(1)
 
-    def run_command(self, filenames):  # pylint: disable=arguments-differ
+    def run_command(self, filenames):  # pylint: disable=arguments-differ,arguments-renamed
         """Run the command and check for errors."""
         self.history.append(self._call_process([self.command] + filenames + self.args + self.ddash_args))
 
