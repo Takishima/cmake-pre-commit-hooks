@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
--   Update version of `isort` pre-commit hook
+-   Update pre-commit hooks
 
 ## [1.4.0] - 2021-07-16
 
