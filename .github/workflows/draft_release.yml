@@ -37,7 +37,7 @@ jobs:
       run: git push origin release/${{ github.event.inputs.version }}
 
     - name: Create pull request
-      uses: thomaseizinger/create-pull-request@1.1.0
+      uses: thomaseizinger/create-pull-request@1.2.0
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
