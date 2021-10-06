@@ -33,3 +33,9 @@
   description: Find unused include directives in C/CPP code
   files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
+- id: lizard
+  name: lizard
+  entry: cmake-pc-lizard-hook
+  description: Code complexity analyzer for C/CPP/ObjC/...
+  files: \.(c|cc|cpp|cu|cuh|cxx|h|hh|hpp|hxx|py)$
+  language: python

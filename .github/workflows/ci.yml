@@ -53,12 +53,12 @@ jobs:
       run: |
         sudo apt-get update
         sudo apt-get install -y clang clang-format clang-tidy cppcheck iwyu
-        python -m pip install pytest-github-actions-annotate-failures pre-commit cpplint
+        python -m pip install pytest-github-actions-annotate-failures pre-commit cpplint lizard
 
     - name: Prepare env (Mac OS)
       if: runner.os == 'macOS'
       run: |
-        brew install llvm clang-format cppcheck cpplint include-what-you-use pre-commit gnu-sed
+        brew install llvm clang-format cppcheck cpplint include-what-you-use pre-commit gnu-sed lizard-analyzer
         ln -s "$(brew --prefix llvm)/bin/clang-tidy" /usr/local/bin/clang-tidy
 
     - name: Prepare env (Windows)
@@ -78,9 +78,9 @@ jobs:
         . $PROFILE
         Write-Output "CMAKE_PREFIX_PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-        python -m pip install pre-commit cpplint
+        python -m pip install pre-commit cpplint lizard
 
-        Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "pre-commit")
+        Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "lizard", "pre-commit")
 
     - name: Prepare env
       run: |

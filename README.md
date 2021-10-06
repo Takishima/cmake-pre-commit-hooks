@@ -7,7 +7,8 @@ This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ 
 > [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html),
 [clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
 [cppcheck](http://cppcheck.sourceforge.net/),
-[cpplint](https://github.com/cpplint/cpplint) and
+[cpplint](https://github.com/cpplint/cpplint),
+[lizard](http://www.lizard.ws) and
 [iwyu](https://include-what-you-use.org/)
 
 It is largely based on the work found [here](https://github.com/pocc/pre-commit-hooks). The main difference with POCC's
@@ -124,14 +125,14 @@ For installing the various utilities, refer to your package manager documentatio
 
 ### Hook Info
 
-| Hook Info                                                                | Type                 | Languages    |
-|--------------------------------------------------------------------------|----------------------|--------------|
-| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | Formatter            | C, C++, ObjC |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | Static code analyzer | C, C++, ObjC |
-| [cppcheck](http://cppcheck.sourceforge.net/)                             | Static code analyzer | C, C++       |
-| [cpplint](https://github.com/cpplint/cpplint)                            | Static code analyzer | C, C++       |
-| [include-what-you-use](https://include-what-you-use.org/)                | Static code analyzer | C, C++       |
-
+| Hook Info                                                                | Type                     | Languages        |
+|--------------------------------------------------------------------------|--------------------------|------------------|
+| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | Formatter                | C, C++, ObjC     |
+| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | Static code analyzer     | C, C++, ObjC     |
+| [cppcheck](http://cppcheck.sourceforge.net/)                             | Static code analyzer     | C, C++           |
+| [cpplint](https://github.com/cpplint/cpplint)                            | Static code analyzer     | C, C++           |
+| [include-what-you-use](https://include-what-you-use.org/)                | Static code analyzer     | C, C++           |
+| [lizard](http://www.lizard.ws)                                           | code complexity analyzer | C/C++, ObjC, ... |
 
 ### Hook options
 

@@ -9,3 +9,5 @@ repos:
       - id: cpplint
       - id: cppcheck
         args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe"]
+      - id: lizard
+        args: [-lcpp,-w,-C4]
