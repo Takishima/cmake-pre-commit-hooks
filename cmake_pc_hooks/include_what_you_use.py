@@ -101,6 +101,10 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         version = re.search(regex, version_str).group(1)
         return version
 
+    def set_file_regex(self):
+        """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
+        self.file_regex = r".*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx)$"
+
     def _parse_output(self, result):  # pylint: disable=no-self-use
         """
         Parse output and check whether some errors occurred.
