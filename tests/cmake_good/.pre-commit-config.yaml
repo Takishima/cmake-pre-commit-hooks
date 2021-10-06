@@ -8,5 +8,6 @@ repos:
                --checks=readability-magic-numbers,--warnings-as-errors=*,--,-std=c++11]
       - id: cppcheck
         args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe"]
+      - id: cpplint
       - id: include-what-you-use
         args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe"]
