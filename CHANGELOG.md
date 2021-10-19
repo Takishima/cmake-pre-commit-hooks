@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `isort` hook to v5.9.3
 -   Update `black` hook to v21.9b0
 -   Update `check-manifest` hook to v0.47
+-   Update `flake8` hook to v4.0.1
 
 ## [1.4.0] - 2021-07-16
 

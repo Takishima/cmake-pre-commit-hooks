@@ -15,7 +15,44 @@
 
 """Wrapper script for clang-format."""
 
-from hooks.clang_format import main
+import sys
 
-if __name__ == '__main__':
+from ._utils import FormatterCmd
+
+
+class ClangFormatCmd(FormatterCmd):
+    """Class for the ClangFormat command."""
+
+    command = "clang-format"
+    lookbehind = "clang-format version "
+
+    def __init__(self, args):
+        """Initialize a ClangFormatCmd object."""
+        super().__init__(self.command, self.lookbehind, args)
+        self.check_installed()
+        self.parse_args(args)
+        self.set_diff_flag()
+        self.edit_in_place = "-i" in self.args
+
+    def run(self):
+        """Run clang-format. Error if diff is incorrect."""
+        for filename in self.files:
+            self.compare_to_formatted(filename)
+        if self.returncode != 0:
+            sys.stdout.buffer.write(self.stderr)
+            sys.exit(self.returncode)
+
+
+def main():
+    """
+    Run command.
+
+    Args:
+        argv (:obj:`list` of :obj:`str`): list of arguments
+    """
+    cmd = ClangFormatCmd(sys.argv[1:])
+    cmd.run()
+
+
+if __name__ == "__main__":
     main()

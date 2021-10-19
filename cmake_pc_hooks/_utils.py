@@ -389,3 +389,15 @@ class ClangAnalyzerCmd(Command):
 
 class FormatterCmd(Command, hooks.utils.FormatterCmd):
     """Commands that format code: clang-format, uncrustify."""
+
+    def get_formatted_lines(self, filename: bytes):
+        """Get the expected output for a command applied to a file."""
+        filename_opts = self.get_filename_opts(filename)
+        args = [self.command, *self.args, *filename_opts]
+        child = self._call_process([arg.decode() if isinstance(arg, bytes) else arg for arg in args])
+        if len(child.stderr) > 0 or child.returncode != 0:
+            problem = f"Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}"
+            self.raise_error(problem, child.stdout + child.stderr)
+        if child.stdout == "":
+            return []
+        return child.stdout.encode().split(b"\x0a")
