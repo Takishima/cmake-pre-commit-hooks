@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.0] - 2021-11-08
+
 ### Added
 
 -   Support for `cpplint`
@@ -41,11 +43,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Cleanup of `pre-commit-config.yaml` and added
 -   Added some more flake8 plugins to the list used by `pre-commit`:
-    + flake8-breakpoint
-    + flake8-comprehensions
-    + flake8-docstrings
-    + flake8-eradicate
-    + flake8-mutable
+    -   flake8-breakpoint
+    -   flake8-comprehensions
+    -   flake8-docstrings
+    -   flake8-eradicate
+    -   flake8-mutable
 
 ## [1.3.0] - 2021-06-27
 
@@ -135,7 +137,9 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.4.0...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/1.5.0...HEAD
+
+[1.5.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.4.0...1.5.0
 
 [1.4.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.3.0...v1.4.0
 
