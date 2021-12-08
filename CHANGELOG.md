@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   Fixed locating of compilation database in presence of a symbolic link in the source directory
+
 ### Repository
 
 -   Update `isort` hook to v5.10.1
