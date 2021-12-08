@@ -287,9 +287,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                             if self.debug:
                                 print(f'DEBUG removing symbolic link at: {compiledb_srcdir}')
                             compiledb_srcdir.unlink()
-                        if self.debug:
-                            print(f'DEBUG copying compilation database from {self.build_dir} to {self.source_dir}')
-                        shutil.copy(compiledb, self.source_dir)
+                            if self.debug:
+                                print(f'DEBUG copying compilation database from {self.build_dir} to {self.source_dir}')
+                            shutil.copy(compiledb, self.source_dir)
 
                 if result.returncode != 0:
                     sys.stdout.write(result.stdout)
