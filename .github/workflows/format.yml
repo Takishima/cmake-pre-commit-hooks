@@ -22,3 +22,34 @@ jobs:
       with:
         # Slow hooks are marked with manual - slow is okay here, run them too
         extra_args: --hook-stage manual --all-files
+
+  parse-changelog:
+    name: Parse CHANGELOG
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'  && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/'))
+    steps:
+      - uses: actions/checkout@v2
+      - name: Installing parse-changelog
+        env:
+          target: x86_64-unknown-linux-musl
+          parse_changelog_tag: v0.4.5
+        run: |
+          curl -LsSf "https://github.com/taiki-e/parse-changelog/releases/download/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
+      - name: Extract version from branch name (for release branches)
+        if:  github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#release/}
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          git tag v${RELEASE_VERSION}
+
+      - name: Extract version from branch name (for hotfix branches)
+        if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
+        run: |
+          BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
+          VERSION=${BRANCH_NAME#hotfix/}
+          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
+          git tag v${RELEASE_VERSION}
+
+      - name: Calling parse-changelog
+        run: ./parse-changelog CHANGELOG.md "${RELEASE_VERSION}"
