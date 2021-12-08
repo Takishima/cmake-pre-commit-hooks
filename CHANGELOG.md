@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+-   New step in "Format" GitHub action to make sure the CHANGELOG is updated with proper version section for hotfix/*
+    and release/* branches
 -   Update `isort` hook to v5.10.1
 -   Update `black` hook to v21.12b0
 
