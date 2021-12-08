@@ -37,7 +37,7 @@ jobs:
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#release/}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          git tag v${RELEASE_VERSION}
+          git tag v${VERSION}
 
       - name: Extract version from branch name (for hotfix branches)
         if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
@@ -45,7 +45,7 @@ jobs:
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix/}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          git tag v${RELEASE_VERSION}
+          git tag v${VERSION}
 
       - name: Show short log (debug)
         run: git --no-pager log --oneline -n40
