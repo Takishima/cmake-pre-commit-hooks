@@ -68,7 +68,7 @@ jobs:
       - name: Create release
         env:
           target: x86_64-unknown-linux-musl
-          parse_changelog_tag: v0.3.0
+          parse_changelog_tag: v0.4.5
           changelog: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
