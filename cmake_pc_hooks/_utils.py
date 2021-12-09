@@ -284,6 +284,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                         if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
                             # If it's a symbolic link and points to the compilation database in the build directory,
                             # we're all good.
+                            pass
                         else:
                             # In all other cases, we copy the compilation database into the source directory
                             if compiledb_srcdir.is_symlink():
