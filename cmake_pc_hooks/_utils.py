@@ -274,24 +274,26 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                     ]
                 )
 
-                compiledb = Path(self.build_dir, 'compile_commands.json')
                 if result.returncode == 0:
+                    compiledb = Path(self.build_dir, 'compile_commands.json')
                     if not compiledb.exists():
                         result.returncode = 1
                         result.stderr += f'\nUnable to locate {compiledb}\n\n'
                     else:
                         compiledb_srcdir = Path(self.source_dir, 'compile_commands.json')
-
-                        # If it's not a symbolic link to the compilation database in the build directory, replace it
-                        if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() != compiledb:
-                            if self.debug:
-                                print(f'DEBUG removing symbolic link at: {compiledb_srcdir}')
-                            compiledb_srcdir.unlink()
+                        if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
+                            # If it's a symbolic link and points to the compilation database in the build directory,
+                            # we're all good.
+                        else:
+                            # In all other cases, we copy the compilation database into the source directory
+                            if compiledb_srcdir.is_symlink():
+                                if self.debug:
+                                    print(f'DEBUG removing symbolic link at: {compiledb_srcdir}')
+                                compiledb_srcdir.unlink()
                             if self.debug:
                                 print(f'DEBUG copying compilation database from {self.build_dir} to {self.source_dir}')
                             shutil.copy(compiledb, self.source_dir)
-
-                if result.returncode != 0:
+                else:
                     sys.stdout.write(result.stdout)
                     sys.stderr.write(result.stderr)
                     sys.stdout.flush()
