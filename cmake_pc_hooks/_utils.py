@@ -192,7 +192,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if not self.clean_build:
             parser.add_argument('--clean', action='store_true', help='Start from a clean build directory')
 
-        known_args, self.args = parser.parse_known_args(args)
+        known_args, self.args = parser.parse_known_args(args[1:])
 
         self.cmake = known_args.cmake
         self.all_at_once = known_args.all_at_once

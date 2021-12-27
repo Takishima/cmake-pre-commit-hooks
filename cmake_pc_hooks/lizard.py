@@ -16,6 +16,8 @@
 
 """Wrapper script for lizard."""
 
+import sys
+
 from hooks.utils import StaticAnalyzerCmd
 
 
@@ -28,6 +30,7 @@ class LizardCmd(StaticAnalyzerCmd):
     def __init__(self, args):
         """Initialize a LizardCmd object."""
         super().__init__(self.command, self.lookbehind, args)
+        self.file_regex = ""
         self.parse_args(args)
 
     def set_file_regex(self):
@@ -48,6 +51,8 @@ def main(argv=None):
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
+    if argv is None:
+        argv = sys.argv
     cmd = LizardCmd(argv)
     cmd.run()
 

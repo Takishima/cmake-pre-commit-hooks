@@ -15,6 +15,7 @@
 
 """Wrapper script for cppcheck."""
 
+import sys
 from pathlib import Path
 
 from ._utils import Command
@@ -63,6 +64,8 @@ def main(argv=None):
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
+    if argv is None:
+        argv = sys.argv
     cmd = CppcheckCmd(argv)
     cmd.run()
 

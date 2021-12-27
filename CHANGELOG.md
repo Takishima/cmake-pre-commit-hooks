@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   Correctly pass on the default argument list to `CLinters`
+
 ### Repository
 
+-   Update `pre-commit/pre-commit-hooks` to v4.1.0
 -   Update `thomaseizinger/create-pull-request` GitHub action to v1.2.2
 
 

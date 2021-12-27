@@ -78,6 +78,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
             raise RuntimeError('Unable to locate path to include-what-you-use executable!')
 
         super().__init__(self.command, self.lookbehind, args)
+        self.file_regex = ""
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()
@@ -123,14 +124,16 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         return result.stdout and not is_correct
 
 
-def main():
+def main(argv=None):
     """
     Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
-    cmd = IWYUToolCmd(sys.argv[1:])
+    if argv is None:
+        argv = sys.argv
+    cmd = IWYUToolCmd(argv)
     cmd.run()
 
 
