@@ -78,6 +78,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
             raise RuntimeError('Unable to locate path to include-what-you-use executable!')
 
         super().__init__(self.command, self.lookbehind, args)
+        self.file_regex = ""
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()

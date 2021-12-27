@@ -28,6 +28,7 @@ class LizardCmd(StaticAnalyzerCmd):
     def __init__(self, args):
         """Initialize a LizardCmd object."""
         super().__init__(self.command, self.lookbehind, args)
+        self.file_regex = ""
         self.parse_args(args)
 
     def set_file_regex(self):
