@@ -44,13 +44,15 @@ class LizardCmd(StaticAnalyzerCmd):
             self.exit_on_error()
 
 
-def main(argv=sys.argv):
+def main(argv=None):
     """
     Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
+    if argv is None:
+        argv = sys.argv
     cmd = LizardCmd(argv)
     cmd.run()
 
