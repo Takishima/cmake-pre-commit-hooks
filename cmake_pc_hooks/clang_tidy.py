@@ -64,14 +64,14 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         )
 
 
-def main():
+def main(argv=sys.argv):
     """
     Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
-    cmd = ClangTidyCmd(sys.argv[1:])
+    cmd = ClangTidyCmd(argv)
     cmd.run()
 
 

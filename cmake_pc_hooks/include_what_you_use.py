@@ -124,14 +124,14 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         return result.stdout and not is_correct
 
 
-def main():
+def main(argv=sys.argv):
     """
     Run command.
 
     Args:
         argv (:obj:`list` of :obj:`str`): list of arguments
     """
-    cmd = IWYUToolCmd(sys.argv[1:])
+    cmd = IWYUToolCmd(argv)
     cmd.run()
 
 

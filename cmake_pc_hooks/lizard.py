@@ -16,6 +16,8 @@
 
 """Wrapper script for lizard."""
 
+import sys
+
 from hooks.utils import StaticAnalyzerCmd
 
 
@@ -42,7 +44,7 @@ class LizardCmd(StaticAnalyzerCmd):
             self.exit_on_error()
 
 
-def main(argv=None):
+def main(argv=sys.argv):
     """
     Run command.
 

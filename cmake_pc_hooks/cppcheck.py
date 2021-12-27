@@ -15,6 +15,7 @@
 
 """Wrapper script for cppcheck."""
 
+import sys
 from pathlib import Path
 
 from ._utils import Command
@@ -56,7 +57,7 @@ class CppcheckCmd(Command):
         return result.returncode != 0
 
 
-def main(argv=None):
+def main(argv=sys.argv):
     """
     Run command.
 
