@@ -8,21 +8,6 @@ on:
     - "v*"
 
 jobs:
-  pre-commit:
-    name: Format and static analysis
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v2
-    - name: Get history and tags for SCM versioning to work
-      run: |
-        git fetch --prune --unshallow
-        git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-    - uses: actions/setup-python@v2
-    - uses: pre-commit/action@v2.0.3
-      with:
-        # Slow hooks are marked with manual - slow is okay here, run them too
-        extra_args: --hook-stage manual --all-files
-
   parse-changelog:
     name: Parse CHANGELOG
     runs-on: ubuntu-latest
