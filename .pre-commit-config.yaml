@@ -18,7 +18,7 @@ repos:
   - id: fix-encoding-pragma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.10
+  rev: v1.1.11
   hooks:
     - id: insert-license
       files: \.py$
@@ -27,7 +27,7 @@ repos:
         - misc/license_header.txt
 # Changes tabs to spaces
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.10
+  rev: v1.1.11
   hooks:
   - id: remove-tabs
 
@@ -38,7 +38,7 @@ repos:
       name: isort (python)
 
 - repo: https://github.com/psf/black
-  rev: 21.12b0
+  rev: 22.1.0
   hooks:
   - id: black
     language_version: python3
