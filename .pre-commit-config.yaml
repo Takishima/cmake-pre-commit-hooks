@@ -18,7 +18,7 @@ repos:
   - id: fix-encoding-pragma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.11
+  rev: v1.1.12
   hooks:
     - id: insert-license
       files: \.py$
@@ -27,7 +27,7 @@ repos:
         - misc/license_header.txt
 # Changes tabs to spaces
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.11
+  rev: v1.1.12
   hooks:
   - id: remove-tabs
 
