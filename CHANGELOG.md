@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `dangoslen/changelog-enforcer` GitHub action to v3
 -   Update `pre-commit/pre-commit-hooks` to v4.1.0
 -   Update `thomaseizinger/create-pull-request` GitHub action to v1.2.2
--   Update `Lucas-C/pre-commit-hooks` hook to v1.1.11
+-   Update `Lucas-C/pre-commit-hooks` hook to v1.1.12
 -   Update `black` hook to v22.1.0
 
 
