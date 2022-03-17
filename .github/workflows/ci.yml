@@ -13,7 +13,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        runs-on: [ubuntu-latest, windows-2019, macos-latest]
         python:
         - 3.6
         - 3.7
