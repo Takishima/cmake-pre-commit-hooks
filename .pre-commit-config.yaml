@@ -18,7 +18,7 @@ repos:
   - id: fix-encoding-pragma
 
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.12
+  rev: v1.1.13
   hooks:
     - id: insert-license
       files: \.py$
@@ -27,7 +27,7 @@ repos:
         - misc/license_header.txt
 # Changes tabs to spaces
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.1.12
+  rev: v1.1.13
   hooks:
   - id: remove-tabs
 
@@ -62,7 +62,7 @@ repos:
     stages: [manual]
 
 - repo: https://github.com/mgedmin/check-manifest
-  rev: "0.47"
+  rev: "0.48"
   hooks:
   - id: check-manifest
     additional_dependencies: ['setuptools-scm', 'pybind11>=2.6']
