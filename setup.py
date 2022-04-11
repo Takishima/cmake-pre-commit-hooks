@@ -35,7 +35,7 @@ def get_executable(exec_name):
 
     exec_name = os.path.basename(exec_name)
 
-    logging.info(f'trying to locate {exec_name} in {root_path}')
+    logging.info('trying to locate %s in %s', exec_name, root_path)
 
     search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
 
@@ -46,9 +46,9 @@ def get_executable(exec_name):
             with open(os.devnull, 'w') as devnull:
                 subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
-            logging.info(f'  failed in {base_path}')
+            logging.info('  failed in %s', base_path)
         else:
-            logging.info(f'  command found: {cmd}')
+            logging.info('  command found: %s', cmd)
             return cmd
 
     # That did not work: try calling it through Python
@@ -58,9 +58,9 @@ def get_executable(exec_name):
             with open(os.devnull, 'w') as devnull:
                 subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
-            logging.info(f'  failed in {base_path}')
+            logging.info('  failed in %s', base_path)
         else:
-            logging.info(f'  command found: {cmd}')
+            logging.info('  command found: %s', cmd)
             return cmd
 
     logging.info('  command *not* found in virtualenv!')
