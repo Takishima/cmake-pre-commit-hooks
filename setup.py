@@ -15,6 +15,76 @@
 
 """Dummy setup script."""
 
-from setuptools import setup
+import logging
+import os
+import shutil
+import subprocess
+import sys
 
-setup()
+from setuptools import setup
+from setuptools.command.egg_info import egg_info
+
+
+def get_executable(exec_name):
+    """Try to locate an executable in a Python virtual environment."""
+    try:
+        root_path = os.environ['VIRTUAL_ENV']
+        python = os.path.basename(sys.executable)
+    except KeyError:
+        root_path, python = os.path.split(sys.executable)
+
+    exec_name = os.path.basename(exec_name)
+
+    logging.info(f'trying to locate {exec_name} in {root_path}')
+
+    search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
+
+    # First try executing the program directly
+    for base_path in search_paths:
+        try:
+            cmd = os.path.join(base_path, exec_name)
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
+        except (OSError, subprocess.CalledProcessError):
+            logging.info(f'  failed in {base_path}')
+        else:
+            logging.info(f'  command found: {cmd}')
+            return cmd
+
+    # That did not work: try calling it through Python
+    for base_path in search_paths:
+        try:
+            cmd = [python, os.path.join(base_path, exec_name)]
+            with open(os.devnull, 'w') as devnull:
+                subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
+        except (OSError, subprocess.CalledProcessError):
+            logging.info(f'  failed in {base_path}')
+        else:
+            logging.info(f'  command found: {cmd}')
+            return cmd
+
+    logging.info('  command *not* found in virtualenv!')
+
+    return shutil.which(exec_name)
+
+
+class EggInfo(egg_info):
+    """
+    Custom egg_info command.
+
+    Makes sure that clang-format is added to the list of requirements if the command cannot be found on the path.
+    """
+
+    def run(self):
+        """Run the egg_info command."""
+        if get_executable('clang-format') is None:
+            self.distribution.install_requires.append('clang-format')
+
+        egg_info.run(self)
+
+
+setup(
+    cmdclass={
+        'egg_info': EggInfo,
+    }
+)
