@@ -176,9 +176,13 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/1.5.3...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...HEAD
 
-[1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.0...1.5.3
+[1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.2...v1.5.3
+
+[1.5.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.1...v1.5.2
+
+[1.5.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.0...v1.5.1
 
 [1.5.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.4.0...v1.5.0
 
