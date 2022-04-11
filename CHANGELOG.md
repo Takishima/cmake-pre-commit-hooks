@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Add support for installing `clang-format` using Python if not found on the system
+
 ### Fixed
 
 -   Correctly pass on the default argument list to `CLinters`
