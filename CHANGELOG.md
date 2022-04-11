@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 -   Add support for installing `clang-format` using Python if not found on the system
+-   Add support for installing `lizard` automatically if not found on the system
 
 ### Fixed
 

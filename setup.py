@@ -77,8 +77,9 @@ class EggInfo(egg_info):
 
     def run(self):
         """Run the egg_info command."""
-        if get_executable('clang-format') is None:
-            self.distribution.install_requires.append('clang-format')
+        for exec_name, pkg in ({'clang-format': 'clang-format', 'lizard': 'lizard'}).items():
+            if get_executable(exec_name) is None:
+                self.distribution.install_requires.append(pkg)
 
         egg_info.run(self)
 
