@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.3] - 2022-04-11
+
 ### Added
 
 -   Add support for installing `clang-format` using Python if not found on the system
@@ -25,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `black` hook to v22.3.0
 -   Update `check-manifest` to v0.48
 
-
 ## [1.5.2] - 2021-12-08
 
 ### Fixed
@@ -40,8 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
--   New step in "Format" GitHub action to make sure the CHANGELOG is updated with proper version section for hotfix/*
-    and release/* branches
+-   New step in "Format" GitHub action to make sure the CHANGELOG is updated with proper version section for hotfix/_
+    and release/_ branches
 -   Update `isort` hook to v5.10.1
 -   Update `black` hook to v21.12b0
 
@@ -175,7 +176,13 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.0...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...HEAD
+
+[1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.2...v1.5.3
+
+[1.5.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.1...v1.5.2
+
+[1.5.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.0...v1.5.1
 
 [1.5.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.4.0...v1.5.0
 
