@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+-   Update GitHub's CodeQL action to v2
+
 ## [1.5.3] - 2022-04-11
 
 ### Added
