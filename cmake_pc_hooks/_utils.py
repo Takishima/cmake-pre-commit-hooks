@@ -313,7 +313,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if returncode != 0:
             sys.exit(returncode)
 
-    def _parse_output(self, result):  # pylint: disable=no-self-use,unused-argument
+    def _parse_output(self, result):  # pylint: disable=unused-argument
         return NotImplemented
 
     def _call_process(self, args, **kwargs):
