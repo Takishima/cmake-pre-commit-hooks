@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.5.3] - 2022-06-14
+
 ### Repository
 
 -   Update GitHub's CodeQL action to v2
@@ -183,7 +185,9 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/1.5.3...HEAD
+
+[1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...1.5.3
 
 [1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.2...v1.5.3
 
