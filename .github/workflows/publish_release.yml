@@ -1,3 +1,5 @@
+---
+
 name: "Publish new release"
 
 on:
@@ -12,9 +14,13 @@ on:
 
 jobs:
   release:
-    name: Build wheels
+    name: Build wheels and release on Pypi
     runs-on: ubuntu-latest
-    if: startsWith(github.ref, 'refs/tags/') || (github.event_name == 'pull_request' && github.event.pull_request.merged == true && (startsWith(github.event.pull_request.head.ref, 'release/') || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
+    if: >-
+      startsWith(github.ref, 'refs/tags/')
+      || (github.event_name == 'pull_request' && github.event.pull_request.merged == true
+          && (startsWith(github.event.pull_request.head.ref, 'release/')
+              || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
       - uses: actions/checkout@v2
@@ -32,28 +38,37 @@ jobs:
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
 
       - name: Extract version from branch name (for release branches)
-        if:  github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
+        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#release/}
+          VERSION=${VERSION#v}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          git tag v${VERSION}
 
       - name: Extract version from branch name (for hotfix branches)
         if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
           VERSION=${BRANCH_NAME#hotfix/}
+          VERSION=${VERSION#v}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          git tag v${VERSION}
 
       - name: Show short log (debug)
         run: git --no-pager log --oneline -n40
 
       - name: Build wheel
         run: |
+          if ! git rev-parse v${RELEASE_VERSION} > /dev/null 2>&1; then
+              _added_tag=1
+              git tag v${RELEASE_VERSION}
+          fi
+
           python -m pip install build wheel
           python -m build --wheel --sdist
+
+          if [ ${_added_tag:-0} -eq 1 ]; then
+              git tag -d v${RELEASE_VERSION}
+          fi
 
       - name: Check metadata
         run: |
@@ -71,18 +86,22 @@ jobs:
       - name: Create release
         env:
           target: x86_64-unknown-linux-musl
-          parse_changelog_tag: v0.4.5
+          source_url: https://github.com/taiki-e/parse-changelog/releases/download
+          parse_changelog_tag: v0.4.7
           changelog: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # https://github.com/taiki-e/parse-changelog
-          curl -LsSf "https://github.com/taiki-e/parse-changelog/releases/download/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
+          curl -LsSf "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
           notes=$(./parse-changelog "${changelog}" "${RELEASE_VERSION}")
           rm -f ./parse-changelog
           if [[ "${tag}" =~ ^v?[0-9\.]+-[a-zA-Z_0-9\.-]+(\+[a-zA-Z_0-9\.-]+)?$ ]]; then
             prerelease="--prerelease"
           fi
-          gh release create "v${RELEASE_VERSION}" ${prerelease:-} --title "cmake-pre-commit-hooks v${RELEASE_VERSION}" --notes "${notes:-}" dist/*
+          gh release create "v${RELEASE_VERSION}" ${prerelease:-} \
+          --title "cmake-pre-commit-hooks v${RELEASE_VERSION}" \
+          --notes "${notes:-}" \
+          dist/*
 
       - name: Setup Python for Pypi upload
         uses: actions/setup-python@v2
