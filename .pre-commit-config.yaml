@@ -3,7 +3,7 @@ ci:
 
 repos:
 - repo: https://github.com/pre-commit/pre-commit-hooks
-  rev: v4.2.0
+  rev: v4.3.0
   hooks:
   - id: check-added-large-files
   - id: check-case-conflict
@@ -54,7 +54,7 @@ repos:
                               flake8-mutable]
 
 - repo: https://github.com/pre-commit/mirrors-pylint
-  rev: 'v3.0.0a4'
+  rev: 'v3.0.0a5'
   hooks:
   - id: pylint
     additional_dependencies: ['CLinters', 'fasteners']
