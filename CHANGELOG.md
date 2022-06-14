@@ -9,19 +9,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.3] - 2022-06-14
 
-### Fixed
-
--   Correctly pass on the default argument list to `CLinters` (again).
-
-### Repository
-
--   Update GitHub's CodeQL action to v2
--   Update `pre-commit/pre-commit-hooks` hook to v4.3.0
--   Update `Lucas-C/pre-commit-hooks` hook to v1.2.0
--   Update `pre-commit/mirrors-pylint` hook to v3.0.0a5
-
-## [1.5.3] - 2022-04-11
-
 ### Added
 
 -   Add support for installing `clang-format` using Python if not found on the system
@@ -33,10 +20,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+-   Update GitHub's CodeQL action to v2
+-   Update `pre-commit/pre-commit-hooks` hook to v4.3.0
+-   Update `Lucas-C/pre-commit-hooks` hook to v1.2.0
+-   Update `pre-commit/mirrors-pylint` hook to v3.0.0a5
 -   Update `dangoslen/changelog-enforcer` GitHub action to v3
--   Update `pre-commit/pre-commit-hooks` to v4.2.0
 -   Update `thomaseizinger/create-pull-request` GitHub action to v1.2.2
--   Update `Lucas-C/pre-commit-hooks` hook to v1.1.13
 -   Update `black` hook to v22.3.0
 -   Update `check-manifest` to v0.48
 
