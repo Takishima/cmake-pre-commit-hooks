@@ -27,7 +27,7 @@ repos:
 #         - misc/license_header.txt
 # Changes tabs to spaces
 - repo: https://github.com/Lucas-C/pre-commit-hooks
-  rev: v1.3.0
+  rev: v1.3.1
   hooks:
   - id: remove-tabs
 
@@ -38,7 +38,7 @@ repos:
       name: isort (python)
 
 - repo: https://github.com/psf/black
-  rev: 22.6.0
+  rev: 22.8.0
   hooks:
   - id: black
     language_version: python3
@@ -46,7 +46,7 @@ repos:
     stages: [manual]
 
 - repo: https://github.com/PyCQA/flake8
-  rev: 4.0.1
+  rev: 5.0.4
   hooks:
   - id: flake8
     additional_dependencies: [flake8-breakpoint, flake8-comprehensions,
