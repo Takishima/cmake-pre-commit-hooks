@@ -9,8 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
--   Update `black` hook to v22.6.0
--   Update `Lucas-C/pre-commit-hooks` hook to v1.3.0
+-   Update `black` hook to v22.8.0
+-   Update `flake8` hook to v5.0.4
+-   Update `Lucas-C/pre-commit-hooks` hook to v1.3.1
 
 ## [1.5.3] - 2022-06-14
 
