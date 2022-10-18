@@ -7,9 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+-   Changed minimum Python version to 3.7.X
+
+### Updated
+
+-   Update GitHub release publishing workflow
+-   Added some more pre-commit hooks:
+    +  doc8
+    +  codespell
+    +  yamllint
+    +  blacken-docs
+    +  pyupgrade
+
 ### Repository
 
--   Update `black` hook to v22.8.0
+-   Update `black` hook to v22.10.0
 -   Update `flake8` hook to v5.0.4
 -   Update `Lucas-C/pre-commit-hooks` hook to v1.3.1
 
