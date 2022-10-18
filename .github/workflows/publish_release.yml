@@ -23,7 +23,7 @@ jobs:
               || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -87,7 +87,7 @@ jobs:
         env:
           target: x86_64-unknown-linux-musl
           source_url: https://github.com/taiki-e/parse-changelog/releases/download
-          parse_changelog_tag: v0.4.7
+          parse_changelog_tag: v0.5.1
           changelog: CHANGELOG.md
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -104,7 +104,7 @@ jobs:
           dist/*
 
       - name: Setup Python for Pypi upload
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v3
 
       - name: Publish standard package
         uses: pypa/gh-action-pypi-publish@release/v1
