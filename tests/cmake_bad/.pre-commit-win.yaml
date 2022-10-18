@@ -1,13 +1,15 @@
+---
+
 repos:
   - repo: ../../
     rev: main
     hooks:
       - id: clang-format
       - id: clang-tidy
-        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe",
-               --checks=readability-magic-numbers,--warnings-as-errors=*,--,-std=c++11]
+        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe", --win="-DCMAKE_CXX_COMPILER=cl.exe",
+               --checks=readability-magic-numbers, --warnings-as-errors=*, --, -std=c++11]
       - id: cpplint
       - id: cppcheck
-        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe",--win="-DCMAKE_CXX_COMPILER=cl.exe"]
+        args: [--win=-GNinja, --win="-DCMAKE_C_COMPILER=cl.exe", --win="-DCMAKE_CXX_COMPILER=cl.exe"]
       - id: lizard
-        args: [-lcpp,-w,-C4]
+        args: [-lcpp, -w, -C4]

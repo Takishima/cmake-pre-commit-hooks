@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 # Copyright 2021 Damien Nguyen
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -325,7 +324,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             ret = _History(sp_child.stdout.decode(), sp_child.stderr.decode(), sp_child.returncode)
 
         if self.debug:
-            print(f'DEBUG command {" ".join(args)} exitted with {ret.returncode}')
+            print(f'DEBUG command {" ".join(args)} exited with {ret.returncode}')
             for line in ret.stdout.split('\n'):
                 print(f'DEBUG (out) {line}')
             for line in ret.stderr.split('\n'):

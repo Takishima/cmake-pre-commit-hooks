@@ -60,7 +60,7 @@ __src/err.cpp__
     #include <string>
     int main() { int i; return 10; }
 
-Runnning pre-commit on the above project will lead to an output similar to this one:
+Running pre-commit on the above project will lead to an output similar to this one:
 
     $ pre-commit run --all-files
     clang-format.............................................................Failed
