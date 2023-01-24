@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+-   Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
 -   Update `Lucas-C/pre-commit-hooks` hook to v1.4.1
 -   Update `asottile/pyupgrade` to v3.2.0
 -   Update `black` hook to v22.10.0
