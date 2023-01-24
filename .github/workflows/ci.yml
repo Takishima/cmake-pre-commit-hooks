@@ -15,10 +15,10 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-2019, macos-latest]
         python:
-          - 3.7
           - 3.8
           - 3.9
           - '3.10'
+          - '3.11'
 
     name: "🐍 ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
