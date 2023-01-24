@@ -1,11 +1,12 @@
 ---
 
-ci:
-  skip: [check-manifest]
-
 repos:
+  - repo: meta
+    hooks:
+      - id: check-useless-excludes
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.3.0
+    rev: v4.4.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -18,22 +19,13 @@ repos:
       - id: mixed-line-ending
       - id: trailing-whitespace
 
-  # - repo: https://github.com/Lucas-C/pre-commit-hooks
-  #   rev: v1.1.13
-  #   hooks:
-  #     - id: insert-license
-  #       files: \.py$
-  #       args:
-  #         - --license-filepath
-  #         - misc/license_header.txt
-  # Changes tabs to spaces
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.3.1
+    rev: v1.4.1
     hooks:
       - id: remove-tabs
 
   - repo: https://github.com/PyCQA/doc8/
-    rev: v1.0.0
+    rev: v1.1.1
     hooks:
       - id: doc8
         require_serial: false
@@ -47,60 +39,46 @@ repos:
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.28.0
+    rev: v1.29.0
     hooks:
       - id: yamllint
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.10.1
+    rev: 5.11.4
     hooks:
       - id: isort
         name: isort (python)
 
   - repo: https://github.com/psf/black
-    rev: 22.10.0
+    rev: 22.12.0
     hooks:
       - id: black
         language_version: python3
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: v1.12.1
+    rev: 1.13.0
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
-        additional_dependencies: [black==22.10.0]
+        additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/asottile/pyupgrade
-    rev: v3.2.0
+    rev: v3.3.1
     hooks:
       - id: pyupgrade
-        args: [--py37-plus, --keep-mock]
+        args: [--py38-plus, --keep-mock]
 
   - repo: https://github.com/PyCQA/flake8
     rev: 5.0.4
     hooks:
       - id: flake8
-        exclude: ^(.*_test\.py)$
         additional_dependencies: [flake8-breakpoint, flake8-comprehensions,
                                   flake8-docstrings, flake8-eradicate,
                                   flake8-mutable]
-
-      - id: flake8
-        name: flake8-test-files
-        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
-                                  flake8-eradicate, flake8-mutable]
-        files: ^(.*_test\.py)$
 
   - repo: https://github.com/pre-commit/mirrors-pylint
     rev: 'v3.0.0a5'
     hooks:
       - id: pylint
-        additional_dependencies: ['CLinters', 'fasteners']
-        # This is a slow hook, so only run this if --hook-stage manual is passed
-        stages: [manual]
-
-  - repo: https://github.com/mgedmin/check-manifest
-    rev: "0.48"
-    hooks:
-      - id: check-manifest
-        additional_dependencies: ['setuptools-scm', 'pybind11>=2.6']
+        additional_dependencies: [CLinters, fasteners, pylint-secure-coding-standard]
+        args: [--load-plugins=pylint_secure_coding_standard]

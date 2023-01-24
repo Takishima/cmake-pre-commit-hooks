@@ -13,12 +13,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        runs-on: [ubuntu-latest, windows-2019, macos-latest]
+        runs-on: [ubuntu-latest, windows-latest, macos-latest]
         python:
-          - 3.7
           - 3.8
           - 3.9
           - '3.10'
+          - '3.11'
 
     name: "🐍 ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -33,6 +33,10 @@ jobs:
         run: |
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+
+      - name: Enable Developer Command Prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1.12.0
 
       - name: Setup Python ${{ matrix.python }}
         uses: actions/setup-python@v3
@@ -63,10 +67,11 @@ jobs:
           if (!(Test-Path -Path $PROFILE)) {
               New-Item -ItemType File -Path $PROFILE -Force
           }
+
           Write-Output 'Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"' | Out-File -FilePath $PROFILE -Append -Encoding utf8
           Write-Output 'Update-SessionEnvironment' | Out-File -FilePath $PROFILE -Append -Encoding utf8
           Write-Output '$id = vswhere -property instanceId' | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Write-Output 'Import-Module "C:\Program Files (x86)\Microsoft Visual Studio\2019\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"' `
+          Write-Output 'Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"' `
           | Out-File -FilePath $PROFILE -Append -Encoding utf8
           Write-Output 'Enter-VsDevShell -InstanceId $id' | Out-File -FilePath $PROFILE -Append -Encoding utf8
 
@@ -90,4 +95,7 @@ jobs:
 
       - name: Run test (Windows)
         if: runner.os == 'Windows'
+        env:
+          CC: cl
+          CXX: cl
         run: ./tests/run_tests.ps1

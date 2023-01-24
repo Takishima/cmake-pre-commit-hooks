@@ -38,7 +38,8 @@ def get_cmake_command(cmake_names=None):
         cmake_names = ['cmake', 'cmake3']
 
     for cmake in cmake_names:
-        with open(os.devnull, 'w') as devnull:
+        # pylint: disable=no-member
+        with open(os.devnull, 'w', encoding='utf-8') as devnull:
             try:
                 sp.check_call([cmake, '--version'], stdout=devnull, stderr=devnull)
                 return [shutil.which(cmake)]
@@ -113,6 +114,7 @@ def executable_path(path):
     Returns:
         True if `path` points to a file that is executable, False otherwise
     """
+    # pylint: disable=no-member
     if os.path.isfile(path) and os.access(path, os.X_OK):
         return path
     raise argparse.ArgumentTypeError(f'{path} is not a valid file and/or does not appear executable')
