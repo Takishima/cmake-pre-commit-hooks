@@ -72,16 +72,9 @@ repos:
     rev: 5.0.4
     hooks:
       - id: flake8
-        exclude: ^(.*_test\.py)$
         additional_dependencies: [flake8-breakpoint, flake8-comprehensions,
                                   flake8-docstrings, flake8-eradicate,
                                   flake8-mutable]
-
-      - id: flake8
-        name: flake8-test-files
-        additional_dependencies: [flake8-comprehensions, flake8-breakpoint,
-                                  flake8-eradicate, flake8-mutable]
-        files: ^(.*_test\.py)$
 
   - repo: https://github.com/pre-commit/mirrors-pylint
     rev: 'v3.0.0a5'

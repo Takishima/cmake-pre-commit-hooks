@@ -65,6 +65,7 @@ build-backend = "setuptools.build_meta"
     [tool.pylint.messages_control]
     disable = [
          'invalid-name',
+         'duplicate-code'
     ]
 
 
