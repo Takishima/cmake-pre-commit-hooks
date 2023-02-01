@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 -   Changed minimum Python version to 3.8.X
+-   Allow `lizard` hook to handle Fortran files
 
 ### Updated
 

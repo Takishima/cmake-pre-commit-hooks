@@ -37,5 +37,5 @@
   name: lizard
   entry: cmake-pc-lizard-hook
   description: Code complexity analyzer for C/CPP/ObjC/...
-  files: \.(c|cc|cpp|cu|cuh|cxx|h|hh|hpp|hxx|py)$
+  files: \.(c|cc|cpp|cu|cuh|cxx|h|hh|hpp|hxx|py|f|f90|f95|f03|F|F90|F95|F03)$
   language: python
