@@ -39,7 +39,7 @@ jobs:
         uses: ilammy/msvc-dev-cmd@v1.12.1
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v3
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
