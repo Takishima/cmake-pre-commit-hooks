@@ -26,7 +26,7 @@ from pathlib import Path
 import fasteners
 import hooks.utils
 
-_LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()
+_LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()  # pylint: disable=no-member
 logging.basicConfig(level=_LOGLEVEL)
 
 
