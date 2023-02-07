@@ -1,0 +1,11 @@
+---
+
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - include-what-you-use>=0.19
+  - cppcheck>=2.7.5
+  - pip>=23.0
+  - pip:
+      - cmake-pre-commit-hooks>=1.6.0

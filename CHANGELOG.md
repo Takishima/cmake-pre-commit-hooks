@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added `include-what-you-use-conda` and `cppcheck-conda` hooks to install both tools using conda environments
+
 ### Changed
 
 -   Changed minimum Python version to 3.8.X
@@ -24,8 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
--   Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
+-   Update `action/setup-python` GitHub Action to v4
 -   Update `ilammy/msvc-dev-cmd` GitHub Action to v1.12.1
+-   Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
 -   Update `Lucas-C/pre-commit-hooks` hook to v1.4.2
 -   Update `asottile/pyupgrade` to v3.2.0
 -   Update `black` hook to v22.10.0

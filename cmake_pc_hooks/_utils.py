@@ -15,6 +15,7 @@
 """Base classes and functions for C/C++ linters and formatters."""
 
 import argparse
+import logging
 import os
 import platform
 import shutil
@@ -24,6 +25,9 @@ from pathlib import Path
 
 import fasteners
 import hooks.utils
+
+_LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()  # pylint: disable=no-member
+logging.basicConfig(level=_LOGLEVEL)
 
 
 def get_cmake_command(cmake_names=None):
@@ -120,6 +124,14 @@ def executable_path(path):
     raise argparse.ArgumentTypeError(f'{path} is not a valid file and/or does not appear executable')
 
 
+def copy_std_output_to_sys(result: _History):
+    """Copy the standard output and error resulting from a command execution to system standard streams."""
+    sys.stdout.write(result.stdout)
+    sys.stderr.write(result.stderr)
+    sys.stdout.flush()
+    sys.stderr.flush()
+
+
 class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attributes
     """Super class that all commands inherit."""
 
@@ -132,7 +144,6 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.source_dir = '.'
         self.build_dir = '.cmake_build'
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
-        self.debug = False
         self.all_at_once = False
 
         self.history = []
@@ -174,7 +185,6 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             action='store_true',
             help='Pass all filenames at once to the linter/formatter instead of calling the command once for each file',
         )
-        parser.add_argument('--debug', action='store_true', help='Enable debug output')
 
         parser.add_argument(
             '--unix',
@@ -199,7 +209,6 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.all_at_once = known_args.all_at_once
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
-        self.debug = known_args.debug
 
         if not known_args.build_dir:
             known_args.build_dir = [self.build_dir]  # default value
@@ -230,14 +239,16 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.run_cmake_configure()
         if self.all_at_once:
             self.run_command(self.files)
-        else:
+        elif self.files:
             for filename in self.files:
                 self.run_command([filename])
+        else:
+            logging.error('No files to process!')
+            sys.exit(1)
 
         has_errors = False
         for res in self.history[1:]:
-            sys.stdout.write(res.stdout)
-            sys.stderr.write(res.stderr)
+            copy_std_output_to_sys(res)
             has_errors |= self._parse_output(res)
 
         if has_errors:
@@ -280,6 +291,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                     if not compiledb.exists():
                         result.returncode = 1
                         result.stderr += f'\nUnable to locate {compiledb}\n\n'
+                        copy_std_output_to_sys(result)
                     else:
                         compiledb_srcdir = Path(self.source_dir, 'compile_commands.json')
                         if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
@@ -289,17 +301,14 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                         else:
                             # In all other cases, we copy the compilation database into the source directory
                             if compiledb_srcdir.is_symlink():
-                                if self.debug:
-                                    print(f'DEBUG removing symbolic link at: {compiledb_srcdir}')
+                                logging.debug('Removing symbolic link at: %s', compiledb_srcdir)
                                 compiledb_srcdir.unlink()
-                            if self.debug:
-                                print(f'DEBUG copying compilation database from {self.build_dir} to {self.source_dir}')
+                                logging.debug(
+                                    'copying compilation database from %s to %s', self.build_dir, self.source_dir
+                                )
                             shutil.copy(compiledb, self.source_dir)
                 else:
-                    sys.stdout.write(result.stdout)
-                    sys.stderr.write(result.stderr)
-                    sys.stdout.flush()
-                    sys.stderr.flush()
+                    copy_std_output_to_sys(result)
 
                 self.history.append(result)
                 returncode = result.returncode
@@ -325,13 +334,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         else:
             ret = _History(sp_child.stdout.decode(), sp_child.stderr.decode(), sp_child.returncode)
 
-        if self.debug:
-            print(f'DEBUG command {" ".join(args)} exited with {ret.returncode}')
+            logging.debug('command `%s` exited with %d', ' '.join(args), ret.returncode)
             for line in ret.stdout.split('\n'):
-                print(f'DEBUG (out) {line}')
+                logging.debug('(stdout) %s', line)
             for line in ret.stderr.split('\n'):
-                print(f'DEBUG (err) {line}')
-
+                logging.debug('(stderr) %s', line)
         return ret
 
     def _setup_cmake_args(self, args):  # pylint: disable=too-many-branches

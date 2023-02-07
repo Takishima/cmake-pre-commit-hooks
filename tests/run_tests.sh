@@ -48,7 +48,7 @@ run_hook cmake-pc-clang-format-hook tests/cmake_good 1 0 tests/cmake_good/good.c
 run_hook cmake-pc-clang-tidy-hook tests/cmake_good 1 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_good/good.cpp
 run_hook cmake-pc-cppcheck-hook tests/cmake_good 1 1 tests/cmake_good/good.cpp
 run_hook cmake-pc-cpplint-hook tests/cmake_good 1 0 tests/cmake_good/good.cpp
-run_hook cmake-pc-include-what-you-use-hook tests/cmake_good 1 1 --debug tests/cmake_good/good.cpp
+run_hook cmake-pc-include-what-you-use-hook tests/cmake_good 1 1 tests/cmake_good/good.cpp
 run_hook cmake-pc-lizard-hook tests/cmake_good 1 0 tests/cmake_good/good.cpp
 
 # Test multiple build directory options
@@ -67,7 +67,7 @@ run_hook cmake-pc-clang-format-hook tests/cmake_bad 0 0 tests/cmake_bad/bad.cpp
 run_hook cmake-pc-clang-tidy-hook tests/cmake_bad 0 1 --checks=readability-magic-numbers --warnings-as-errors=* tests/cmake_bad/bad.cpp
 run_hook cmake-pc-cppcheck-hook tests/cmake_bad 0 1 tests/cmake_bad/bad.cpp
 run_hook cmake-pc-cpplint-hook tests/cmake_bad 0 0 tests/cmake_bad/bad.cpp
-run_hook cmake-pc-include-what-you-use-hook tests/cmake_bad 0 1 --debug tests/cmake_bad/bad.cpp
+run_hook cmake-pc-include-what-you-use-hook tests/cmake_bad 0 1 tests/cmake_bad/bad.cpp
 run_hook cmake-pc-lizard-hook tests/cmake_bad 0 0 -C4 tests/cmake_bad/bad.cpp
 
 # ==============================================================================

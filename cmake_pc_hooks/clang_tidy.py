@@ -14,6 +14,7 @@
 
 """Wrapper script for clang-tidy."""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -52,6 +53,8 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         else:
             result.stderr = ''
 
+        logging.debug('returncode %d', result.returncode)
+        logging.debug('parsing output from %s', result.stderr)
         return result.returncode != 0 or any(
             msg in result.stderr
             for msg in (
