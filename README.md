@@ -167,13 +167,16 @@ In addition to the above CMake options, the hooks also accept the following:
 |------------------------------|--------------------------------------------------|--------------|
 | `--all-at-once`              | Pass all filenames to the command at once        | Since v1.4.0 |
 | `--cmake`                    | Specify path to CMake executable                 | Since v1.4.0 |
-| `--debug`                    | Enable debug output                              | Since v1.3.0 |
 | `--linux`                    | Linux-only CMake options                         | Since v1.3.0 |
 | `--mac`                      | MacOS-only CMake options                         | Since v1.3.0 |
 | `--win`                      | Windows-only CMake options                       | Since v1.3.0 |
 
 NB: by specifying `--all-at-once` the linter/formatter command will only be called once for all the files instead of
 calling the command once per file.
+
+NB: Since v1.6.0, the `--debug` command line argument has been removed. Use the `LOGLEVEL` environment variable instead
+to control the level of verbosity of each of the commands. To show all debug messages, set `LOGLEVEL=DEBUG` in your
+environment variables when running the hooks.
 
 Usage example:
 

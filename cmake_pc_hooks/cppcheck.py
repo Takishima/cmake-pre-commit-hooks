@@ -14,6 +14,7 @@
 
 """Wrapper script for cppcheck."""
 
+import logging
 import sys
 from pathlib import Path
 
@@ -50,6 +51,7 @@ class CppcheckCmd(Command):
             False if no errors were detected, True in all other cases.
         """
         # Useless error see https://stackoverflow.com/questions/6986033
+        logging.debug('parsing output from %s', result.stderr)
         useless_error_part = "Cppcheck cannot find all the include files"
         result.stderr = [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
 

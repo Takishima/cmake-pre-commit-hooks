@@ -14,6 +14,7 @@
 
 """Wrapper script for cppcheck."""
 
+import logging
 import re
 import shutil
 import sys
@@ -36,6 +37,7 @@ def get_iwyu_tool_command(iwyu_tool_names=None):
     for iwyu_tool in iwyu_tool_names:
         fname = shutil.which(iwyu_tool)
         if fname:
+            logging.debug('found iwyu-tool command at %s', fname)
             return fname
 
     # Nothing worked -> give up!
@@ -56,6 +58,7 @@ def get_iwyu_command(iwyu_names=None):
     for iwyu in iwyu_names:
         fname = shutil.which(iwyu)
         if fname:
+            logging.debug('found iwyu command at %s', fname)
             return fname
 
     # Nothing worked -> give up!
@@ -88,6 +91,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
     def get_version_str(self):
         """Get the version string like 8.0.0 for a given command."""
         result = self._call_process([self.command_for_version, '--version'])
+        logging.debug('string for version: %s', result)
         version_str = result.stdout
 
         # After version like `8.0.0` is expected to be '\n' or ' '
@@ -99,6 +103,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
             )
         regex = self.look_behind + r'((?:\d+\.)+[\d+_\+\-a-z]+)'
         version = re.search(regex, version_str).group(1)
+        logging.debug('extracted version: %s', version)
         return version
 
     def set_file_regex(self):
@@ -118,6 +123,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         Notes:
             Include-What-You-Use return code is never 0
         """
+        logging.debug('parsing output from %s', result.stdout)
         is_correct = "has correct #includes/fwd-decls" in result.stdout
 
         return result.stdout and not is_correct
