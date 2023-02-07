@@ -16,11 +16,17 @@
   files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
 - id: cppcheck
-  name: cppcheck
+  name: cppcheck (system)
   entry: cmake-pc-cppcheck-hook
   description: Find warnings/errors in C/CPP code
   files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
+- id: cppcheck-conda
+  name: cppcheck (conda)
+  entry: cmake-pc-cppcheck-hook
+  description: Find warnings/errors in C/CPP code
+  files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
+  language: conda
 - id: cpplint
   name: cpplint
   entry: cmake-pc-cpplint-hook
@@ -28,11 +34,17 @@
   files: \.(c|cc|cpp|cu|cuh|cxx|h|hh|hpp|hxx)$
   language: python
 - id: include-what-you-use
-  name: include-what-you-use
+  name: include-what-you-use (system)
   entry: cmake-pc-include-what-you-use-hook
   description: Find unused include directives in C/CPP code
   files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
   language: python
+- id: include-what-you-use-conda
+  name: include-what-you-use (conda)
+  entry: cmake-pc-include-what-you-use-hook
+  description: Find unused include directives in C/CPP code
+  files: \.(c|cc|cu|cxx|cpp|h|hpp|hxx|m)$
+  language: conda
 - id: lizard
   name: lizard
   entry: cmake-pc-lizard-hook
