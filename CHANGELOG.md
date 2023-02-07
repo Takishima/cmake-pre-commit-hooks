@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added `include-what-you-use-conda` and `cppcheck-conda` hooks to install both tools using conda environments
+
 ### Changed
 
 -   Changed minimum Python version to 3.8.X
