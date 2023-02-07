@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.6.0] - 2023-02-07
+
 ### Added
 
 -   Added `include-what-you-use-conda` and `cppcheck-conda` hooks to install both tools using conda environments
@@ -20,11 +22,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Update GitHub release publishing workflow
 -   Added some more pre-commit hooks:
-    +  doc8
-    +  codespell
-    +  yamllint
-    +  blacken-docs
-    +  pyupgrade
+    -   doc8
+    -   codespell
+    -   yamllint
+    -   blacken-docs
+    -   pyupgrade
 
 ### Repository
 
@@ -214,7 +216,9 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.6.0...HEAD
+
+[v1.6.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...v1.6.0
 
 [1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.2...v1.5.3
 
