@@ -15,6 +15,7 @@
 """Base classes and functions for C/C++ linters and formatters."""
 
 import argparse
+import json
 import logging
 import os
 import platform
@@ -82,6 +83,16 @@ def get_cmake_command(cmake_names=None):
     return None
 
 
+def _read_compile_commands_json(build_dir: Path):
+    """Read a JSON compile database and return the list of files contained within."""
+    compile_db = build_dir / 'compile_commands.json'
+    if compile_db.exists():
+        with open(str(compile_db), encoding='utf-8') as fd:
+            data = json.load(fd)
+        return [entry['file'] for entry in data]
+    return []
+
+
 def _append_in_namespace(namespace, key, values):
     current = getattr(namespace, key, [])
     if current is None:
@@ -145,6 +156,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.build_dir = '.cmake_build'
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS=ON']
         self.all_at_once = False
+        self.read_json_db = False
 
         self.history = []
 
@@ -185,6 +197,14 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             action='store_true',
             help='Pass all filenames at once to the linter/formatter instead of calling the command once for each file',
         )
+        parser.add_argument(
+            '--read-json-db',
+            action='store_true',
+            help=(
+                'Run hooks on files found in compile_commands.json '
+                '(if found and in addition to files specified on CLI)'
+            ),
+        )
 
         parser.add_argument(
             '--unix',
@@ -207,6 +227,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         self.cmake = known_args.cmake
         self.all_at_once = known_args.all_at_once
+        self.read_json_db = known_args.read_json_db
         self.clean_build = known_args.clean
         self.source_dir = Path(known_args.source_dir).resolve()
 
@@ -237,6 +258,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
     def run(self):
         """Run the command."""
         self.run_cmake_configure()
+        if self.read_json_db:
+            self.files.extend(_read_compile_commands_json(self.build_dir))
         if self.all_at_once:
             self.run_command(self.files)
         elif self.files:
