@@ -259,7 +259,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         """Run the command."""
         self.run_cmake_configure()
         if self.read_json_db:
-            self.files.extend(_read_compile_commands_json(self.build_dir))
+            self.files.extend(set(self.files).symmetric_difference(set(_read_compile_commands_json(self.build_dir))))
         if self.all_at_once:
             self.run_command(self.files)
         elif self.files:
@@ -280,6 +280,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
     def run_command(self, filenames):  # pylint: disable=arguments-differ,arguments-renamed
         """Run the command and check for errors."""
         self.history.append(self._call_process([self.command] + filenames + self.args + self.ddash_args))
+
+        # Compatibility with CLinters
+        self.stdout = self.history[-1].stdout.encode()
+        self.stderr = self.history[-1].stderr.encode()
+        self.returncode = self.history[-1].returncode
 
     def run_cmake_configure(self):  # pylint: disable=too-many-branches
         """Run a CMake configure step."""
@@ -444,3 +449,7 @@ class FormatterCmd(Command, hooks.utils.FormatterCmd):
         if child.stdout == "":
             return []
         return child.stdout.encode().split(b"\x0a")
+
+
+class StaticAnalyzerCmd(Command, hooks.utils.StaticAnalyzerCmd):
+    """Commands that analyze code and are not formatters."""

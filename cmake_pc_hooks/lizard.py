@@ -17,7 +17,7 @@
 
 import sys
 
-from hooks.utils import StaticAnalyzerCmd
+from ._utils import StaticAnalyzerCmd, _read_compile_commands_json
 
 
 class LizardCmd(StaticAnalyzerCmd):
@@ -38,9 +38,17 @@ class LizardCmd(StaticAnalyzerCmd):
 
     def run(self):
         """Run lizard."""
-        for filename in self.files:
-            self.run_command([filename] + self.args)
+        if self.read_json_db:
+            self.run_cmake_configure()
+            self.files.extend(set(self.files).symmetric_difference(set(_read_compile_commands_json(self.build_dir))))
+
+        if self.all_at_once:
+            self.run_command(self.files)
             self.exit_on_error()
+        else:
+            for filename in self.files:
+                self.run_command([filename])
+                self.exit_on_error()
 
 
 def main(argv=None):
