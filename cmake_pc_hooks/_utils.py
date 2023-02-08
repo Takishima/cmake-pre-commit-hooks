@@ -289,14 +289,12 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
     def run_cmake_configure(self):  # pylint: disable=too-many-branches
         """Run a CMake configure step."""
         configuring = Path(self.build_dir, '_configuring')
-        has_lock = False
 
         self.build_dir.mkdir(exist_ok=True)
 
         rw_lock = fasteners.InterProcessReaderWriterLock(configuring)
         if not configuring.exists():
             with rw_lock.write_lock():
-                has_lock = True
                 if self.clean_build:
                     for path in self.build_dir.iterdir():
                         if path.is_dir():
@@ -340,13 +338,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
                 self.history.append(result)
                 returncode = result.returncode
+            configuring.unlink()
         else:
             returncode = 0
             with rw_lock.read_lock():
                 pass
-
-        if has_lock and configuring.exists():
-            configuring.unlink()
 
         if returncode != 0:
             sys.exit(returncode)
