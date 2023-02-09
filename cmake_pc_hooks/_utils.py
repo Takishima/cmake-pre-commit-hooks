@@ -173,17 +173,29 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         parser.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default=self.source_dir)
         parser.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
         parser.add_argument(
-            '-D', dest='defines', action='append', type=str, help='Create or update a cmake cache entry.'
+            '-D', dest='defines', action='append', type=str, help='Create or update a cmake cache entry.', default=[]
         )
         parser.add_argument(
-            '-U', dest='undefines', action='append', type=str, help='Remove matching entries from CMake cache.'
+            '-U',
+            dest='undefines',
+            action='append',
+            type=str,
+            help='Remove matching entries from CMake cache.',
+            default=[],
         )
         parser.add_argument('-G', dest='generator', type=str, help='Specify a build system generator.')
         parser.add_argument('-T', dest='toolset', type=str, help='Specify toolset name if supported by generator.')
         parser.add_argument('-A', dest='platform', type=str, help='Specify platform if supported by generator.')
-        parser.add_argument('-Werror', dest='errors', action='append', type=str, help='Make developer warnings errors.')
         parser.add_argument(
-            '-Wno-error', dest='no_error', action='append', type=str, help='Make developer warnings not errors.'
+            '-Werror', dest='errors', action='append', type=str, help='Make developer warnings errors.', default=[]
+        )
+        parser.add_argument(
+            '-Wno-error',
+            dest='no_error',
+            action='append',
+            type=str,
+            help='Make developer warnings not errors.',
+            default=[],
         )
         parser.add_argument(
             '--cmake', type=executable_path, help='Specify path to CMake executable.', default=self.cmake
@@ -370,15 +382,14 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if not self.cmake:
             raise RuntimeError('Unable to locate CMake command')
 
-        if args.defines:
-            for define in args.defines:
-                self.cmake_args.append(f'-D{define}')
-        if args.undefines:
-            for undefine in args.undefines:
-                self.cmake_args.append(f'-U{undefine}')
-        if args.errors:
-            for error in args.errors:
-                self.cmake_args.append(f'-Werror={error}')
+        for define in args.defines:
+            self.cmake_args.append(f'-D{define}')
+
+        for undefine in args.undefines:
+            self.cmake_args.append(f'-U{undefine}')
+
+        for error in args.errors:
+            self.cmake_args.append(f'-Werror={error}')
 
         if args.generator:
             self.cmake_args.append(f'-G{args.generator}')

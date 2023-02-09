@@ -48,9 +48,7 @@ class ClangTidyCmd(ClangAnalyzerCmd):
             False if no errors were detected, True in all other cases.
         """
         # Reset stderr if it's complaining about problems in system files
-        if result.stdout and 'non-user code' not in result.stderr:
-            pass
-        else:
+        if not result.stdout or 'non-user code' in result.stderr:
             result.stderr = ''
 
         logging.debug('returncode %d', result.returncode)
