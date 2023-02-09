@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+-   Add new badges to README file for CodeFactor.io and SonarCloud
 -   Update `black` hook to v23.1.0
 
 ## [v1.6.0] - 2023-02-07
