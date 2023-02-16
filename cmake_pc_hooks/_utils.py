@@ -197,6 +197,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             help='Make developer warnings not errors.',
             default=[],
         )
+        parser.add_argument('--preset', type=str, help='Specify a configure preset.')
         parser.add_argument(
             '--cmake', type=executable_path, help='Specify path to CMake executable.', default=self.cmake
         )
@@ -402,6 +403,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             self.cmake_args.append('-Wdev')
         if args.Wno_dev:
             self.cmake_args.append('-Wno-dev')
+        if args.preset:
+            self.cmake_args.append(f'--preset={args.preset}')
 
         for system, attr in (('Linux', 'linux'), ('Darwin', 'mac'), ('Windows', 'win')):
             platform_args = getattr(args, attr)
