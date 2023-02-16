@@ -150,6 +150,7 @@ These hooks accept all the most common CMake options:
 | `-G <generator-name>`        | Specify a build system generator.                |
 | `-T <toolset-name>`          | Specify toolset name if supported by generator.  |
 | `-A <platform-name>`         | Specify platform name if supported by generator. |
+| `--preset <preset>`          | Specify a configure preset.                      |
 | `-Wdev`                      | Enable developer warnings.                       |
 | `-Wno-dev`                   | Suppress developer warnings.                     |
 | `-Werror=dev`                | Make developer warnings errors.                  |
