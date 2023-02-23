@@ -40,7 +40,7 @@ __.pre-commit-config.yaml__
 
     repos:
       - repo: https://github.com/Takishima/cmake-pre-commit-hooks
-        rev: 1.0.0
+        rev: v1.8.0
         hooks:
           - id: clang-format
           - id: clang-tidy
@@ -190,7 +190,7 @@ Usage example:
 ```yaml
 repos:
 - repo: https://github.com/Takishima/cmake-pre-commit-hooks
-  rev: 1.0.0
+  rev: v1.8.0
   hooks:
     - id: cppcheck
       args: [-DBUILD_TESTING=ON,
