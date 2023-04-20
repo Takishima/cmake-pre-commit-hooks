@@ -25,10 +25,12 @@ import sys
 from pathlib import Path
 
 import fasteners
+import filelock
 import hooks.utils
 
 _LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()  # pylint: disable=no-member
 logging.basicConfig(level=_LOGLEVEL)
+logging.getLogger('filelock').setLevel(logging.WARNING)
 
 
 def get_cmake_command(cmake_names=None):
@@ -301,64 +303,34 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.stderr = self.history[-1].stderr.encode()
         self.returncode = self.history[-1].returncode
 
-    def run_cmake_configure(self):  # pylint: disable=too-many-branches
-        """Run a CMake configure step."""
-        configuring = Path(self.build_dir, '_configuring')
+    def run_cmake_configure(self):
+        """Run the CMake configure step.
+
+        This member function is essentially here to handle the case where multiple processes are attempting to call
+        CMake configure within the same build directory. This can happen if the pre-commit hooks are not configured with
+        `serial: True` inside the configuration file.
+        """
+        cmake_configure_lock_file = Path(self.build_dir, '_cmake_configure_lock')
+        cmake_configure_try_lock_file = Path(self.build_dir, '_cmake_configure_try_lock')
 
         self.build_dir.mkdir(exist_ok=True)
 
-        rw_lock = fasteners.InterProcessReaderWriterLock(configuring)
-        with rw_lock.write_lock():
-            if self.clean_build:
-                for path in self.build_dir.iterdir():
-                    if path.is_dir():
-                        shutil.rmtree(path)
-                    elif path != configuring:
-                        path.unlink()
-
-            result = self._call_process(self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir)
-            result.stdout = '\n'.join(
-                [
-                    f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}',
-                    f'  from within {self.build_dir}',
-                    result.stdout,
-                    '',
-                ]
-            )
-
-            if result.returncode == 0:
-                compiledb = Path(self.build_dir, 'compile_commands.json')
-                if not compiledb.exists():
-                    result.returncode = 1
-                    result.stderr += f'\nUnable to locate {compiledb}\n\n'
-                    copy_std_output_to_sys(result)
-                else:
-                    compiledb_srcdir = Path(self.source_dir, 'compile_commands.json')
-                    if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
-                        # If it's a symbolic link and points to the compilation database in the build directory,
-                        # we're all good.
-                        pass
-                    else:
-                        # In all other cases, we copy the compilation database into the source directory
-                        if compiledb_srcdir.is_symlink():
-                            logging.debug('Removing symbolic link at: %s', compiledb_srcdir)
-                            compiledb_srcdir.unlink()
-                            logging.debug('copying compilation database from %s to %s', self.build_dir, self.source_dir)
-                        shutil.copy(compiledb, self.source_dir)
-            else:
-                copy_std_output_to_sys(result)
-
-            self.history.append(result)
-            returncode = result.returncode
-
-        if configuring.exists():
-            configuring.unlink()
+        cmake_configure_try_lock = filelock.FileLock(cmake_configure_try_lock_file)
+        cmake_configure_lock = fasteners.InterProcessReaderWriterLock(cmake_configure_lock_file)
+        try:
+            with cmake_configure_try_lock.acquire(blocking=False):
+                with cmake_configure_lock.write_lock():
+                    logging.debug('Command %s with id %s is running CMake configure', self.command, os.getpid())
+                    returncode = self._run_cmake_configure((cmake_configure_lock_file, cmake_configure_try_lock_file))
+                    logging.debug('Command %s with id %s is done running CMake configure', self.command, os.getpid())
+        except filelock.Timeout:
+            logging.debug('Command %s with id %s is not running CMake configure and waiting', self.command, os.getpid())
+            with cmake_configure_lock.read_lock():
+                logging.debug('Command %s with id %s is done waiting', self.command, os.getpid())
+                returncode = 0
 
         if returncode != 0:
             sys.exit(returncode)
-
-    def _parse_output(self, result):  # pylint: disable=unused-argument
-        return NotImplemented
 
     def _call_process(self, args, **kwargs):
         try:
@@ -374,6 +346,55 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             for line in ret.stderr.split('\n'):
                 logging.debug('(stderr) %s', line)
         return ret
+
+    def _parse_output(self, result):  # pylint: disable=unused-argument
+        return NotImplemented
+
+    def _run_cmake_configure(self, lock_files):  # pylint: disable=too-many-branches
+        """Run a CMake configure step."""
+        self.build_dir.mkdir(exist_ok=True)
+
+        if self.clean_build:
+            for path in self.build_dir.iterdir():
+                if path.is_dir():
+                    shutil.rmtree(path)
+                elif path not in lock_files:
+                    path.unlink()
+
+        result = self._call_process(self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir)
+        result.stdout = '\n'.join(
+            [
+                f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}',
+                f'  from within {self.build_dir}',
+                result.stdout,
+                '',
+            ]
+        )
+
+        if result.returncode == 0:
+            compiledb = Path(self.build_dir, 'compile_commands.json')
+            if not compiledb.exists():
+                result.returncode = 1
+                result.stderr += f'\nUnable to locate {compiledb}\n\n'
+                copy_std_output_to_sys(result)
+            else:
+                compiledb_srcdir = Path(self.source_dir, 'compile_commands.json')
+                if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
+                    # If it's a symbolic link and points to the compilation database in the build directory,
+                    # we're all good.
+                    pass
+                else:
+                    # In all other cases, we copy the compilation database into the source directory
+                    if compiledb_srcdir.is_symlink():
+                        logging.debug('Removing symbolic link at: %s', compiledb_srcdir)
+                        compiledb_srcdir.unlink()
+                        logging.debug('copying compilation database from %s to %s', self.build_dir, self.source_dir)
+                    shutil.copy(compiledb, self.source_dir)
+        else:
+            copy_std_output_to_sys(result)
+
+        self.history.append(result)
+        return result.returncode
 
     def _setup_cmake_args(self, args):  # pylint: disable=too-many-branches
         self.cmake = args.cmake if isinstance(args.cmake, list) else [args.cmake]
