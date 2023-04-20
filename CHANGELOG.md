@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Fixed some typos in the README file (thanks to @onuralpszr)
 
+### Repository
+
+-   Update `Lucas-C/pre-commit-hooks` hook to v1.5.1
+-   Update `codespell` to v2.2.4
+-   Update `yamllint` hook to v1.30.0
+-   Update `black` hook to v23.3.0
+-   Update `bandit` hook to v1.7.5
+-   Update `isort` hook to v5.12.0
+
 ## [v1.8.0] - 2023-02-16
 
 ### Added
