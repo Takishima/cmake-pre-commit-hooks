@@ -94,5 +94,5 @@ repos:
     rev: 'v3.0.0a5'
     hooks:
       - id: pylint
-        additional_dependencies: [CLinters, fasteners, pylint-secure-coding-standard]
+        additional_dependencies: [CLinters, fasteners, filelock, pylint-secure-coding-standard]
         args: [--load-plugins=pylint_secure_coding_standard]
