@@ -245,6 +245,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.source_dir = Path(known_args.source_dir).resolve()
 
         if not known_args.build_dir:
+            if known_args.preset:
+                raise RuntimeError('You *must* specify -B|--build-dir if you pass --preset as a CMake argument!')
             known_args.build_dir = [self.build_dir]  # default value
 
         # Try all the passed build directories if one already exists, use that one, otherwise take the first one
