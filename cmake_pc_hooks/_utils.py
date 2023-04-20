@@ -315,6 +315,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         self.build_dir.mkdir(exist_ok=True)
 
+        # NB: disable weird error on pre-commit CI
+        # pylint: disable=no-member
+
         cmake_configure_try_lock = filelock.FileLock(cmake_configure_try_lock_file)
         cmake_configure_lock = fasteners.InterProcessReaderWriterLock(cmake_configure_lock_file)
         try:
