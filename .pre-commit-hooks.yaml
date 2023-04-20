@@ -7,47 +7,47 @@
   name: clang-format
   entry: cmake-pc-clang-format-hook
   description: Formats C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
   language: python
 - id: clang-tidy
   name: clang-tidy
   entry: cmake-pc-clang-tidy-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
   language: python
 - id: cppcheck
   name: cppcheck (system)
   entry: cmake-pc-cppcheck-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
   language: python
 - id: cppcheck-conda
   name: cppcheck (conda)
   entry: cmake-pc-cppcheck-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
   language: conda
 - id: cpplint
   name: cpplint
   entry: cmake-pc-cpplint-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cuh|cxx|cxxm|h|hh|hpp|hxx|ixx|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cuh|cxx|cxxm|h|hh|hpp|hxx|ixx|mxx)$
   language: python
 - id: include-what-you-use
   name: include-what-you-use (system)
   entry: cmake-pc-include-what-you-use-hook
   description: Find unused include directives in C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
   language: python
 - id: include-what-you-use-conda
   name: include-what-you-use (conda)
   entry: cmake-pc-include-what-you-use-hook
   description: Find unused include directives in C/CPP code
-  files: \.(c|c++m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
   language: conda
 - id: lizard
   name: lizard
   entry: cmake-pc-lizard-hook
   description: Code complexity analyzer for C/CPP/ObjC/...
-  files: \.(F|F03|F90|F95|c|c++m|cc|ccm|cpp|cppm|cu|cuh|cxx|cxxm|f|f03|f90|f95|h|hh|hpp|hxx|ixx|mxx|py)$
+  files: \.(F|F03|F90|F95|c|c\+\+m|cc|ccm|cpp|cppm|cu|cuh|cxx|cxxm|f|f03|f90|f95|h|hh|hpp|hxx|ixx|mxx|py)$
   language: python
