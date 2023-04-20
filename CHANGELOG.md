@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.8.1] - 2023-04-20
+
 ### Added
 
 -   Added support for C++ module files by default
@@ -17,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
--   Require users to explicitly set `-B`|`--build-dir` if they pass `--preset` to CMake (see issue [#63](https://github.com/Takishima/cmake-pre-commit-hooks/issues/63))
+-   Require users to explicitly set `-B`\|`--build-dir` if they pass `--preset` to CMake (see issue [#63](https://github.com/Takishima/cmake-pre-commit-hooks/issues/63))
 
 ### Repository
 
@@ -262,7 +264,9 @@ Initial release with support for:
 -   clang-tidy
 -   cppcheck
 
-[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.8.1...HEAD
+
+[v1.8.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.8.0...v1.8.1
 
 [v1.8.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.7.0...v1.8.0
 
