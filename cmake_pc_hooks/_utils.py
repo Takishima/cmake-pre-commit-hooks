@@ -308,56 +308,51 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.build_dir.mkdir(exist_ok=True)
 
         rw_lock = fasteners.InterProcessReaderWriterLock(configuring)
-        if not configuring.exists():
-            with rw_lock.write_lock():
-                if self.clean_build:
-                    for path in self.build_dir.iterdir():
-                        if path.is_dir():
-                            shutil.rmtree(path)
-                        elif path != configuring:
-                            path.unlink()
+        with rw_lock.write_lock():
+            if self.clean_build:
+                for path in self.build_dir.iterdir():
+                    if path.is_dir():
+                        shutil.rmtree(path)
+                    elif path != configuring:
+                        path.unlink()
 
-                result = self._call_process(self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir)
-                result.stdout = '\n'.join(
-                    [
-                        f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}',
-                        f'  from within {self.build_dir}',
-                        result.stdout,
-                        '',
-                    ]
-                )
+            result = self._call_process(self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir)
+            result.stdout = '\n'.join(
+                [
+                    f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}',
+                    f'  from within {self.build_dir}',
+                    result.stdout,
+                    '',
+                ]
+            )
 
-                if result.returncode == 0:
-                    compiledb = Path(self.build_dir, 'compile_commands.json')
-                    if not compiledb.exists():
-                        result.returncode = 1
-                        result.stderr += f'\nUnable to locate {compiledb}\n\n'
-                        copy_std_output_to_sys(result)
-                    else:
-                        compiledb_srcdir = Path(self.source_dir, 'compile_commands.json')
-                        if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
-                            # If it's a symbolic link and points to the compilation database in the build directory,
-                            # we're all good.
-                            pass
-                        else:
-                            # In all other cases, we copy the compilation database into the source directory
-                            if compiledb_srcdir.is_symlink():
-                                logging.debug('Removing symbolic link at: %s', compiledb_srcdir)
-                                compiledb_srcdir.unlink()
-                                logging.debug(
-                                    'copying compilation database from %s to %s', self.build_dir, self.source_dir
-                                )
-                            shutil.copy(compiledb, self.source_dir)
-                else:
+            if result.returncode == 0:
+                compiledb = Path(self.build_dir, 'compile_commands.json')
+                if not compiledb.exists():
+                    result.returncode = 1
+                    result.stderr += f'\nUnable to locate {compiledb}\n\n'
                     copy_std_output_to_sys(result)
+                else:
+                    compiledb_srcdir = Path(self.source_dir, 'compile_commands.json')
+                    if compiledb_srcdir.is_symlink() and compiledb_srcdir.resolve() == compiledb:
+                        # If it's a symbolic link and points to the compilation database in the build directory,
+                        # we're all good.
+                        pass
+                    else:
+                        # In all other cases, we copy the compilation database into the source directory
+                        if compiledb_srcdir.is_symlink():
+                            logging.debug('Removing symbolic link at: %s', compiledb_srcdir)
+                            compiledb_srcdir.unlink()
+                            logging.debug('copying compilation database from %s to %s', self.build_dir, self.source_dir)
+                        shutil.copy(compiledb, self.source_dir)
+            else:
+                copy_std_output_to_sys(result)
 
-                self.history.append(result)
-                returncode = result.returncode
+            self.history.append(result)
+            returncode = result.returncode
+
+        if configuring.exists():
             configuring.unlink()
-        else:
-            returncode = 0
-            with rw_lock.read_lock():
-                pass
 
         if returncode != 0:
             sys.exit(returncode)

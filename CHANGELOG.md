@@ -232,6 +232,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 -   Issues with arguments parsing for arguments that are specified more than once
+-   Fix issue with CMake configure step when running hooks in parallel
 
 ### Repository
 
