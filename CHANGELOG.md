@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Fixed some typos in the README file (thanks to @onuralpszr)
 
+### Changed
+
+-   Require users to explicitly set `-B`|`--build-dir` if they pass `--preset` to CMake (see issue [#63](https://github.com/Takishima/cmake-pre-commit-hooks/issues/63))
+
 ### Repository
 
 -   Update `Lucas-C/pre-commit-hooks` hook to v1.5.1
