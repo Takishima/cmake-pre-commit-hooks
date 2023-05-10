@@ -93,6 +93,8 @@ jobs:
 
       - name: Run test (Unix)
         if: runner.os != 'Windows'
+        env:
+          LOGLEVEL: DEBUG
         run: ./tests/run_tests.sh
 
       - name: Run test (Windows)
@@ -100,6 +102,7 @@ jobs:
         env:
           CC: cl
           CXX: cl
+          LOGLEVEL: DEBUG
         run: ./tests/run_tests.ps1
 
   finish:
