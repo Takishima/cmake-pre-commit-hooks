@@ -18,6 +18,7 @@ import logging
 import sys
 from pathlib import Path
 
+from ._call_process import call_process
 from ._utils import Command
 
 
@@ -39,6 +40,12 @@ class CppcheckCmd(Command):
         self.add_if_missing(['--enable=all'])
         # Force location of compile database
         self.add_if_missing([f'--project={Path(self.cmake.build_dir, "compile_commands.json")}'])
+
+    def run_command(self, filenames):
+        """Run the command and check for errors."""
+        filter_args = [f'--file-filter=*{Path(filename).parent.name}/{Path(filename).name}' for filename in filenames]
+        self.history.append(call_process([self.command, *filter_args, *self.args, *self.ddash_args]))
+        self._clinters_compat()
 
     def _parse_output(self, result):
         """
