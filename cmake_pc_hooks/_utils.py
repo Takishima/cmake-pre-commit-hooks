@@ -28,7 +28,7 @@ import hooks.utils
 from ._call_process import call_process
 from ._cmake import CMakeCommand
 
-_LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()
+_LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
 logging.basicConfig(level=_LOGLEVEL)
 logging.getLogger('filelock').setLevel(logging.WARNING)
 
