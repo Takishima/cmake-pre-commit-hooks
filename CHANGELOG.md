@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+-   Use [ruff](https://beta.ruff.rs/docs/) for linting over other Python linters
+
 ## [v1.8.1] - 2023-04-20
 
 ### Added
