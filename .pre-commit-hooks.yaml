@@ -19,13 +19,17 @@
   name: cppcheck (system)
   entry: cmake-pc-cppcheck-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  # NB: no h|hpp|hxx here since we are calling cppcheck with --project=/path/to/compile_commands.json which does not
+  # contain header files
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|ixx|m|mxx)$
   language: python
 - id: cppcheck-conda
   name: cppcheck (conda)
   entry: cmake-pc-cppcheck-hook
   description: Find warnings/errors in C/CPP code
-  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|h|hpp|hxx|ixx|m|mxx)$
+  # NB: no h|hpp|hxx here since we are calling cppcheck with --project=/path/to/compile_commands.json which does not
+  # contain header files
+  files: \.(c|c\+\+m|cc|ccm|cpp|cppm|cu|cxx|cxxm|ixx|m|mxx)$
   language: conda
 - id: cpplint
   name: cpplint
