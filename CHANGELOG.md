@@ -7,9 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+-   Fixed potential issue with CppCheck hook always running on all files in compile database
+
+### Changed
+
+-   CppCheck hook will now exclude C++ header files by default since those are not present within the compilatioon databasebecauzse
+-   Move all CMake handling code into dedicated sub-module
+
 ### Repository
 
 -   Use [ruff](https://beta.ruff.rs/docs/) for linting over other Python linters
+-   Tests now run using LOGLEVEL=DEBUG
 
 ## [v1.8.1] - 2023-04-20
 
