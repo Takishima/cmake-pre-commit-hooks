@@ -47,6 +47,7 @@ ignore = ['ANN101', # missing-type-self
 extend-exclude = ["tests/**"]
 
 [tool.ruff.flake8-annotations]
+allow-star-arg-any = true
 ignore-fully-untyped = true
 mypy-init-return = true
 suppress-dummy-args = true

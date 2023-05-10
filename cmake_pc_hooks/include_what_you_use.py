@@ -87,7 +87,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         self.handle_ddash_args()
 
         # Force location of compile database
-        self.add_if_missing([f'-p={Path(self.build_dir, "compile_commands.json")}'])
+        self.add_if_missing([f'-p={Path(self.cmake.build_dir, "compile_commands.json")}'])
 
     def get_version_str(self):
         """Get the version string like 8.0.0 for a given command."""

@@ -38,7 +38,7 @@ class CppcheckCmd(Command):
         # Enable all of the checks
         self.add_if_missing(['--enable=all'])
         # Force location of compile database
-        self.add_if_missing([f'--project={Path(self.build_dir, "compile_commands.json")}'])
+        self.add_if_missing([f'--project={Path(self.cmake.build_dir, "compile_commands.json")}'])
 
     def _parse_output(self, result):
         """
