@@ -24,19 +24,19 @@ from ._utils import Command
 class CppcheckCmd(Command):
     """Class for the cppcheck command."""
 
-    command = "cppcheck"
-    lookbehind = "Cppcheck "
+    command = 'cppcheck'
+    lookbehind = 'Cppcheck '
 
     def __init__(self, args):
         """Initialize a CppcheckCmd object."""
         super().__init__(self.command, self.lookbehind, args)
         self.parse_args(args)
         # quiet for stdout purposes
-        self.add_if_missing(["-q"])
+        self.add_if_missing(['-q'])
         # make cppcheck behave as expected for pre-commit
-        self.add_if_missing(["--error-exitcode=1"])
+        self.add_if_missing(['--error-exitcode=1'])
         # Enable all of the checks
-        self.add_if_missing(["--enable=all"])
+        self.add_if_missing(['--enable=all'])
         # Force location of compile database
         self.add_if_missing([f'--project={Path(self.build_dir, "compile_commands.json")}'])
 
@@ -52,7 +52,7 @@ class CppcheckCmd(Command):
         """
         # Useless error see https://stackoverflow.com/questions/6986033
         logging.debug('parsing output from %s', result.stderr)
-        useless_error_part = "Cppcheck cannot find all the include files"
+        useless_error_part = 'Cppcheck cannot find all the include files'
         result.stderr = [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
 
         return result.returncode != 0
@@ -71,5 +71,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

@@ -70,7 +70,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
 
     command = get_iwyu_tool_command()
     command_for_version = get_iwyu_command()
-    lookbehind = "include-what-you-use "
+    lookbehind = 'include-what-you-use '
 
     def __init__(self, args):
         """Initialize an IWYUToolCmd object."""
@@ -80,7 +80,8 @@ class IWYUToolCmd(ClangAnalyzerCmd):
             raise RuntimeError('Unable to locate path to include-what-you-use executable!')
 
         super().__init__(self.command, self.lookbehind, args)
-        self.file_regex = ""
+        self.file_regex = ''
+        self.file_regex = ''
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()
@@ -108,7 +109,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
 
     def set_file_regex(self):
         """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
-        self.file_regex = r".*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx)$"
+        self.file_regex = r'.*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx)$'
 
     def _parse_output(self, result):
         """
@@ -124,7 +125,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
             Include-What-You-Use return code is never 0
         """
         logging.debug('parsing output from %s', result.stdout)
-        is_correct = "has correct #includes/fwd-decls" in result.stdout
+        is_correct = 'has correct #includes/fwd-decls' in result.stdout
 
         return result.stdout and not is_correct
 
@@ -142,5 +143,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

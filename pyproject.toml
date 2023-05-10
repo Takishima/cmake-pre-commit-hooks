@@ -4,69 +4,127 @@ build-backend = "setuptools.build_meta"
 
 # ==============================================================================
 
+[tool.ruff]
+line-length = 120
+target-version = 'py38'
+
+select = ['F',   # pyflakes
+          'E',   # pycodestyle
+          'W',   # pycodestyle
+          'I',   # isort
+          'N',   # pep8-naming
+          'D',   # pydocstyle
+          'UP',  # pyupgrade
+          'YTT', # flake-2020
+          'ANN', # flake8-annotations
+          'S',   # flake8-bandit
+          'BLE', # flake8-blind-except
+          'B',   # flake8-bugbear
+          'A',   # flake8-builtins
+          'C4',  # flake8-comprehensions
+          'T10', # flake8-debugger
+          'ISC', # flake8-implicit-str-concat
+          'ICN', # flake8-import-conventions
+          'PIE', # flake8-pie
+          'PT',  # flake8-pytest-style
+          'Q',   # flake8-quotes
+          'RSE', # flake8-raise
+          'RET', # flake8-return
+          'SLF', # flake8-self
+          'SIM', # flake8-simplify
+          'TID', # flake8-tidy-imports
+          'ARG', # flake8-unused-arguments
+          'PTH', # flake8-use-pathlib
+          'ERA', # eradicate
+          'PL',  # pylint
+          'RUF', # ruff-specific rules
+]
+ignore = ['ANN101', # missing-type-self
+          'D203',   # one-blank-line-before-class
+          'D212',   # multi-line-summary-first-line
+          'S603'    # subprocess-without-shell-equals-true
+]
+extend-exclude = ["tests/**"]
+
+[tool.ruff.flake8-annotations]
+ignore-fully-untyped = true
+mypy-init-return = true
+suppress-dummy-args = true
+suppress-none-returning = true
+
+[tool.ruff.flake8-quotes]
+docstring-quotes = 'double'
+inline-quotes = 'single'
+multiline-quotes = 'single'
+
+[tool.ruff.pydocstyle]
+convention = 'google'
+
+# ------------------------------------------------------------------------------
+
 [tool.black]
-    line-length = 120
-    target-version = ['py38','py39','py310']
-    skip-string-normalization = true
+line-length = 120
+target-version = ['py38','py39','py310']
+skip-string-normalization = true
 
 
 [tool.check-manifest]
-    ignore = [
-    'PKG-INFO',
-    '*.egg-info',
-    '*.egg-info/*',
-    'setup.cfg',
-    '.hgtags',
-    '.hgsigs',
-    '.hgignore',
-    '.gitignore',
-    '.bzrignore',
-    '.gitattributes',
-    '.github/*',
-    '.travis.yml',
-    'Jenkinsfile',
-    '*.mo',
-    '.gitmodules',
-    'VERSION.txt',
-    '.editorconfig',
-    '.envrc',
-    '*.yml',
-    '*.yaml',
-    'MANIFEST.in',
-    'docs/*',
-    'docs/images/*',
-    'misc/*',
-    'tests/*',
-    'tests/cmake_bad/*',
-    'tests/cmake_good/*'
-    ]
+ignore = [
+'PKG-INFO',
+'*.egg-info',
+'*.egg-info/*',
+'setup.cfg',
+'.hgtags',
+'.hgsigs',
+'.hgignore',
+'.gitignore',
+'.bzrignore',
+'.gitattributes',
+'.github/*',
+'.travis.yml',
+'Jenkinsfile',
+'*.mo',
+'.gitmodules',
+'VERSION.txt',
+'.editorconfig',
+'.envrc',
+'*.yml',
+'*.yaml',
+'MANIFEST.in',
+'docs/*',
+'docs/images/*',
+'misc/*',
+'tests/*',
+'tests/cmake_bad/*',
+'tests/cmake_good/*'
+]
 
 
 [tool.coverage]
-    [tool.coverage.run]
-        omit = [
-            '*_test.py',
-            '*_fixtures.py'
-        ]
+[tool.coverage.run]
+omit = [
+'*_test.py',
+'*_fixtures.py'
+]
 
 
 [tool.pylint]
-    [tool.pylint.master]
-    ignore-patterns = [
-        '__init__.py'
-    ]
+[tool.pylint.master]
+ignore-patterns = [
+'__init__.py'
+]
 
-    [tool.pylint.format]
-    max-line-length = 120
+[tool.pylint.format]
+max-line-length = 120
 
-    [tool.pylint.reports]
-    msg-template = '{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})'
+[tool.pylint.reports]
+msg-template = '{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})'
 
-    [tool.pylint.messages_control]
-    disable = [
-         'invalid-name',
-         'duplicate-code'
-    ]
+[tool.pylint.messages_control]
+disable = [
+'invalid-name',
+'duplicate-code'
+]
 
 
 [tool.pytest.ini_options]

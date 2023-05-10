@@ -19,6 +19,7 @@ import os
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
@@ -26,24 +27,25 @@ from setuptools.command.egg_info import egg_info
 
 def get_executable(exec_name):
     """Try to locate an executable in a Python virtual environment."""
-    # pylint: disable=no-member
+    python_executable = Path(sys.executable)
     try:
-        root_path = os.environ['VIRTUAL_ENV']
-        python = os.path.basename(sys.executable)
+        root_path = Path(os.environ['VIRTUAL_ENV'])
+        python = python_executable.name
     except KeyError:
-        root_path, python = os.path.split(sys.executable)
+        root_path = python_executable.parent
+        python = python_executable.name
 
-    exec_name = os.path.basename(exec_name)
+    exec_name = Path(exec_name).name
 
     logging.info('trying to locate %s in %s', exec_name, root_path)
 
-    search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
+    search_paths = [root_path, root_path / 'bin', root_path / 'Scripts']
 
     # First try executing the program directly
     for base_path in search_paths:
         try:
-            cmd = os.path.join(base_path, exec_name)
-            with open(os.devnull, 'w', encoding='utf-8') as devnull:
+            cmd = base_path / exec_name
+            with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
                 subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
             logging.info('  failed in %s', base_path)
@@ -54,9 +56,9 @@ def get_executable(exec_name):
     # That did not work: try calling it through Python
     for base_path in search_paths:
         try:
-            cmd = [python, os.path.join(base_path, exec_name)]
-            with open(os.devnull, 'w', encoding='utf-8') as devnull:
-                subprocess.check_call(cmd + ['--version'], stdout=devnull, stderr=devnull)
+            cmd = [python, base_path / exec_name]
+            with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
+                subprocess.check_call([*cmd, '--version'], stdout=devnull, stderr=devnull)
         except (OSError, subprocess.CalledProcessError):
             logging.info('  failed in %s', base_path)
         else:
