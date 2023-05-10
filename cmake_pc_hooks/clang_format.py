@@ -22,8 +22,8 @@ from ._utils import FormatterCmd
 class ClangFormatCmd(FormatterCmd):
     """Class for the ClangFormat command."""
 
-    command = "clang-format"
-    lookbehind = "clang-format version "
+    command = 'clang-format'
+    lookbehind = 'clang-format version '
 
     def __init__(self, args):
         """Initialize a ClangFormatCmd object."""
@@ -31,7 +31,7 @@ class ClangFormatCmd(FormatterCmd):
         self.check_installed()
         self.parse_args(args)
         self.set_diff_flag()
-        self.edit_in_place = "-i" in self.args
+        self.edit_in_place = '-i' in self.args
 
     def run(self):
         """Run clang-format. Error if diff is incorrect."""
@@ -55,5 +55,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

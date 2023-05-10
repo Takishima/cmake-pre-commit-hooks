@@ -14,6 +14,8 @@
 
 """Base classes and functions for C/C++ linters and formatters."""
 
+from __future__ import annotations
+
 import argparse
 import json
 import logging
@@ -28,7 +30,7 @@ import fasteners
 import filelock
 import hooks.utils
 
-_LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()  # pylint: disable=no-member
+_LOGLEVEL = os.environ.get('LOGLEVEL', 'WARNING').upper()
 logging.basicConfig(level=_LOGLEVEL)
 logging.getLogger('filelock').setLevel(logging.WARNING)
 
@@ -45,8 +47,7 @@ def get_cmake_command(cmake_names=None):
         cmake_names = ['cmake', 'cmake3']
 
     for cmake in cmake_names:
-        # pylint: disable=no-member
-        with open(os.devnull, 'w', encoding='utf-8') as devnull:
+        with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
             try:
                 sp.check_call([cmake, '--version'], stdout=devnull, stderr=devnull)
                 return [shutil.which(cmake)]
@@ -55,18 +56,20 @@ def get_cmake_command(cmake_names=None):
 
             # CMake not in PATH, should have installed Python CMake module
             # -> try to find out where it is
+            python_executable = Path(sys.executable)
             try:
-                root_path = os.environ['VIRTUAL_ENV']
-                python = os.path.basename(sys.executable)
+                root_path = Path(os.environ['VIRTUAL_ENV'])
+                python = python_executable.name
             except KeyError:
-                root_path, python = os.path.split(sys.executable)
+                root_path = python_executable.parent
+                python = python_executable.name
 
-            search_paths = [root_path, os.path.join(root_path, 'bin'), os.path.join(root_path, 'Scripts')]
+            search_paths = [root_path, root_path / 'bin', root_path / 'Scripts']
 
             # First try executing CMake directly
             for base_path in search_paths:
                 try:
-                    cmake_cmd = os.path.join(base_path, cmake)
+                    cmake_cmd = base_path / cmake
                     sp.check_call([cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
                     return [cmake_cmd]
                 except (OSError, sp.CalledProcessError):
@@ -75,8 +78,8 @@ def get_cmake_command(cmake_names=None):
             # That did not work: try calling it through Python
             for base_path in search_paths:
                 try:
-                    cmake_cmd = [python, os.path.join(base_path, 'cmake')]
-                    sp.check_call(cmake_cmd + ['--version'], stdout=devnull, stderr=devnull)
+                    cmake_cmd = [python, base_path / 'cmake']
+                    sp.check_call([*cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
                     return [cmake_cmd]
                 except (OSError, sp.CalledProcessError):
                     pass
@@ -85,11 +88,11 @@ def get_cmake_command(cmake_names=None):
     return None
 
 
-def _read_compile_commands_json(build_dir: Path):
+def _read_compile_commands_json(build_dir: Path) -> list[str]:
     """Read a JSON compile database and return the list of files contained within."""
     compile_db = build_dir / 'compile_commands.json'
     if compile_db.exists():
-        with open(str(compile_db), encoding='utf-8') as fd:
+        with compile_db.open(encoding='utf-8') as fd:
             data = json.load(fd)
         return [entry['file'] for entry in data]
     return []
@@ -113,7 +116,7 @@ class _History:  # pylint: disable=too-few-public-methods
 
 
 class _OSSpecificAction(argparse.Action):
-    def __call__(self, parser, namespace, values, options_string=None):
+    def __call__(self, parser, namespace, values, options_string=None):  # noqa: ARG002
         if self.dest == 'unix':
             _append_in_namespace(namespace, 'linux', values)
             _append_in_namespace(namespace, 'mac', values)
@@ -131,8 +134,7 @@ def executable_path(path):
     Returns:
         True if `path` points to a file that is executable, False otherwise
     """
-    # pylint: disable=no-member
-    if os.path.isfile(path) and os.access(path, os.X_OK):
+    if Path(path).is_file() and os.access(path, os.X_OK):
         return path
     raise argparse.ArgumentTypeError(f'{path} is not a valid file and/or does not appear executable')
 
@@ -232,7 +234,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         parser.add_argument('--win', action=_OSSpecificAction, type=str, help='Windows-only options for CMake')
 
         # Other options
-        parser.add_argument('positionals', metavar='filenames', nargs="*", help='Filenames to check')
+        parser.add_argument('positionals', metavar='filenames', nargs='*', help='Filenames to check')
         parser.add_argument('--version', type=str, help='Version check')
 
         if not self.clean_build:
@@ -296,7 +298,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
     def run_command(self, filenames):  # pylint: disable=arguments-differ,arguments-renamed
         """Run the command and check for errors."""
-        self.history.append(self._call_process([self.command] + filenames + self.args + self.ddash_args))
+        self.history.append(self._call_process([self.command, *filenames, *self.args, *self.ddash_args]))
 
         # Compatibility with CLinters
         self.stdout = self.history[-1].stdout.encode()
@@ -315,17 +317,13 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         self.build_dir.mkdir(exist_ok=True)
 
-        # NB: disable weird error on pre-commit CI
-        # pylint: disable=no-member
-
-        cmake_configure_try_lock = filelock.FileLock(cmake_configure_try_lock_file)
+        filelock.FileLock(cmake_configure_try_lock_file)
         cmake_configure_lock = fasteners.InterProcessReaderWriterLock(cmake_configure_lock_file)
         try:
-            with cmake_configure_try_lock.acquire(blocking=False):
-                with cmake_configure_lock.write_lock():
-                    logging.debug('Command %s with id %s is running CMake configure', self.command, os.getpid())
-                    returncode = self._run_cmake_configure((cmake_configure_lock_file, cmake_configure_try_lock_file))
-                    logging.debug('Command %s with id %s is done running CMake configure', self.command, os.getpid())
+            with cmake_configure_lock.write_lock():
+                logging.debug('Command %s with id %s is running CMake configure', self.command, os.getpid())
+                returncode = self._run_cmake_configure((cmake_configure_lock_file, cmake_configure_try_lock_file))
+                logging.debug('Command %s with id %s is done running CMake configure', self.command, os.getpid())
         except filelock.Timeout:
             logging.debug('Command %s with id %s is not running CMake configure and waiting', self.command, os.getpid())
             with cmake_configure_lock.read_lock():
@@ -337,7 +335,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
     def _call_process(self, args, **kwargs):
         try:
-            sp_child = sp.run(args, check=True, stdout=sp.PIPE, stderr=sp.PIPE, **kwargs)
+            sp_child = sp.run(args, check=True, capture_output=True, **kwargs)
         except sp.CalledProcessError as e:
             ret = _History(e.stdout.decode(), e.stderr.decode(), e.returncode)
         else:
@@ -350,10 +348,10 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                 logging.debug('(stderr) %s', line)
         return ret
 
-    def _parse_output(self, result):  # pylint: disable=unused-argument
+    def _parse_output(self, result):  # noqa: ARG002
         return NotImplemented
 
-    def _run_cmake_configure(self, lock_files):  # pylint: disable=too-many-branches
+    def _run_cmake_configure(self, lock_files):
         """Run a CMake configure step."""
         self.build_dir.mkdir(exist_ok=True)
 
@@ -364,10 +362,10 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
                 elif path not in lock_files:
                     path.unlink()
 
-        result = self._call_process(self.cmake + [str(self.source_dir)] + self.cmake_args, cwd=self.build_dir)
+        result = self._call_process([*self.cmake, str(self.source_dir), *self.cmake_args], cwd=self.build_dir)
         result.stdout = '\n'.join(
             [
-                f'Running CMake with: {self.cmake + [str(self.source_dir)] + self.cmake_args}',
+                f'Running CMake with: {[*self.cmake, str(self.source_dir), *self.cmake_args]}',
                 f'  from within {self.build_dir}',
                 result.stdout,
                 '',
@@ -399,7 +397,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.history.append(result)
         return result.returncode
 
-    def _setup_cmake_args(self, args):  # pylint: disable=too-many-branches
+    def _setup_cmake_args(self, args):  # noqa: PLR0912
         self.cmake = args.cmake if isinstance(args.cmake, list) else [args.cmake]
         if not self.cmake:
             raise RuntimeError('Unable to locate CMake command')
@@ -454,7 +452,7 @@ class ClangAnalyzerCmd(Command):
         """
         idx = -1
         files = []
-        for idx, fname in enumerate(reversed(self.files)):
+        for _, fname in enumerate(reversed(self.files)):
             if Path(fname).is_file():
                 files.append(fname)
             else:
@@ -469,17 +467,17 @@ class ClangAnalyzerCmd(Command):
 class FormatterCmd(Command, hooks.utils.FormatterCmd):
     """Commands that format code: clang-format, uncrustify."""
 
-    def get_formatted_lines(self, filename: bytes):
+    def get_formatted_lines(self, filename: bytes) -> list:
         """Get the expected output for a command applied to a file."""
         filename_opts = self.get_filename_opts(filename)
         args = [self.command, *self.args, *filename_opts]
         child = self._call_process([arg.decode() if isinstance(arg, bytes) else arg for arg in args])
         if len(child.stderr) > 0 or child.returncode != 0:
-            problem = f"Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}"
+            problem = f'Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}'
             self.raise_error(problem, child.stdout + child.stderr)
-        if child.stdout == "":
+        if not child.stdout:
             return []
-        return child.stdout.encode().split(b"\x0a")
+        return child.stdout.encode().split(b'\x0a')
 
 
 class StaticAnalyzerCmd(Command, hooks.utils.StaticAnalyzerCmd):

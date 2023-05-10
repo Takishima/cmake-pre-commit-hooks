@@ -24,14 +24,14 @@ from ._utils import ClangAnalyzerCmd
 class ClangTidyCmd(ClangAnalyzerCmd):
     """Class for the clang-tidy command."""
 
-    command = "clang-tidy"
-    lookbehind = "LLVM version "
+    command = 'clang-tidy'
+    lookbehind = 'LLVM version '
 
     def __init__(self, args):
         """Initialize a ClangTidyCmd object."""
         super().__init__(self.command, self.lookbehind, args)
         self.parse_args(args)
-        self.edit_in_place = "-fix" in self.args or "--fix-errors" in self.args
+        self.edit_in_place = '-fix' in self.args or '--fix-errors' in self.args
         self.handle_ddash_args()
 
         # Force location of compile database
@@ -77,5 +77,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()

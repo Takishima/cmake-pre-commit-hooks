@@ -23,18 +23,18 @@ from ._utils import StaticAnalyzerCmd, _read_compile_commands_json
 class LizardCmd(StaticAnalyzerCmd):
     """Class for the lizard command."""
 
-    command = "lizard"
-    lookbehind = ""
+    command = 'lizard'
+    lookbehind = ''
 
     def __init__(self, args):
         """Initialize a LizardCmd object."""
         super().__init__(self.command, self.lookbehind, args)
-        self.file_regex = ""
+        self.file_regex = ''
         self.parse_args(args)
 
     def set_file_regex(self):
         """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
-        self.file_regex = r".*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx|py)$"
+        self.file_regex = r'.*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx|py)$'
 
     def run(self):
         """Run lizard."""
@@ -64,5 +64,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     main()
