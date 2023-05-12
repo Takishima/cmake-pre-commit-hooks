@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   CppCheck hook will now exclude C++ header files by default since those are not present within the compilatioon databasebecauzse
 -   Make default logging level `INFO` instead of `WARNING`
 -   Move all CMake handling code into dedicated sub-module
+-   Minor adjustments to logging output format
 
 ### Repository
 
