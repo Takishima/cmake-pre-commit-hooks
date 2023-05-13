@@ -29,7 +29,7 @@ from ._call_process import call_process
 # ==============================================================================
 
 
-def get_cmake_command(cmake_names=None):
+def get_cmake_command(cmake_names=None):  # pragma: nocover
     """
     Get the path to a CMake executable on the PATH or in the virtual environment.
 
@@ -44,7 +44,7 @@ def get_cmake_command(cmake_names=None):
         with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
             try:
                 sp.check_call([cmake, '--version'], stdout=devnull, stderr=devnull)
-                return shutil.which(cmake)
+                return [shutil.which(cmake)]
             except (OSError, sp.CalledProcessError):
                 pass
 
@@ -85,6 +85,8 @@ def get_cmake_command(cmake_names=None):
 class CMakeCommand:
     """Class used to encapsulate all CMake related functionality."""
 
+    DEFAULT_BUILD_DIR = '.cmake_build'
+
     def __init__(self, cmake_names=None):
         """
         Initialize a CMakeCommand object.
@@ -95,7 +97,6 @@ class CMakeCommand:
         self.command = get_cmake_command(cmake_names)
         self.source_dir = None
         self.build_dir = None
-        self.build_dir_list = []
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON']
 
     def add_cmake_arguments_to_parser(self, parser):
@@ -117,13 +118,12 @@ class CMakeCommand:
         parser.add_argument('-T', dest='toolset', type=str, help='Specify toolset name if supported by generator.')
         parser.add_argument('-A', dest='platform', type=str, help='Specify platform if supported by generator.')
         parser.add_argument(
-            '-Werror', dest='errors', action='append', type=str, help='Make developer warnings errors.', default=[]
+            '-Werror', dest='errors', choices=['dev'], help='Make developer warnings errors.', default=[]
         )
         parser.add_argument(
             '-Wno-error',
-            dest='no_error',
-            action='append',
-            type=str,
+            dest='no_errors',
+            choices=['dev'],
             help='Make developer warnings not errors.',
             default=[],
         )
@@ -160,19 +160,19 @@ class CMakeCommand:
                 return
 
         # If that fails or none have been passed, attempt automatic discovery
-        for path in self.source_dir.glob('*'):
+        for path in sorted(self.source_dir.glob('*')):
             if path.is_dir() and (path / 'CMakeCache.txt').exists():
                 logging.info('Automatic build dir discovery resulted in: %s', str(path))
                 self.build_dir = path
                 return
 
         if not build_dir_list:
-            self.build_dir = self.source_dir / '.cmake_build'
+            self.build_dir = self.source_dir / self.DEFAULT_BUILD_DIR
         else:
             self.build_dir = Path(build_dir_list[0]).resolve()
         logging.info('Unable to locate a valid build directory. Will be creating one at %s', str(self.build_dir))
 
-    def setup_cmake_args(self, cmake_args: dict):
+    def setup_cmake_args(self, cmake_args):
         """
         Setup CMake arguments.
 
@@ -181,6 +181,7 @@ class CMakeCommand:
                 - 'defines': list[str]
                 - 'undefined': list[str]
                 - 'errors': list[str]
+                - 'no_errors': list[str]
                 - 'generator': str
                 - 'toolset': str
                 - 'platform': str
@@ -200,6 +201,7 @@ class CMakeCommand:
             'defines': ([], '-D{}'),
             'undefines': ([], '-U{}'),
             'errors': ([], '-Werror={}'),
+            'no_errors': ([], '-Wno-error={}'),
             'generator': ('', '-G{}'),
             'toolset': ('', '-T{}'),
             'platform': ('', '-A{}'),

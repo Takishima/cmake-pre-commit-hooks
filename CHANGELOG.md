@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added Python tests using PyTest
+
 ### Fixed
 
 -   Fixed potential issue with CppCheck hook always running on all files in compile database
