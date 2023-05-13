@@ -195,7 +195,7 @@ class CMakeCommand:
         """
         self.source_dir = Path(cmake_args.source_dir).resolve()
         if cmake_args.cmake:
-            self.command = Path(cmake_args.cmake).resolve()
+            self.command = [Path(cmake_args.cmake).resolve()]
 
         keyword_args = {
             'defines': ([], '-D{}'),
@@ -272,6 +272,8 @@ class CMakeCommand:
 
     def _configure(self, lock_files, clean_build):
         """Run a CMake configure step."""
+        command = [str(cmd) for cmd in self.command]
+
         self.build_dir.mkdir(exist_ok=True)
 
         if clean_build:
@@ -281,10 +283,10 @@ class CMakeCommand:
                 elif path not in lock_files:
                     path.unlink()
 
-        result = call_process([str(self.command), str(self.source_dir), *self.cmake_args], cwd=str(self.build_dir))
+        result = call_process([*command, str(self.source_dir), *self.cmake_args], cwd=str(self.build_dir))
         result.stdout = '\n'.join(
             [
-                f'Running CMake with: {[str(self.command), str(self.source_dir), *self.cmake_args]}',
+                f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
                 f'  from within {self.build_dir}',
                 result.stdout,
                 '',
