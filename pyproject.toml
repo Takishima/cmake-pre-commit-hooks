@@ -130,8 +130,8 @@ disable = [
 
 [tool.pytest.ini_options]
 minversion = '6.0'
-addopts = '-pno:warnings'
-testpaths = ['cmake_pc_hooks']
+testpaths = ['tests/python']
+mock_use_standalone_module = true
 
 [tool.isort]
 
