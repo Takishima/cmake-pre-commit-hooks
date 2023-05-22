@@ -40,9 +40,7 @@ class LizardCmd(StaticAnalyzerCmd):
         """Run lizard."""
         if self.read_json_db:
             self.cmake.configure(self.command)
-            self.files.extend(
-                set(self.files).symmetric_difference(set(_read_compile_commands_json(self.cmake.build_dir)))
-            )
+            self.files.extend(set(_read_compile_commands_json(self.cmake.build_dir)) - set(self.files))
 
         if self.all_at_once:
             self.run_command(self.files)
