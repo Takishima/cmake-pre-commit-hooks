@@ -16,6 +16,8 @@ import argparse
 import platform
 from pathlib import Path
 
+import fasteners
+import filelock
 import pytest
 
 from cmake_pc_hooks._cmake import CMakeCommand, get_cmake_command
@@ -171,3 +173,124 @@ def test_setup_cmake_args(mocker, system):
     elif platform.system() == 'Windows':
         for win in args.win:
             assert any(win in arg for arg in cmake.cmake_args)
+
+
+@pytest.mark.parametrize('returncode', [0, 1])
+@pytest.mark.parametrize('clean_build', [False, True])
+def test_configure_cmake(mocker, tmp_path, clean_build, returncode):
+    sys_exit = mocker.patch('sys.exit')
+    FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
+    mocker.patch('filelock.FileLock', FileLock)
+    InterProcessReaderWriterLock = mocker.MagicMock(fasteners.InterProcessReaderWriterLock)  # noqa: N806
+    mocker.patch('fasteners.InterProcessReaderWriterLock', InterProcessReaderWriterLock)
+    _configure = mocker.Mock(return_value=returncode)
+    mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._configure', _configure)
+
+    # ----------------------------------
+
+    build_dir = tmp_path / 'build'
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = build_dir
+    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
+
+    cmake.configure(command='test', clean_build=clean_build)
+
+    # ----------------------------------
+
+    FileLock.assert_called_once_with(build_dir / '_cmake_configure_try_lock')
+    InterProcessReaderWriterLock.assert_called_once_with(build_dir / '_cmake_configure_lock')
+    _configure.assert_called_once_with(
+        lock_files=(InterProcessReaderWriterLock.call_args[0][0], FileLock.call_args[0][0]), clean_build=clean_build
+    )
+    if returncode != 0:
+        sys_exit.assert_called_once_with(returncode)
+    else:
+        sys_exit.assert_not_called()
+
+
+@pytest.mark.parametrize('clean_build', [False, True])
+def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
+    mocker.patch('filelock.Timeout', RuntimeError)
+
+    def timeout(blocking):  # noqa: ARG001
+        raise RuntimeError
+
+    args = {'acquire.side_effect': timeout}
+    file_lock = mocker.MagicMock(filelock.FileLock, **args)
+    FileLock = mocker.MagicMock(filelock.FileLock, return_value=file_lock)  # noqa: N806
+    mocker.patch('filelock.FileLock', FileLock)
+
+    interprocess_lock = mocker.MagicMock()
+    InterProcessReaderWriterLock = mocker.MagicMock(return_value=interprocess_lock)  # noqa: N806
+    mocker.patch('fasteners.InterProcessReaderWriterLock', InterProcessReaderWriterLock)
+    _configure = mocker.Mock(return_value=0)
+    mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._configure', _configure)
+
+    # ----------------------------------
+
+    build_dir = tmp_path / 'build'
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = build_dir
+    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
+
+    cmake.configure(command='test', clean_build=clean_build)
+
+    # ----------------------------------
+
+    FileLock.assert_called_once()
+    InterProcessReaderWriterLock.assert_called_once()
+    interprocess_lock.read_lock.assert_called_once()
+    _configure.assert_not_called()
+
+
+@pytest.mark.parametrize('clean_build', [False, True])
+def test_configure_cmake_internal(mocker, tmp_path, clean_build):
+    mocker.patch('shutil.rmtree')
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
+    )
+
+    # ----------------------------------
+
+    build_dir = tmp_path / 'build'
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    (build_dir / 'CMakeFiles').mkdir()
+    (build_dir / 'CMakeCache.txt').write_text('')
+    compile_commands = build_dir / 'compile_commands.json'
+    compile_commands.write_text('')
+    lock_files = [build_dir / '_lock']
+    for lock_file in lock_files:
+        lock_file.write_text('')
+
+    cmake = CMakeCommand()
+    cmake.command = ['cmake']
+    cmake.source_dir = tmp_path
+    cmake.build_dir = build_dir
+    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
+
+    returncode = cmake._configure(lock_files=lock_files, clean_build=clean_build)
+
+    # ----------------------------------
+
+    for lock_file in lock_files:
+        assert lock_file.exists()
+
+    call_process.assert_called_once_with(
+        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args], cwd=str(cmake.build_dir)
+    )
+
+    if not clean_build:
+        assert compile_commands.exists()
+        assert returncode == 0
+    else:
+        assert not compile_commands.exists()
+        assert returncode != 0
+
+    call_process.assert_called_once()

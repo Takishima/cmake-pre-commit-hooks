@@ -23,8 +23,7 @@ from pathlib import Path
 import fasteners
 import filelock
 
-from . import _argparse
-from ._call_process import call_process
+from . import _argparse, _call_process
 
 # ==============================================================================
 
@@ -279,7 +278,7 @@ class CMakeCommand:
                 elif path not in lock_files:
                     path.unlink()
 
-        result = call_process([*command, str(self.source_dir), *self.cmake_args], cwd=str(self.build_dir))
+        result = _call_process.call_process([*command, str(self.source_dir), *self.cmake_args], cwd=str(self.build_dir))
         result.stdout = '\n'.join(
             [
                 f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
