@@ -46,7 +46,7 @@ repos:
         args: [-x, --severity=info]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.30.0
+    rev: v1.32.0
     hooks:
       - id: yamllint
 
@@ -64,7 +64,7 @@ repos:
         additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.265
+    rev: v0.0.269
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --show-source, --show-fixes]
