@@ -47,7 +47,7 @@ def test_cmake_command_init():
 
 
 @pytest.mark.parametrize(
-    'args, opt_name, opt_value',
+    ('args', 'opt_name', 'opt_value'),
     [
         (['-S/path/to/source'], 'source_dir', '/path/to/source'),
         (['-B/path/to/build'], 'build_dir', ['/path/to/build']),
@@ -62,7 +62,6 @@ def test_cmake_command_init():
         (['-Werror=dev'], 'errors', 'dev'),
         (['-Wno-error=dev'], 'no_errors', 'dev'),
         (['--preset=/path/to/file.cmake'], 'preset', '/path/to/file.cmake'),
-        # (['--cmake=/path/to/cmake'], 'preset', '/path/to/cmake'),
         (['-Wdev'], 'dev_warnings', True),
         (['-Wno-dev'], 'no_dev_warnings', True),
         (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
@@ -86,7 +85,7 @@ def test_cmake_parser_unix_platform_setup(parser):
 
 
 @pytest.mark.parametrize(
-    'dir_list, build_dir_tree, ref_path',
+    ('dir_list', 'build_dir_tree', 'ref_path'),
     [
         (None, ['build'], CMakeCommand.DEFAULT_BUILD_DIR),
         (None, ['build/CMakeCache.txt'], 'build'),

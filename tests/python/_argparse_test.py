@@ -13,12 +13,11 @@
 # limitations under the License.
 
 import argparse
-import os
 from textwrap import dedent
 
 import pytest
 
-import cmake_pc_hooks._argparse as _argparse
+from cmake_pc_hooks import _argparse
 
 # ==============================================================================
 
@@ -100,7 +99,7 @@ def toml_generate(tmp_path, request):
 # ==============================================================================
 
 
-@pytest.mark.parametrize('field_name, field_value', [('one', 1), ('string', 'Hello')])
+@pytest.mark.parametrize(('field_name', 'field_value'), [('one', 1), ('string', 'Hello')])
 def test_append_in_namespace(field_name, field_value):
     namespace = argparse.Namespace()
 
@@ -151,7 +150,7 @@ def test_argument_parser_load_from_toml_unknown_key(mocker, toml_generate):
         raise RuntimeError(f'{status}')
 
     mocker.patch('sys.exit', exit_raise)
-    path, with_content, toml_section, ref_values = toml_generate
+    path, with_content, toml_section, _ = toml_generate
 
     if not with_content:
         return
@@ -165,7 +164,7 @@ def test_argument_parser_load_from_toml_unknown_key(mocker, toml_generate):
 
 
 def test_argument_parser_load_from_toml_invalid(toml_generate):
-    path, with_content, toml_section, ref_values = toml_generate
+    path, with_content, toml_section, _ = toml_generate
 
     if not with_content:
         return
@@ -215,7 +214,7 @@ def test_argument_parser_load_from_toml(parser, toml_generate):
         attr_type = type(ref_value)
         assert hasattr(namespace, attr_name)
         attr_value = getattr(namespace, attr_name)
-        assert type(attr_value) is attr_type
+        assert isinstance(attr_value, attr_type)
         assert attr_value == ref_value
 
 
@@ -241,7 +240,7 @@ def test_argument_parser_load_from_toml_overrides(parser, toml_generate):
         attr_type = type(ref_value)
         assert hasattr(namespace, attr_name)
         attr_value = getattr(namespace, attr_name)
-        assert type(attr_value) is attr_type
+        assert isinstance(attr_value, attr_type)
         assert attr_value == ref_value
 
 
@@ -275,13 +274,13 @@ def test_argument_parser_pyproject_toml(tmp_path, monkeypatch):
     known_args, args = parser.parse_known_args([])
 
     assert not args
-    assert getattr(known_args, 'flag')
-    assert getattr(known_args, 'int') == 2
-    assert getattr(known_args, 'string') == 'two'
+    assert known_args.flag
+    assert known_args.int == 2
+    assert known_args.string == 'two'
 
 
 def test_argument_parser_default_config_file(tmp_path, monkeypatch):
-    default_config_name = 'config.toml'
+    default_config_name = 'default_config.toml'
     parser = _argparse.ArgumentParser(default_config_name=default_config_name)
     parser.add_argument('--flag', action='store_true')
     parser.add_argument('--int', type=int)
@@ -308,13 +307,13 @@ def test_argument_parser_default_config_file(tmp_path, monkeypatch):
     known_args, args = parser.parse_known_args([])
 
     assert not args
-    assert getattr(known_args, 'flag')
-    assert getattr(known_args, 'int') == 1
-    assert getattr(known_args, 'string') == 'one'
+    assert known_args.flag
+    assert known_args.int == 1
+    assert known_args.string == 'one'
 
 
 def test_argument_parser_config_file(tmp_path):
-    default_config_name = 'config.toml'
+    default_config_name = 'myconfig.toml'
     parser = _argparse.ArgumentParser()
     parser.add_argument('--flag', action='store_true')
     parser.add_argument('--int', type=int)
@@ -340,9 +339,9 @@ def test_argument_parser_config_file(tmp_path):
     known_args, args = parser.parse_known_args([f'--config={config_file}', '--flag', '--string=aaa'])
 
     assert not args
-    assert getattr(known_args, 'flag')
-    assert getattr(known_args, 'int') == 1
-    assert getattr(known_args, 'string') == 'aaa'
+    assert known_args.flag
+    assert known_args.int == 1
+    assert known_args.string == 'aaa'
 
 
 # ==============================================================================
