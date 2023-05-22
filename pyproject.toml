@@ -108,8 +108,7 @@ ignore = [
 [tool.coverage]
 [tool.coverage.run]
 omit = [
-'*_test.py',
-'*_fixtures.py'
+'test_*.py',
 ]
 
 
