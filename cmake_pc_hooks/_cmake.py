@@ -23,7 +23,7 @@ from pathlib import Path
 import fasteners
 import filelock
 
-from . import _argparse_utils as parse_utils
+from . import _argparse
 from ._call_process import call_process
 
 # ==============================================================================
@@ -128,7 +128,7 @@ class CMakeCommand:
             default=[],
         )
         parser.add_argument('--preset', type=str, help='Specify a configure preset.')
-        parser.add_argument('--cmake', type=parse_utils.executable_path, help='Specify path to CMake executable.')
+        parser.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
 
         parser.add_argument('-Wdev', dest='dev_warnings', action='store_true', help='Enable developer warnings.')
         parser.add_argument(
@@ -137,17 +137,13 @@ class CMakeCommand:
 
         parser.add_argument(
             '--unix',
-            action=parse_utils.OSSpecificAction,
+            action=_argparse.OSSpecificAction,
             type=str,
             help='Unix-only (ie. Linux and MacOS) options for CMake',
         )
-        parser.add_argument(
-            '--linux', action=parse_utils.OSSpecificAction, type=str, help='Linux-only options for CMake'
-        )
-        parser.add_argument('--mac', action=parse_utils.OSSpecificAction, type=str, help='Mac-only options for CMake')
-        parser.add_argument(
-            '--win', action=parse_utils.OSSpecificAction, type=str, help='Windows-only options for CMake'
-        )
+        parser.add_argument('--linux', action=_argparse.OSSpecificAction, type=str, help='Linux-only options for CMake')
+        parser.add_argument('--mac', action=_argparse.OSSpecificAction, type=str, help='Mac-only options for CMake')
+        parser.add_argument('--win', action=_argparse.OSSpecificAction, type=str, help='Windows-only options for CMake')
 
     def resolve_build_directory(self, build_dir_list=None):
         """Locate a valid build directory based on internal list and automatic discovery if enabled."""

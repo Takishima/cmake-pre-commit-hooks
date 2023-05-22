@@ -65,12 +65,24 @@ def test_cmake_command_init():
         # (['--cmake=/path/to/cmake'], 'preset', '/path/to/cmake'),
         (['-Wdev'], 'dev_warnings', True),
         (['-Wno-dev'], 'no_dev_warnings', True),
+        (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
+        (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ['"-DCMAKE_CXX_COMPILER=clang++"']),
+        (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ['"-DCMAKE_CXX_COMPILER=cl"']),
     ],
 )
 def test_cmake_parser_setup(parser, args, opt_name, opt_value):
     known_args, _ = parser.parse_known_args(args)
     assert opt_name in known_args
     assert getattr(known_args, opt_name) == opt_value
+
+
+def test_cmake_parser_unix_platform_setup(parser):
+    unix_flag_value = '"-DCMAKE_CXX_COMPILER=g++-10"'
+    known_args, _ = parser.parse_known_args([f'--unix={unix_flag_value}'])
+
+    assert known_args.linux == [unix_flag_value]
+    assert known_args.mac == [unix_flag_value]
+    assert known_args.win is None
 
 
 @pytest.mark.parametrize(
@@ -93,7 +105,7 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
         path = tmp_path / path_elem
         if path.is_file():
             path.parent.mkdir(parents=True)
-            path.write_text()
+            path.write_text('')
         else:
             path.mkdir(parents=True)
 
