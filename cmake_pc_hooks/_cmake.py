@@ -96,10 +96,30 @@ class CMakeCommand:
         self.command = get_cmake_command(cmake_names)
         self.source_dir = None
         self.build_dir = None
+        self.build_dir_discovery = True
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON']
 
     def add_cmake_arguments_to_parser(self, parser):
         """Add CMake options to an argparse.ArgumentParser."""
+        # Custom options
+        parser.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
+        parser.add_argument(
+            '--no-automatic-discovery',
+            action='store_false',
+            dest='automatic_discovery',
+            help='Do not attempt to automatically look for a build directory',
+        )
+        parser.add_argument(
+            '--unix',
+            action=_argparse.OSSpecificAction,
+            type=str,
+            help='Unix-only (ie. Linux and MacOS) options for CMake',
+        )
+        parser.add_argument('--linux', action=_argparse.OSSpecificAction, type=str, help='Linux-only options for CMake')
+        parser.add_argument('--mac', action=_argparse.OSSpecificAction, type=str, help='Mac-only options for CMake')
+        parser.add_argument('--win', action=_argparse.OSSpecificAction, type=str, help='Windows-only options for CMake')
+
+        # CMake-like options
         parser.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default='.')
         parser.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
         parser.add_argument(
@@ -127,22 +147,11 @@ class CMakeCommand:
             default=[],
         )
         parser.add_argument('--preset', type=str, help='Specify a configure preset.')
-        parser.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
 
         parser.add_argument('-Wdev', dest='dev_warnings', action='store_true', help='Enable developer warnings.')
         parser.add_argument(
             '-Wno-dev', dest='no_dev_warnings', action='store_true', help='Suppress developer warnings.'
         )
-
-        parser.add_argument(
-            '--unix',
-            action=_argparse.OSSpecificAction,
-            type=str,
-            help='Unix-only (ie. Linux and MacOS) options for CMake',
-        )
-        parser.add_argument('--linux', action=_argparse.OSSpecificAction, type=str, help='Linux-only options for CMake')
-        parser.add_argument('--mac', action=_argparse.OSSpecificAction, type=str, help='Mac-only options for CMake')
-        parser.add_argument('--win', action=_argparse.OSSpecificAction, type=str, help='Windows-only options for CMake')
 
     def resolve_build_directory(self, build_dir_list=None):
         """Locate a valid build directory based on internal list and automatic discovery if enabled."""
@@ -155,11 +164,12 @@ class CMakeCommand:
                 return
 
         # If that fails or none have been passed, attempt automatic discovery
-        for path in sorted(self.source_dir.glob('*')):
-            if path.is_dir() and (path / 'CMakeCache.txt').exists():
-                logging.info('Automatic build dir discovery resulted in: %s', str(path))
-                self.build_dir = path
-                return
+        if self.build_dir_discovery:
+            for path in sorted(self.source_dir.glob('*')):
+                if path.is_dir() and (path / 'CMakeCache.txt').exists():
+                    logging.info('Automatic build dir discovery resulted in: %s', str(path))
+                    self.build_dir = path
+                    return
 
         if not build_dir_list:
             self.build_dir = self.source_dir / self.DEFAULT_BUILD_DIR
@@ -191,6 +201,7 @@ class CMakeCommand:
         self.source_dir = Path(cmake_args.source_dir).resolve()
         if cmake_args.cmake:
             self.command = [Path(cmake_args.cmake).resolve()]
+        self.build_dir_discovery = cmake_args.automatic_discovery
 
         keyword_args = {
             'defines': ([], '-D{}'),

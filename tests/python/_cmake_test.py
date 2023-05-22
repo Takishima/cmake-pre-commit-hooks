@@ -51,6 +51,13 @@ def test_cmake_command_init():
 @pytest.mark.parametrize(
     ('args', 'opt_name', 'opt_value'),
     [
+        # Custom options
+        ([], 'automatic_discovery', True),
+        (['--no-automatic-discovery'], 'automatic_discovery', False),
+        (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
+        (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ['"-DCMAKE_CXX_COMPILER=clang++"']),
+        (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ['"-DCMAKE_CXX_COMPILER=cl"']),
+        # CMake-like options
         (['-S/path/to/source'], 'source_dir', '/path/to/source'),
         (['-B/path/to/build'], 'build_dir', ['/path/to/build']),
         (['-B/path/to/build', '-B/other'], 'build_dir', ['/path/to/build', '/other']),
@@ -66,9 +73,6 @@ def test_cmake_command_init():
         (['--preset=/path/to/file.cmake'], 'preset', '/path/to/file.cmake'),
         (['-Wdev'], 'dev_warnings', True),
         (['-Wno-dev'], 'no_dev_warnings', True),
-        (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
-        (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ['"-DCMAKE_CXX_COMPILER=clang++"']),
-        (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ['"-DCMAKE_CXX_COMPILER=cl"']),
     ],
 )
 def test_cmake_parser_setup(parser, args, opt_name, opt_value):
@@ -142,6 +146,7 @@ def test_setup_cmake_args(mocker, system):
     args.platform = '64'
     args.dev_warnings = True
     args.no_dev_warnings = True
+    args.automatic_discovery = True
     args.linux = ['LNX_A', 'LNX_B']
     args.mac = ['MAC_A', 'MAC_B']
     args.win = ['WIN_A', 'WIN_B']
