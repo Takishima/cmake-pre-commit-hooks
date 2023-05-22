@@ -117,6 +117,8 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
 def test_setup_cmake_args(mocker, system):
+    original_system = platform.system()
+
     def system_stub():
         return system
 
@@ -125,8 +127,12 @@ def test_setup_cmake_args(mocker, system):
     cmake = CMakeCommand()
 
     args = argparse.Namespace()
-    args.source_dir = Path('/path/to/source')
-    args.cmake = Path('/path/to/cmake')
+    if original_system == 'Windows':
+        args.source_dir = Path('C:/path/to/source')
+        args.cmake = Path('C:/path/to/cmake')
+    else:
+        args.source_dir = Path('/path/to/source')
+        args.cmake = Path('/path/to/cmake')
     args.defines = ['ONE', 'TWO']
     args.undefines = ['THREE', 'FOUR']
     args.errors = ['dev']

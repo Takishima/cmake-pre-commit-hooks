@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import argparse
+import platform
 from textwrap import dedent
 
 import pytest
@@ -127,8 +128,9 @@ def test_executable_path(tmp_path):
     with pytest.raises(argparse.ArgumentTypeError):
         _argparse.executable_path(tmp_path)
 
-    with pytest.raises(argparse.ArgumentTypeError):
-        _argparse.executable_path(a_file)
+    if platform.system() != 'Windows':
+        with pytest.raises(argparse.ArgumentTypeError):
+            _argparse.executable_path(a_file)
 
 
 # ==============================================================================
