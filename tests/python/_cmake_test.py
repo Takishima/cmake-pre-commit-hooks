@@ -243,7 +243,7 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     cmake = CMakeCommand()
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
-    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
+    cmake.cmake_args.append('-DCMAKE_C_COMPILER=gcc')
 
     cmake.configure(command='test', clean_build=clean_build)
 
@@ -279,7 +279,7 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build):
     cmake.command = ['cmake']
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
-    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
+    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=clang++')
 
     returncode = cmake._configure(lock_files=lock_files, clean_build=clean_build)
 
