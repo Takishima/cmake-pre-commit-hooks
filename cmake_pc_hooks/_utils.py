@@ -25,7 +25,7 @@ from pathlib import Path
 
 import hooks.utils
 
-from ._call_process import call_process
+from . import _call_process
 from ._cmake import CMakeCommand
 
 _LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
@@ -100,7 +100,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.cmake.resolve_build_directory(known_args.build_dir)
 
         if not self.cmake.source_dir.exists() and not self.cmake.source_dir.is_dir():
-            sys.stderr.write(f'{self.source_dir} is not a valid source directory\n')
+            sys.stderr.write(f'{self.cmake.source_dir} is not a valid source directory\n')
             sys.exit(1)
 
         if known_args.version:
@@ -115,9 +115,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         """Run the command."""
         self.cmake.configure(self.command)
         if self.read_json_db:
-            self.files.extend(
-                set(self.files).symmetric_difference(set(_read_compile_commands_json(self.cmake.build_dir)))
-            )
+            self.files.extend(set(_read_compile_commands_json(self.cmake.build_dir)) - set(self.files))
         if self.all_at_once:
             self.run_command(self.files)
         elif self.files:
@@ -137,7 +135,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
     def run_command(self, filenames):  # pylint: disable=arguments-differ,arguments-renamed
         """Run the command and check for errors."""
-        self.history.append(call_process([self.command, *filenames, *self.args, *self.ddash_args]))
+        self.history.append(_call_process.call_process([self.command, *filenames, *self.args, *self.ddash_args]))
         self._clinters_compat()
 
     def _clinters_compat(self):
@@ -185,11 +183,12 @@ class ClangAnalyzerCmd(Command):
 class FormatterCmd(Command, hooks.utils.FormatterCmd):
     """Commands that format code: clang-format, uncrustify."""
 
-    def get_formatted_lines(self, filename: bytes) -> list:
+    def get_formatted_lines(self, filename: bytes) -> list:  # pragma: nocover
         """Get the expected output for a command applied to a file."""
         filename_opts = self.get_filename_opts(filename)
         args = [self.command, *self.args, *filename_opts]
-        child = call_process([arg.decode() if isinstance(arg, bytes) else arg for arg in args])
+        # NB: only change w.r.t original method to handle both bytes and string argument types
+        child = _call_process.call_process([arg.decode() if isinstance(arg, bytes) else arg for arg in args])
         if len(child.stderr) > 0 or child.returncode != 0:
             problem = f'Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}'
             self.raise_error(problem, child.stdout + child.stderr)
