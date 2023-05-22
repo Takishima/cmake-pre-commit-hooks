@@ -21,8 +21,10 @@ from pathlib import Path
 from typing import Any
 
 try:
+    TOML_FILEMODE = 'rb'
     import tomllib as toml
 except ImportError:  # pragma: nocover
+    TOML_FILEMODE = 'r'
     import toml
 
 # ==============================================================================
@@ -181,7 +183,7 @@ class ArgumentParser(argparse.ArgumentParser):
             overridable_keys: List of keys that can be overridden by values in the TOML file
         """
         try:
-            with path.open(mode='rb') as fd:
+            with path.open(mode=TOML_FILEMODE) as fd:
                 config = toml.load(fd)
             if section:
                 for sub_section in section.split('.'):
