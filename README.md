@@ -1,7 +1,6 @@
 # pre-commit hooks
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks\&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)
-
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks\&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a3a1139e4bed4d4694bb12991b7df775)](https://app.codacy.com/gh/Takishima/cmake-pre-commit-hooks?utm_source=github.com&utm_medium=referral&utm_content=Takishima/cmake-pre-commit-hooks&utm_campaign=Badge_Grade)
 
 This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ linters/formatters to work with CMake-based projects.
 
@@ -237,7 +236,6 @@ for a particular repository using either of:
 3.  TOML file specified using `--config=/path/to/file.toml`
 4.  Command line arguments
 
-
 Note that each step in the above list is overridden by the steps that happen __after__ it. For example, CLI arguments
 will always override any arguments read from any TOML file.
 
@@ -246,6 +244,7 @@ you would normally and then run the hook manually and with the addition of `--du
 TOML-formatted configuration on the standard output for all the parameters that _diverge_ from their default values.
 
 For example, running the following command (assuming that no valid TOML configuration exists):
+
 ```
 cmake-pc-clang-format-hook tests/cmake_bad/bad.cpp  --dump-toml -B /tmp/build -S source -Wdev --no-automatic-discovery
 ```
