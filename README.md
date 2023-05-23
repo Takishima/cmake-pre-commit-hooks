@@ -1,15 +1,16 @@
 # pre-commit hooks
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks\&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)
 
 
 This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ linters/formatters to work with CMake-based projects.
+
 > [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html),
-[clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
-[cppcheck](http://cppcheck.sourceforge.net/),
-[cpplint](https://github.com/cpplint/cpplint),
-[lizard](http://www.lizard.ws) and
-[iwyu](https://include-what-you-use.org/)
+> [clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
+> [cppcheck](http://cppcheck.sourceforge.net/),
+> [cpplint](https://github.com/cpplint/cpplint),
+> [lizard](http://www.lizard.ws) and
+> [iwyu](https://include-what-you-use.org/)
 
 It is largely based on the work found [here](https://github.com/pocc/pre-commit-hooks). The main difference with POCC's
 pre-commit hooks is that the ones from this repository will do a CMake configuration step prior to running any
@@ -147,7 +148,6 @@ For installing the various utilities, refer to your package manager documentatio
 | [include-what-you-use](https://include-what-you-use.org/)                | Static code analyzer     | C, C++           |
 | [lizard](http://www.lizard.ws)                                           | code complexity analyzer | C/C++, ObjC, ... |
 
-
 ### Hook options
 
 Since v1.1.0 all hooks that depend on a compilation database (e.g. `clang-tidy`, `cppcheck`, `include-what-you-use`)
@@ -227,7 +227,6 @@ Also, builds on Linux and MacOS will set the C++ compiler to `g++-10`, while bui
 `cl.exe`. This is done by looking at the value returned by
 [`platform.system()`](https://docs.python.org/3/library/platform.html#platform.system).
 
-
 ### TOML support
 
 Since v1.9.0, the hooks support loading the CLI arguments from TOML files. This can be used to configure all the hooks
@@ -238,10 +237,13 @@ for a particular repository using either of:
 3.  TOML file specified using `--config=/path/to/file.toml`
 4.  Command line arguments
 
+
 Note that each step in the above list is overridden by the steps that happen __after__ it. For example, CLI arguments
 will always override any arguments read from any TOML file.
 
-A good place to start if you plan on creating a TOML configuration file is to use the hooks using the CLI arguments as you would normally and then run the hook manually and with the addition of `--dump-toml`. This will output a TOML-formatted configuration on the standard output for all the parameters that _diverge_ from their default values.
+A good place to start if you plan on creating a TOML configuration file is to use the hooks using the CLI arguments as
+you would normally and then run the hook manually and with the addition of `--dump-toml`. This will output a
+TOML-formatted configuration on the standard output for all the parameters that _diverge_ from their default values.
 
 For example, running the following command (assuming that no valid TOML configuration exists):
 ```
@@ -256,7 +258,6 @@ source_dir = "source"
 build_dir = [ "/tmp/build",]
 dev_warnings = true
 ```
-
 
 ### Hook Option Comparison
 
