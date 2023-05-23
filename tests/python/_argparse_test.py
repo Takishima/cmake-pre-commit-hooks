@@ -306,9 +306,12 @@ def test_argument_parser_default_config_file(tmp_path, monkeypatch):
     )
 
     monkeypatch.chdir(str(tmp_path))
-    known_args, args = parser.parse_known_args([])
+    namespace = argparse.Namespace()
+    namespace.sentinel = None
+    known_args, args = parser.parse_known_args(args=[], namespace=namespace)
 
     assert not args
+    assert hasattr(known_args, 'sentinel')
     assert known_args.flag
     assert known_args.int == 1
     assert known_args.string == 'one'

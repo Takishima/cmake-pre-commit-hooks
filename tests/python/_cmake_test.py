@@ -118,6 +118,11 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
     cmake.resolve_build_directory(None if dir_list is None else [tmp_path / path for path in dir_list])
     assert cmake.build_dir == tmp_path / ref_path
 
+    cmake.build_dir = None
+    cmake.build_dir_discovery = False
+    cmake.resolve_build_directory(None if dir_list is None else [tmp_path / path for path in dir_list])
+    assert cmake.build_dir == tmp_path / cmake.DEFAULT_BUILD_DIR if dir_list is None else dir_list[0]
+
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
 def test_setup_cmake_args(mocker, system):

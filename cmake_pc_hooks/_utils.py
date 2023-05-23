@@ -83,9 +83,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         # Other options
         parser.add_argument('positionals', metavar='filenames', nargs='*', help='Filenames to check')
         parser.add_argument('--version', type=str, help='Version check')
-
-        if not self.clean_build:
-            parser.add_argument('--clean', action='store_true', help='Start from a clean build directory')
+        parser.add_argument('--clean', action='store_true', help='Start from a clean build directory')
 
         known_args, self.args = parser.parse_known_args(args[1:])
 
