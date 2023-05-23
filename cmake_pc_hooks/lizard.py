@@ -43,7 +43,7 @@ class LizardCmd(StaticAnalyzerCmd):
         else:
             for filename in self.files:
                 self.run_command([filename])
-                self.exit_on_error()
+            self.exit_on_error()
 
 
 def main(argv=None):
@@ -59,5 +59,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()
