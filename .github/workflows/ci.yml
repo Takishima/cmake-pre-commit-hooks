@@ -59,7 +59,7 @@ jobs:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Save coverage report
-        if: matrix.python == '3.11'
+        if: matrix.python == '3.11' && runner.os == 'Linux'
         uses: actions/upload-artifact@v3
         with:
           name: coverage
