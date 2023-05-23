@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import json
 
 import pytest
 
@@ -21,42 +20,10 @@ from cmake_pc_hooks import cppcheck
 # ==============================================================================
 
 
-@pytest.fixture()
-def compile_commands(tmp_path):
-    compile_commands = tmp_path / 'build' / 'compile_commands.json'
-
-    data = []
-    file_list = [
-        tmp_path / 'directory/one.cpp',
-        tmp_path / 'directory/two.cpp',
-        tmp_path / 'directory/three.cpp',
-    ]
-
-    for fname in file_list:
-        fname.parent.mkdir(parents=True, exist_ok=True)
-        fname.write_text('')
-        data.append(
-            {
-                'directory': str(fname.parent),
-                'file': str(fname),
-                'command': f'/usr/bin/c++ -DONE -DTWO -Wall -c {fname}',
-            }
-        )
-
-    compile_commands.parent.mkdir(parents=True, exist_ok=True)
-    with compile_commands.open(mode='w', encoding='utf-8') as fd:
-        json.dump(data, fd)
-
-    return compile_commands, file_list
-
-
-# ==============================================================================
-
-
 @pytest.mark.parametrize('all_at_once', [False, True])
 @pytest.mark.parametrize('read_json_db', [False, True])
 @pytest.mark.parametrize('returncode', [0, 1])
-def test_clang_format_command(mocker, compile_commands, tmp_path, read_json_db, all_at_once, returncode):
+def test_cppcheck_command(mocker, compile_commands, tmp_path, read_json_db, all_at_once, returncode):
     mocker.patch('hooks.utils.Command.check_installed', return_value=True)
 
     cppcheck_useless_error_msg = 'Cppcheck cannot find all the include files'

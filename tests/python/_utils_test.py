@@ -12,7 +12,6 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import json
 
 import pytest
 
@@ -20,35 +19,6 @@ from cmake_pc_hooks import _utils
 from cmake_pc_hooks._cmake import CMakeCommand
 
 # ==============================================================================
-
-
-@pytest.fixture()
-def compile_commands(tmp_path):
-    compile_commands = tmp_path / 'build' / 'compile_commands.json'
-
-    data = []
-    file_list = [
-        tmp_path / 'directory/one.cpp',
-        tmp_path / 'directory/two.cpp',
-        tmp_path / 'directory/three.cpp',
-    ]
-
-    for fname in file_list:
-        fname.parent.mkdir(parents=True, exist_ok=True)
-        fname.write_text('')
-        data.append(
-            {
-                'directory': str(fname.parent),
-                'file': str(fname),
-                'command': f'/usr/bin/c++ -DONE -DTWO -Wall -c {fname}',
-            }
-        )
-
-    compile_commands.parent.mkdir(parents=True, exist_ok=True)
-    with compile_commands.open(mode='w', encoding='utf-8') as fd:
-        json.dump(data, fd)
-
-    return compile_commands, file_list
 
 
 def test_read_compile_commands_no_file(tmp_path):
