@@ -13,6 +13,7 @@
 #   limitations under the License.
 
 import pytest
+from _test_utils import command_main_asserts
 
 from cmake_pc_hooks import clang_format
 
@@ -66,18 +67,8 @@ def test_clang_format_command(mocker, tmp_path, format_success):
 
 
 def test_clang_format_main(mocker):
-    run = mocker.patch('cmake_pc_hooks.clang_format.ClangFormatCmd.run')
-
     argv = ['clang-format', '-i', 'file.txt']
-
-    clang_format.main(argv)
-    run.assert_called_once_with()
-
-    mocker.patch('sys.argv', return_value=argv)
-
-    clang_format.main()
-    assert run.call_count == 2
-    run.assert_called_with()
+    command_main_asserts(mocker, 'clang_format.ClangFormatCmd', clang_format.main, argv)
 
 
 # ==============================================================================

@@ -12,8 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import contextlib
 
 import pytest
+from _test_utils import ExitError, default_command_assertions
 
 from cmake_pc_hooks import _utils
 from cmake_pc_hooks._cmake import CMakeCommand
@@ -101,24 +103,19 @@ def test_command_parse_args_invalid(mocker, tmp_path, look_behind):
     sys_exit.assert_called_with(0)
 
 
-@pytest.mark.parametrize('all_at_once', [False, True])
-@pytest.mark.parametrize('read_json_db', [False, True])
 @pytest.mark.parametrize('parsing_failed', [False, True])
-def test_command_run(mocker, compile_commands, read_json_db, parsing_failed, all_at_once):
-    sys_exit = mocker.patch('sys.exit')
-    call_process = mocker.patch(
-        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
-    )
-    configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)
-    parse_output = mocker.patch('cmake_pc_hooks._utils.Command._parse_output', return_value=parsing_failed)
+def test_command_run(mocker, compile_commands, parsing_failed, setup_command):
+    path, file_list = compile_commands
+    all_at_once, read_json_db, returncode, cmd_args, configure, sys_exit = setup_command
 
+    # ----------------------------------
+
+    parse_output = mocker.patch('cmake_pc_hooks._utils.Command._parse_output', return_value=parsing_failed)
     call_process = mocker.patch(
         'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
     )
 
     # ----------------------------------
-
-    path, file_list = compile_commands
 
     command_name = 'test-exec'
     other_file_list = ['/path/to/one.cpp', '/path/to/two.cpp']
@@ -127,31 +124,31 @@ def test_command_run(mocker, compile_commands, read_json_db, parsing_failed, all
         f'-B{path.parent}',
         *other_file_list,
     ]
-
-    if read_json_db:
-        args.append('--read-json-db')
-
-    if all_at_once:
-        args.append('--all-at-once')
+    args.extend(cmd_args)
 
     command = _utils.Command(command_name, look_behind=False, args=args)
     command.parse_args(args)
-    command.run()
+
+    with contextlib.suppress(ExitError):
+        command.run()
 
     # ----------------------------------
 
-    if read_json_db:
-        assert len(command.files) == len(other_file_list) + len(file_list)
-    else:
-        assert len(command.files) == len(other_file_list)
-
-    configure.assert_called_once_with(command.command)
+    default_command_assertions(
+        read_json_db_settings={
+            'value': read_json_db,
+            'n_files_true': len(other_file_list) + len(file_list),
+            'n_files_false': len(other_file_list),
+        },
+        all_at_once=all_at_once,
+        configure=configure,
+        call_process=call_process,
+        command=command,
+    )
 
     if all_at_once:
-        call_process.assert_called_once_with([command.command, *command.files])
         parse_output.assert_called_once()
     else:
-        assert call_process.call_count == len(command.files)
         assert parse_output.call_count == len(command.files)
 
     if parsing_failed:

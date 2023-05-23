@@ -12,18 +12,19 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import contextlib
 
-import pytest
+from _test_utils import ExitError, command_main_asserts, default_command_assertions
 
 from cmake_pc_hooks import cppcheck
 
 # ==============================================================================
 
 
-@pytest.mark.parametrize('all_at_once', [False, True])
-@pytest.mark.parametrize('read_json_db', [False, True])
-@pytest.mark.parametrize('returncode', [0, 1])
-def test_cppcheck_command(mocker, compile_commands, tmp_path, read_json_db, all_at_once, returncode):
+def test_cppcheck_command(mocker, compile_commands, tmp_path, setup_command):
+    path, file_list = compile_commands
+    all_at_once, read_json_db, returncode, cmd_args, configure, sys_exit = setup_command
+
     mocker.patch('hooks.utils.Command.check_installed', return_value=True)
 
     cppcheck_useless_error_msg = 'Cppcheck cannot find all the include files'
@@ -38,22 +39,12 @@ def test_cppcheck_command(mocker, compile_commands, tmp_path, read_json_db, all_
     )
     sys_exit = mocker.patch('sys.exit')
 
-    _, file_list = compile_commands
     command_name = 'cppcheck'
-    build_dir = tmp_path / 'build'
-    build_dir.mkdir(parents=True, exist_ok=True)
-
     other_file_list = [tmp_path / 'file1.cpp', tmp_path / 'file2.cpp']
     for file in other_file_list:
         file.write_text('')
 
-    args = [f'{command_name}', f'-B{build_dir}', *[str(fname) for fname in other_file_list]]
-
-    if read_json_db:
-        args.append('--read-json-db')
-
-    if all_at_once:
-        args.append('--all-at-once')
+    args = [f'{command_name}', f'-B{path.parent}', *cmd_args, *[str(fname) for fname in other_file_list]]
 
     command = cppcheck.CppcheckCmd(args=args)
     assert '-q' in command.args
@@ -61,20 +52,20 @@ def test_cppcheck_command(mocker, compile_commands, tmp_path, read_json_db, all_
     assert '--enable=all' in command.args
     assert command.files == [str(fname) for fname in other_file_list]
 
-    command.run()
+    with contextlib.suppress(ExitError):
+        command.run()
 
-    if read_json_db:
-        assert len(command.files) == len(other_file_list) + len(file_list)
-    else:
-        assert len(command.files) == len(other_file_list)
-
-    configure.assert_called_once_with(command_name)
-    if all_at_once:
-        call_process.assert_called()
-        assert call_process.call_count == 1  # NB: CMake call does not occur
-    else:
-        call_process.assert_called()
-        assert call_process.call_count == len(command.files)  # NB: CMake call does not occur
+    default_command_assertions(
+        read_json_db_settings={
+            'value': read_json_db,
+            'n_files_true': len(other_file_list) + len(file_list),
+            'n_files_false': len(other_file_list),
+        },
+        all_at_once=all_at_once,
+        configure=configure,
+        call_process=call_process,
+        command=command,
+    )
 
     assert not any(
         f'{cppcheck_useless_error_msg}'.encode() in line for line in command.stderr.splitlines(keepends=True)
@@ -90,18 +81,8 @@ def test_cppcheck_command(mocker, compile_commands, tmp_path, read_json_db, all_
 
 
 def test_cppcheck_main(mocker):
-    run = mocker.patch('cmake_pc_hooks.cppcheck.CppcheckCmd.run')
-
     argv = ['cppcheck', 'file.txt']
-
-    cppcheck.main(argv)
-    run.assert_called_once_with()
-
-    mocker.patch('sys.argv', return_value=argv)
-
-    cppcheck.main()
-    assert run.call_count == 2
-    run.assert_called_with()
+    command_main_asserts(mocker, 'cppcheck.CppcheckCmd', cppcheck.main, argv)
 
 
 # ==============================================================================
