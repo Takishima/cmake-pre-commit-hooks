@@ -39,6 +39,8 @@ def _append_in_namespace(namespace, key, values):
 
 
 class OSSpecificAction(argparse.Action):
+    """Custom action to support platform-specific arguments."""
+
     def __call__(self, parser, namespace, values, options_string=None):  # noqa: ARG002
         if self.dest == 'unix':
             _append_in_namespace(namespace, 'linux', values)
@@ -87,7 +89,7 @@ class ArgumentParser(argparse.ArgumentParser):
     """
 
     def __init__(
-        self, default_config_name: str = None, pyproject_section_name: str = None, *args: Any, **kwargs: Any
+        self, *args: Any, default_config_name: str = None, pyproject_section_name: str = None, **kwargs: Any
     ) -> None:
         """
         Initialize an instance of ArgumentParser.

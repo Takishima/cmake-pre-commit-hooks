@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+"""Sub-process handling classes and functions."""
+
 from __future__ import annotations
 
 import logging
@@ -20,6 +22,8 @@ import sys
 
 
 class History:  # pylint: disable=too-few-public-methods
+    """Process execution data."""
+
     __slots__ = ('stdout', 'stderr', 'returncode')
 
     def __init__(self, stdout, stderr, returncode):

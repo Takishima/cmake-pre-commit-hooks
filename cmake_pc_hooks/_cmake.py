@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""CMake related function and classes."""
+
 import logging
 import os
 import platform
