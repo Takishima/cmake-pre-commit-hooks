@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Added Python tests using PyTest
 -   Added support for parsing hook parameters from TOML configuration files
+-   Added option to dump the current configuration as TOML-formatted output on the standard output (`--dump-toml`)
 
 ### Fixed
 

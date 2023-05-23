@@ -17,15 +17,11 @@
 import argparse
 import logging
 import os
+import sys
 from pathlib import Path
 from typing import Any
 
-try:
-    TOML_FILEMODE = 'rb'
-    import tomllib as toml
-except ImportError:  # pragma: nocover
-    TOML_FILEMODE = 'r'
-    import toml
+import toml
 
 # ==============================================================================
 
@@ -110,6 +106,11 @@ class ArgumentParser(argparse.ArgumentParser):
             default='',
             help='Path to a TOML configuration file.',
         )
+        self.add_argument(
+            '--dump-toml',
+            action='store_true',
+            help='Dump the current set of CLI arguments as TOML on stdout',
+        )
         self._default_args = {}
 
     def parse_known_args(self, args: list = None, namespace: argparse.Namespace = None) -> argparse.Namespace:
@@ -149,17 +150,31 @@ class ArgumentParser(argparse.ArgumentParser):
             )
 
         namespace, args = super().parse_known_args(args=args, namespace=namespace)
-        if not namespace.config:
-            return namespace, args
+        if namespace.config:
+            overridable_keys = set()
+            for key, value in vars(namespace).items():
+                default_value = self._default_args[key]
+                if value == default_value:
+                    overridable_keys.add(key)
+            namespace = self._load_from_toml(
+                namespace=namespace,
+                path=Path(namespace.config),
+                path_must_exist=True,
+                overridable_keys=overridable_keys,
+            )
 
-        overridable_keys = set()
-        for key, value in vars(namespace).items():
-            default_value = self._default_args[key]
-            if value == default_value:
-                overridable_keys.add(key)
-        namespace = self._load_from_toml(
-            namespace=namespace, path=Path(namespace.config), path_must_exist=True, overridable_keys=overridable_keys
-        )
+        if namespace.dump_toml:
+            exclude_keys = {'positionals', 'dump_toml'}
+            print(
+                toml.dumps(
+                    {
+                        key: value
+                        for key, value in vars(namespace).items()
+                        if value != self._default_args[key] and key not in exclude_keys
+                    }
+                )
+            )
+            sys.exit(0)
 
         return namespace, args
 
@@ -188,7 +203,7 @@ class ArgumentParser(argparse.ArgumentParser):
             overridable_keys: List of keys that can be overridden by values in the TOML file
         """
         try:
-            with path.open(mode=TOML_FILEMODE) as fd:
+            with path.open(mode='r') as fd:
                 config = toml.load(fd)
             if section:
                 for sub_section in section.split('.'):
@@ -206,6 +221,7 @@ class ArgumentParser(argparse.ArgumentParser):
         except KeyError as err:
             if section_must_exist:
                 raise KeyError(f'Unable to locate section {section} in TOML file {path}') from err
+            logging.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
             return namespace
 
         for key, value in config.items():
@@ -220,8 +236,9 @@ class ArgumentParser(argparse.ArgumentParser):
                     f'{type(default_value)} for key "{key}"'
                 )
             if overridable_keys is not None and key not in overridable_keys:
-                logging.debug('Skipping non-overridable key: "%s"', key)
+                logging.debug('  skipping non-overridable key: "%s"', key)
                 continue
 
+            logging.debug('  setting %s = %s', key, value)
             setattr(namespace, key, value)
         return namespace

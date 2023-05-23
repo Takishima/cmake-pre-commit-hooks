@@ -13,10 +13,12 @@
 # limitations under the License.
 
 import argparse
+import contextlib
 import platform
 from textwrap import dedent
 
 import pytest
+from _test_utils import ExitError
 
 from cmake_pc_hooks import _argparse
 
@@ -249,6 +251,33 @@ def test_argument_parser_load_from_toml_overrides(parser, toml_generate):
 # ==============================================================================
 
 
+def test_argument_parser_pyproject_toml_missing_section(tmp_path, monkeypatch):
+    parser = _argparse.ArgumentParser(pyproject_section_name='tool.my-name')
+    parser.add_argument('--flag', action='store_true')
+    parser.add_argument('--int', type=int)
+    parser.add_argument('--string', type=str)
+
+    pyproject_file = tmp_path / 'pyproject.toml'
+    pyproject_file.parent.mkdir(parents=True, exist_ok=True)
+    pyproject_file.write_text(
+        dedent(
+            '''
+            flag = true
+            int = 1
+            string = 'one'
+            '''
+        )
+    )
+
+    monkeypatch.chdir(str(tmp_path))
+    known_args, args = parser.parse_known_args([])
+
+    assert not args
+    assert not known_args.flag
+    assert known_args.int is None
+    assert known_args.string is None
+
+
 def test_argument_parser_pyproject_toml(tmp_path, monkeypatch):
     parser = _argparse.ArgumentParser(pyproject_section_name='tool.my-name')
     parser.add_argument('--flag', action='store_true')
@@ -347,6 +376,33 @@ def test_argument_parser_config_file(tmp_path):
     assert known_args.flag
     assert known_args.int == 1
     assert known_args.string == 'aaa'
+
+
+# ==============================================================================
+
+
+def test_argument_parser_dump_toml(mocker):
+    toml_dumps = mocker.patch('toml.dumps')
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+
+    # ----------------------------------
+
+    parser = _argparse.ArgumentParser()
+    parser.add_argument('--flag', action='store_true')
+    parser.add_argument('--int', type=int)
+    parser.add_argument('--string', type=str)
+
+    with contextlib.suppress(ExitError):
+        parser.parse_known_args(['--flag', '--string=aaa', '--int', '10', '--dump-toml', 'file.txt'])
+
+    sys_exit.assert_called_once_with(0)
+
+    toml_dumps.assert_called_once()
+    toml_dict = toml_dumps.call_args.args[0]
+    assert 'dump_toml' not in toml_dict
+    assert toml_dict['flag']
+    assert toml_dict['int'] == 10
+    assert toml_dict['string'] == 'aaa'
 
 
 # ==============================================================================
