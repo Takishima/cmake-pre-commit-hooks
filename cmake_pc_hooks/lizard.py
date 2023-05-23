@@ -29,12 +29,7 @@ class LizardCmd(StaticAnalyzerCmd):
     def __init__(self, args):
         """Initialize a LizardCmd object."""
         super().__init__(self.command, self.lookbehind, args)
-        self.file_regex = ''
         self.parse_args(args)
-
-    def set_file_regex(self):
-        """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
-        self.file_regex = r'.*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx|py)$'
 
     def run(self):
         """Run lizard."""

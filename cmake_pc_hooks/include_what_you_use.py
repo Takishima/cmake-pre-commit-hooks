@@ -80,8 +80,6 @@ class IWYUToolCmd(ClangAnalyzerCmd):
             raise RuntimeError('Unable to locate path to include-what-you-use executable!')
 
         super().__init__(self.command, self.lookbehind, args)
-        self.file_regex = ''
-        self.file_regex = ''
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()
@@ -106,10 +104,6 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         version = re.search(regex, version_str).group(1)
         logging.debug('extracted version: %s', version)
         return version
-
-    def set_file_regex(self):
-        """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
-        self.file_regex = r'.*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx)$'
 
     def _parse_output(self, result):
         """
