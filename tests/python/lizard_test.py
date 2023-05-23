@@ -22,23 +22,17 @@ from cmake_pc_hooks import lizard
 # ==============================================================================
 
 
-def test_lizard_command(mocker, compile_commands, tmp_path, setup_command):
+def test_lizard_command(compile_commands, tmp_path, setup_command):
     path, file_list = compile_commands
-    all_at_once, read_json_db, returncode, cmd_args, configure, sys_exit = setup_command
 
     # ----------------------------------
-
-    call_process = mocker.patch(
-        'cmake_pc_hooks._call_process.call_process',
-        return_value=mocker.Mock(stdout='', stderr='', returncode=returncode),
-    )
 
     command_name = 'lizard'
     other_file_list = [tmp_path / 'file1.cpp', tmp_path / 'file2.cpp']
     for file in other_file_list:
         file.write_text('')
 
-    args = [f'{command_name}', f'-B{path.parent}', *cmd_args, *[str(fname) for fname in other_file_list]]
+    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args, *[str(fname) for fname in other_file_list]]
 
     command = lizard.LizardCmd(args=args)
     assert command.files == [str(fname) for fname in other_file_list]
@@ -48,20 +42,14 @@ def test_lizard_command(mocker, compile_commands, tmp_path, setup_command):
 
     default_command_assertions(
         read_json_db_settings={
-            'value': read_json_db,
+            'value': setup_command.read_json_db,
             'n_files_true': len(other_file_list) + len(file_list),
             'n_files_false': len(other_file_list),
         },
-        all_at_once=all_at_once,
-        configure=None,
-        call_process=call_process,
         command=command,
+        do_configure_test=setup_command.read_json_db,
+        **setup_command._asdict(),
     )
-
-    if returncode == 0:
-        sys_exit.assert_not_called()
-    else:
-        sys_exit.assert_called_once_with(1)
 
 
 # ==============================================================================

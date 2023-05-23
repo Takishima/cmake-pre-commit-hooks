@@ -29,7 +29,8 @@ from cmake_pc_hooks import clang_tidy
 )
 def test_clang_tidy_command(mocker, compile_commands, tmp_path, setup_command, stdout, error_msg):
     path, file_list = compile_commands
-    all_at_once, read_json_db, returncode, cmd_args, configure, sys_exit = setup_command
+    call_process = setup_command.call_process
+    returncode = setup_command.returncode
 
     # ----------------------------------
 
@@ -38,8 +39,8 @@ def test_clang_tidy_command(mocker, compile_commands, tmp_path, setup_command, s
             stdout=stdout, stderr=f'{error_msg if error_msg is not None else ""} aaa\nbbb', returncode=returncode
         )
 
-    call_process = mocker.patch(
-        'cmake_pc_hooks._call_process.call_process',
+    call_process.reset_mock(return_value=True, side_effect=True)
+    call_process.configure_mock(
         side_effect=_call_process,
     )
 
@@ -50,7 +51,7 @@ def test_clang_tidy_command(mocker, compile_commands, tmp_path, setup_command, s
     for file in other_file_list:
         file.write_text('')
 
-    args = [f'{command_name}', f'-B{path.parent}', *cmd_args, *[str(fname) for fname in other_file_list]]
+    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args, *[str(fname) for fname in other_file_list]]
 
     command = clang_tidy.ClangTidyCmd(args=args)
     assert set(command.files) == {str(fname) for fname in other_file_list}
@@ -60,20 +61,14 @@ def test_clang_tidy_command(mocker, compile_commands, tmp_path, setup_command, s
 
     default_command_assertions(
         read_json_db_settings={
-            'value': read_json_db,
+            'value': setup_command.read_json_db,
             'n_files_true': len(other_file_list) + len(file_list),
             'n_files_false': len(other_file_list),
         },
-        all_at_once=all_at_once,
-        configure=None,
-        call_process=call_process,
         command=command,
+        exit_success=returncode == 0 and (error_msg is None or not stdout),
+        **setup_command._asdict(),
     )
-
-    if returncode == 0 and (error_msg is None or not stdout):
-        sys_exit.assert_not_called()
-    else:
-        sys_exit.assert_called_once_with(1)
 
 
 # ==============================================================================

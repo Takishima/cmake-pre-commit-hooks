@@ -1,5 +1,6 @@
 import itertools
 import json
+from collections import namedtuple
 
 import pytest
 from _test_utils import ExitError
@@ -51,12 +52,23 @@ def _setup_command_ids(param):
     return f'{"all_files" if all_at_once else "single_file"}-{"w_db" if read_json_db else "no_db"}-ret_{returncode}'
 
 
+SetupCommandData = namedtuple(
+    'SetupCommandData',
+    ['all_at_once', 'read_json_db', 'returncode', 'cmd_args', 'configure', 'sys_exit', 'call_process'],
+)
+
+
 @pytest.fixture(params=_setup_commands_args, ids=_setup_command_ids)
 def setup_command(mocker, request):
     mocker.patch('hooks.utils.Command.check_installed', return_value=True)
     all_at_once, read_json_db, returncode = request.param
+
     configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)
     sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout='', stderr='', returncode=returncode),
+    )
 
     args = []
     if read_json_db:
@@ -65,7 +77,15 @@ def setup_command(mocker, request):
     if all_at_once:
         args.append('--all-at-once')
 
-    return all_at_once, read_json_db, returncode, args, configure, sys_exit
+    return SetupCommandData(
+        all_at_once=all_at_once,
+        read_json_db=read_json_db,
+        returncode=returncode,
+        cmd_args=args,
+        configure=configure,
+        sys_exit=sys_exit,
+        call_process=call_process,
+    )
 
 
 # ==============================================================================

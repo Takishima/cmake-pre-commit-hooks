@@ -22,9 +22,23 @@ class ExitError(Exception):
 # ==============================================================================
 
 
-def default_command_assertions(read_json_db_settings, all_at_once, configure, call_process, command):
-    if configure is not None:
+def default_command_assertions(
+    read_json_db_settings,
+    command,
+    all_at_once,
+    configure,
+    call_process,
+    returncode,
+    sys_exit,
+    exit_success=None,
+    do_configure_test=True,
+    **kwargs,  # noqa: ARG001
+):
+    if do_configure_test:
         configure.assert_called_once_with(command.command)
+
+    if exit_success is None:
+        exit_success = returncode == 0
 
     if read_json_db_settings['value']:
         assert len(command.files) == read_json_db_settings['n_files_true']
@@ -36,6 +50,13 @@ def default_command_assertions(read_json_db_settings, all_at_once, configure, ca
     else:
         call_process.assert_called()
         assert call_process.call_count == len(command.files)  # NB: CMake call does not occur
+
+    assert all(result.returncode == returncode for result in command.history)
+
+    if exit_success:
+        sys_exit.assert_not_called()
+    else:
+        sys_exit.assert_called_once_with(1)
 
 
 # ==============================================================================

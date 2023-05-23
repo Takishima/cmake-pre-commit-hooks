@@ -106,14 +106,10 @@ def test_command_parse_args_invalid(mocker, tmp_path, look_behind):
 @pytest.mark.parametrize('parsing_failed', [False, True])
 def test_command_run(mocker, compile_commands, parsing_failed, setup_command):
     path, file_list = compile_commands
-    all_at_once, read_json_db, returncode, cmd_args, configure, sys_exit = setup_command
 
     # ----------------------------------
 
     parse_output = mocker.patch('cmake_pc_hooks._utils.Command._parse_output', return_value=parsing_failed)
-    call_process = mocker.patch(
-        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
-    )
 
     # ----------------------------------
 
@@ -122,9 +118,9 @@ def test_command_run(mocker, compile_commands, parsing_failed, setup_command):
     args = [
         f'{command_name}',
         f'-B{path.parent}',
+        *setup_command.cmd_args,
         *other_file_list,
     ]
-    args.extend(cmd_args)
 
     command = _utils.Command(command_name, look_behind=False, args=args)
     command.parse_args(args)
@@ -136,25 +132,19 @@ def test_command_run(mocker, compile_commands, parsing_failed, setup_command):
 
     default_command_assertions(
         read_json_db_settings={
-            'value': read_json_db,
+            'value': setup_command.read_json_db,
             'n_files_true': len(other_file_list) + len(file_list),
             'n_files_false': len(other_file_list),
         },
-        all_at_once=all_at_once,
-        configure=configure,
-        call_process=call_process,
         command=command,
+        exit_success=not parsing_failed,
+        **setup_command._asdict(),
     )
 
-    if all_at_once:
+    if setup_command.all_at_once:
         parse_output.assert_called_once()
     else:
         assert parse_output.call_count == len(command.files)
-
-    if parsing_failed:
-        sys_exit.assert_called_once_with(1)
-    else:
-        sys_exit.assert_not_called()
 
     assert command.stdout.decode() == command.history[-1].stdout
     assert command.stderr.decode() == command.history[-1].stderr
