@@ -25,14 +25,11 @@ from cmake_pc_hooks import _argparse
 # ==============================================================================
 
 
-@pytest.fixture()
-def simple_parser():
-    parser = _argparse.ArgumentParser(pyproject_section_name='tool.my-name')
+def _add_simple_args(parser):
     parser.add_argument('--flag', action='store_true')
+    parser.add_argument('--no-flag', action='store_false')
     parser.add_argument('--int', type=int)
     parser.add_argument('--string', type=str)
-
-    return parser
 
 
 # ------------------------------------------------------------------------------
@@ -42,15 +39,17 @@ def simple_parser():
 def simple_toml_content():
     return dedent(
         '''
-            flag = false
-            int = 1
-            string = 'one'
+        flag = false
+        no_flag = true
+        int = 1
+        string = 'one'
 
-            [tool.my-name]
-            flag = true
-            int = 2
-            string = 'two'
-            '''
+        [tool.my-name]
+        flag = true
+        no_flag = false
+        int = 2
+        string = 'two'
+        '''
     )
 
 
@@ -60,10 +59,7 @@ def simple_toml_content():
 @pytest.fixture(scope='module')
 def parser():
     parser = _argparse.ArgumentParser()
-    parser.add_argument('--flag', action='store_true')
-    parser.add_argument('--no-flag', action='store_false')
-    parser.add_argument('--string', type=str)
-    parser.add_argument('--int', type=int)
+    _add_simple_args(parser)
     parser.add_argument('-f', '--files', type=str, action='append')
     parser.add_argument('--extra', type=str)
     parser.add_argument('--default', type=str, default='default')
@@ -285,9 +281,7 @@ def test_argument_parser_load_from_toml_overrides(parser, toml_generate):
 
 def test_argument_parser_pyproject_toml_missing_section(tmp_path, monkeypatch):
     parser = _argparse.ArgumentParser(pyproject_section_name='tool.my-name')
-    parser.add_argument('--flag', action='store_true')
-    parser.add_argument('--int', type=int)
-    parser.add_argument('--string', type=str)
+    _add_simple_args(parser)
 
     pyproject_file = tmp_path / 'pyproject.toml'
     pyproject_file.parent.mkdir(parents=True, exist_ok=True)
@@ -312,9 +306,7 @@ def test_argument_parser_pyproject_toml_missing_section(tmp_path, monkeypatch):
 
 def test_argument_parser_pyproject_toml(tmp_path, monkeypatch, simple_toml_content):
     parser = _argparse.ArgumentParser(pyproject_section_name='tool.my-name')
-    parser.add_argument('--flag', action='store_true')
-    parser.add_argument('--int', type=int)
-    parser.add_argument('--string', type=str)
+    _add_simple_args(parser)
 
     pyproject_file = tmp_path / 'pyproject.toml'
     pyproject_file.parent.mkdir(parents=True, exist_ok=True)
@@ -331,10 +323,9 @@ def test_argument_parser_pyproject_toml(tmp_path, monkeypatch, simple_toml_conte
 
 def test_argument_parser_default_config_file(tmp_path, monkeypatch, simple_toml_content):
     default_config_name = 'default_config.toml'
+
     parser = _argparse.ArgumentParser(default_config_name=default_config_name)
-    parser.add_argument('--flag', action='store_true')
-    parser.add_argument('--int', type=int)
-    parser.add_argument('--string', type=str)
+    _add_simple_args(parser)
 
     default_config_file = tmp_path / default_config_name
     default_config_file.parent.mkdir(parents=True, exist_ok=True)
@@ -352,14 +343,17 @@ def test_argument_parser_default_config_file(tmp_path, monkeypatch, simple_toml_
     assert known_args.string == 'one'
 
 
-def test_argument_parser_config_file(tmp_path, simple_parser, simple_toml_content):
+def test_argument_parser_config_file(tmp_path, simple_toml_content):
     default_config_name = 'myconfig.toml'
+
+    parser = _argparse.ArgumentParser()
+    _add_simple_args(parser)
 
     config_file = tmp_path / default_config_name
     config_file.parent.mkdir(parents=True, exist_ok=True)
     config_file.write_text(simple_toml_content)
 
-    known_args, args = simple_parser.parse_known_args([f'--config={config_file}', '--flag', '--string=aaa'])
+    known_args, args = parser.parse_known_args([f'--config={config_file}', '--flag', '--string=aaa'])
 
     assert not args
     assert known_args.flag
@@ -370,14 +364,17 @@ def test_argument_parser_config_file(tmp_path, simple_parser, simple_toml_conten
 # ==============================================================================
 
 
-def test_argument_parser_dump_toml(mocker, simple_parser):
+def test_argument_parser_dump_toml(mocker):
     toml_dumps = mocker.patch('toml.dumps')
     sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
 
     # ----------------------------------
 
+    parser = _argparse.ArgumentParser()
+    _add_simple_args(parser)
+
     with contextlib.suppress(ExitError):
-        simple_parser.parse_known_args(['--flag', '--string=aaa', '--int', '10', '--dump-toml', 'file.txt'])
+        parser.parse_known_args(['--flag', '--string=aaa', '--int', '10', '--dump-toml', 'file.txt'])
 
     sys_exit.assert_called_once_with(0)
 

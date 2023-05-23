@@ -42,6 +42,7 @@ def test_cppcheck_command(mocker, setup_command):
     assert '-q' in command.args
     assert '--error-exitcode=1' in command.args
     assert '--enable=all' in command.args
+    assert f'--project={path}' in command.args
 
     run_command_default_assertions(
         command=command,
