@@ -54,12 +54,23 @@ def _setup_command_ids(param):
 
 SetupCommandData = namedtuple(
     'SetupCommandData',
-    ['all_at_once', 'read_json_db', 'returncode', 'cmd_args', 'configure', 'sys_exit', 'call_process'],
+    [
+        'all_at_once',
+        'read_json_db',
+        'compile_db_path',
+        'json_db_file_list',
+        'returncode',
+        'file_list',
+        'cmd_args',
+        'configure',
+        'sys_exit',
+        'call_process',
+    ],
 )
 
 
 @pytest.fixture(params=_setup_commands_args, ids=_setup_command_ids)
-def setup_command(mocker, request):
+def setup_command(mocker, tmp_path, compile_commands, request):
     mocker.patch('hooks.utils.Command.check_installed', return_value=True)
     all_at_once, read_json_db, returncode = request.param
 
@@ -69,6 +80,10 @@ def setup_command(mocker, request):
         'cmake_pc_hooks._call_process.call_process',
         return_value=mocker.Mock(stdout='', stderr='', returncode=returncode),
     )
+
+    file_list = [tmp_path / 'file1.cpp', tmp_path / 'file2.cpp']
+    for file in file_list:
+        file.write_text('')
 
     args = []
     if read_json_db:
@@ -80,8 +95,11 @@ def setup_command(mocker, request):
     return SetupCommandData(
         all_at_once=all_at_once,
         read_json_db=read_json_db,
+        compile_db_path=compile_commands[0],
+        json_db_file_list=compile_commands[1],
         returncode=returncode,
-        cmd_args=args,
+        file_list=file_list,
+        cmd_args=[*args, *[str(fname) for fname in file_list]],
         configure=configure,
         sys_exit=sys_exit,
         call_process=call_process,

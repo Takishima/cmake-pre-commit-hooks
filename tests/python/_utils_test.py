@@ -12,10 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import contextlib
 
 import pytest
-from _test_utils import ExitError, default_command_assertions
+from _test_utils import run_command_default_assertions
 
 from cmake_pc_hooks import _utils
 from cmake_pc_hooks._cmake import CMakeCommand
@@ -104,8 +103,8 @@ def test_command_parse_args_invalid(mocker, tmp_path, look_behind):
 
 
 @pytest.mark.parametrize('parsing_failed', [False, True])
-def test_command_run(mocker, compile_commands, parsing_failed, setup_command):
-    path, file_list = compile_commands
+def test_command_run(mocker, parsing_failed, setup_command):
+    path = setup_command.compile_db_path
 
     # ----------------------------------
 
@@ -114,28 +113,12 @@ def test_command_run(mocker, compile_commands, parsing_failed, setup_command):
     # ----------------------------------
 
     command_name = 'test-exec'
-    other_file_list = ['/path/to/one.cpp', '/path/to/two.cpp']
-    args = [
-        f'{command_name}',
-        f'-B{path.parent}',
-        *setup_command.cmd_args,
-        *other_file_list,
-    ]
+    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
 
     command = _utils.Command(command_name, look_behind=False, args=args)
     command.parse_args(args)
 
-    with contextlib.suppress(ExitError):
-        command.run()
-
-    # ----------------------------------
-
-    default_command_assertions(
-        read_json_db_settings={
-            'value': setup_command.read_json_db,
-            'n_files_true': len(other_file_list) + len(file_list),
-            'n_files_false': len(other_file_list),
-        },
+    run_command_default_assertions(
         command=command,
         exit_success=not parsing_failed,
         **setup_command._asdict(),

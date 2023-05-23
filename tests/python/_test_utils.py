@@ -12,6 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import contextlib
+
 # ==============================================================================
 
 
@@ -22,8 +24,10 @@ class ExitError(Exception):
 # ==============================================================================
 
 
-def default_command_assertions(
-    read_json_db_settings,
+def run_command_default_assertions(
+    read_json_db,
+    json_db_file_list,
+    file_list,
     command,
     all_at_once,
     configure,
@@ -34,16 +38,21 @@ def default_command_assertions(
     do_configure_test=True,
     **kwargs,  # noqa: ARG001
 ):
+    assert set(command.files) == {str(fname) for fname in file_list}
+
+    with contextlib.suppress(ExitError):
+        command.run()
+
     if do_configure_test:
         configure.assert_called_once_with(command.command)
 
     if exit_success is None:
         exit_success = returncode == 0
 
-    if read_json_db_settings['value']:
-        assert len(command.files) == read_json_db_settings['n_files_true']
+    if read_json_db:
+        assert len(command.files) == len(file_list) + len(json_db_file_list)
     else:
-        assert len(command.files) == read_json_db_settings['n_files_false']
+        assert len(command.files) == len(file_list)
 
     if all_at_once:
         call_process.assert_called_once()

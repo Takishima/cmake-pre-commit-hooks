@@ -12,10 +12,9 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import contextlib
 
 import pytest
-from _test_utils import ExitError, command_main_asserts, default_command_assertions
+from _test_utils import command_main_asserts, run_command_default_assertions
 
 from cmake_pc_hooks import clang_tidy
 
@@ -27,8 +26,8 @@ from cmake_pc_hooks import clang_tidy
 @pytest.mark.parametrize(
     'error_msg', [None, '1 error generated.', '2 errors generated.'], ids=['<empty>', '1_error', '2_errors']
 )
-def test_clang_tidy_command(mocker, compile_commands, tmp_path, setup_command, stdout, error_msg):
-    path, file_list = compile_commands
+def test_clang_tidy_command(mocker, setup_command, stdout, error_msg):
+    path = setup_command.compile_db_path
     call_process = setup_command.call_process
     returncode = setup_command.returncode
 
@@ -47,24 +46,12 @@ def test_clang_tidy_command(mocker, compile_commands, tmp_path, setup_command, s
     # ----------------------------------
 
     command_name = 'clang-tidy'
-    other_file_list = [tmp_path / 'file1.cpp', tmp_path / 'file2.cpp']
-    for file in other_file_list:
-        file.write_text('')
-
-    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args, *[str(fname) for fname in other_file_list]]
-
+    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
     command = clang_tidy.ClangTidyCmd(args=args)
-    assert set(command.files) == {str(fname) for fname in other_file_list}
 
-    with contextlib.suppress(ExitError):
-        command.run()
+    assert f'-p={path}' in command.args
 
-    default_command_assertions(
-        read_json_db_settings={
-            'value': setup_command.read_json_db,
-            'n_files_true': len(other_file_list) + len(file_list),
-            'n_files_false': len(other_file_list),
-        },
+    run_command_default_assertions(
         command=command,
         exit_success=returncode == 0 and (error_msg is None or not stdout),
         **setup_command._asdict(),
