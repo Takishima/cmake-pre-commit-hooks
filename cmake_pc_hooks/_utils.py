@@ -16,7 +16,6 @@
 
 from __future__ import annotations
 
-import argparse
 import json
 import logging
 import os
@@ -25,7 +24,7 @@ from pathlib import Path
 
 import hooks.utils
 
-from . import _call_process
+from . import _argparse, _call_process
 from ._cmake import CMakeCommand
 
 _LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
@@ -64,7 +63,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         Args:
             args (:obj:`list` of :obj:`str`): list of arguments
         """
-        parser = argparse.ArgumentParser()
+        parser = _argparse.ArgumentParser(
+            default_config_name='cmake_pc_hooks.toml', pyproject_section_name='tool.cmake_pc_hooks'
+        )
         self.cmake.add_cmake_arguments_to_parser(parser)
         parser.add_argument(
             '--all-at-once',

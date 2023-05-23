@@ -140,6 +140,7 @@ class ArgumentParser(argparse.ArgumentParser):
                 path=Path('pyproject.toml'),
                 section=self._pyproject_section_name,
                 path_must_exist=False,
+                section_must_exist=False,
             )
 
         if self._default_config_name is not None:
@@ -168,6 +169,7 @@ class ArgumentParser(argparse.ArgumentParser):
         path: Path,
         section: str = '',
         path_must_exist: bool = True,
+        section_must_exist: bool = True,
         overridable_keys: set = None,
     ) -> None:
         """
@@ -182,6 +184,7 @@ class ArgumentParser(argparse.ArgumentParser):
             path: Path to TOML file
             section: Name of section to load in TOML file
             path_must_exist: Whether a missing TOML file is considered an error or not
+            section_must_exist: Whether a missing section in the TOML file is considered an error or not
             overridable_keys: List of keys that can be overridden by values in the TOML file
         """
         try:
@@ -201,7 +204,9 @@ class ArgumentParser(argparse.ArgumentParser):
             logging.debug('TOML file %s does not exist (not an error)', str(path))
             return namespace
         except KeyError as err:
-            raise KeyError(f'Unable to locate section {section} in TOML file {path}') from err
+            if section_must_exist:
+                raise KeyError(f'Unable to locate section {section} in TOML file {path}') from err
+            return namespace
 
         for key, value in config.items():
             if key not in self._default_args:

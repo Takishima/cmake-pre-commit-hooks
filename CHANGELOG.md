@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 -   Added Python tests using PyTest
+-   Added support for parsing hook parameters from TOML configuration files
 
 ### Fixed
 
@@ -25,7 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 -   Use [ruff](https://beta.ruff.rs/docs/) for linting over other Python linters
--   Tests now run using LOGLEVEL=DEBUG
+-   System tests now run using LOGLEVEL=DEBUG
 
 ## [v1.8.1] - 2023-04-20
 
