@@ -55,6 +55,7 @@ def test_cmake_command_init():
         # Custom options
         ([], 'automatic_discovery', True),
         (['--no-automatic-discovery'], 'automatic_discovery', False),
+        (['--detect-configured-files'], 'detect_configured_files', True),
         (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
         (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ['"-DCMAKE_CXX_COMPILER=clang++"']),
         (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ['"-DCMAKE_CXX_COMPILER=cl"']),
@@ -140,7 +141,7 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
     cmake = CMakeCommand()
 
     args = argparse.Namespace()
-    args.cmake_trace = True
+    args.detect_configured_files = True
     if original_system == 'Windows':
         args.source_dir = 'C:/path/to/source'
         args.build_dir = ['C:/path/to/build', 'C:/path/to/other_build']
@@ -204,10 +205,10 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
             assert any(win in arg for arg in cmake.cmake_args)
 
 
-@pytest.mark.parametrize('cmake_trace', [False, True], ids=['no_trace', 'w_trace'])
+@pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
 @pytest.mark.parametrize('returncode', [0, 1])
 @pytest.mark.parametrize('clean_build', [False, True])
-def test_configure_cmake(mocker, tmp_path, clean_build, returncode, cmake_trace):
+def test_configure_cmake(mocker, tmp_path, clean_build, returncode, detect_configured_files):
     sys_exit = mocker.patch('sys.exit')
     FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
     mocker.patch('filelock.FileLock', FileLock)
@@ -226,7 +227,7 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode, cmake_trace)
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
     cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
-    if cmake_trace:
+    if detect_configured_files:
         cmake.cmake_trace_log = tmp_path / 'log.json'
 
     cmake.configure(command='test', clean_build=clean_build)
@@ -239,7 +240,7 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode, cmake_trace)
         lock_files=(InterProcessReaderWriterLock.call_args[0][0], FileLock.call_args[0][0]), clean_build=clean_build
     )
 
-    if cmake_trace:
+    if detect_configured_files:
         parse_log.assert_called_once_with()
     else:
         parse_log.assert_not_called()
@@ -288,9 +289,9 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     _configure.assert_not_called()
 
 
-@pytest.mark.parametrize('cmake_trace', [False, True], ids=['no_trace', 'w_trace'])
+@pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
 @pytest.mark.parametrize('clean_build', [False, True], ids=['no_clean_build', 'clean_build'])
-def test_configure_cmake_internal(mocker, tmp_path, clean_build, cmake_trace):
+def test_configure_cmake_internal(mocker, tmp_path, clean_build, detect_configured_files):
     mocker.patch('shutil.rmtree')
     call_cmake = mocker.patch(
         'cmake_pc_hooks._cmake.CMakeCommand._call_cmake', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
@@ -314,7 +315,7 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build, cmake_trace):
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
     cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=clang++')
-    if cmake_trace:
+    if detect_configured_files:
         cmake.cmake_trace_log = tmp_path / 'log.json'
 
     returncode = cmake._configure(lock_files=lock_files, clean_build=clean_build)
@@ -324,7 +325,7 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build, cmake_trace):
     for lock_file in lock_files:
         assert lock_file.exists()
 
-    if cmake_trace:
+    if detect_configured_files:
         call_cmake.assert_called_once()
         extra_args = call_cmake.call_args.kwargs['extra_args']
         assert '--trace-expand' in extra_args
@@ -375,9 +376,9 @@ def test_call_cmake(mocker, tmp_path):
 # ==============================================================================
 
 
-@pytest.mark.parametrize('cmake_trace', [False, True], ids=['no_trace', 'w_trace'])
+@pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
 @pytest.mark.parametrize('returncode', [0, 1])
-def test_parse_cmake_trace_log(mocker, tmp_path, cmake_trace, returncode):
+def test_parse_cmake_trace_log(mocker, tmp_path, detect_configured_files, returncode):
     cmake_cache_output = dedent(
         f'''
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
@@ -474,17 +475,17 @@ GIT_EXECUTABLE:FILEPATH=/usr/bin/git
     cmake = CMakeCommand()
     cmake.source_dir = tmp_path
     cmake.build_dir = tmp_path / 'build'
-    if cmake_trace:
+    if detect_configured_files:
         cmake.cmake_trace_log = cmake_trace_log
 
     cmake._parse_cmake_trace_log()
 
-    if not cmake_trace:
+    if not detect_configured_files:
         call_cmake.assert_not_called()
     else:
         call_cmake.assert_called_once_with(extra_args=['-N', '-LA'])
 
-    if returncode != 0 or not cmake_trace:
+    if returncode != 0 or not detect_configured_files:
         assert not cmake.cmake_configured_files
     else:
         assert set(cmake.cmake_configured_files) == {

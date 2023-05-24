@@ -128,7 +128,9 @@ class CMakeCommand:
         options.add_argument('--clean', action='store_true', help='Start from a clean build directory')
         options.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
         options.add_argument(
-            '--cmake-trace', action='store_true', help='Enable advanced tracing of CMake operations during configure'
+            '--detect-configured-files',
+            action='store_true',
+            help='Enable tracing of files generated  using the configure_file(...) CMake function',
         )
         options.add_argument(
             '--no-automatic-discovery',
@@ -243,7 +245,7 @@ class CMakeCommand:
             build_dir_list=cmake_args.build_dir, automatic_discovery=cmake_args.automatic_discovery
         )
 
-        if cmake_args.cmake_trace:
+        if cmake_args.detect_configured_files:
             self.cmake_trace_log = self.build_dir / self.DEFAULT_TRACE_LOG
 
         keyword_args = {

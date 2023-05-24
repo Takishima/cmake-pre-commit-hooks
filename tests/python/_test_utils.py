@@ -36,7 +36,7 @@ def run_command_default_assertions(
     sys_exit,
     exit_success=None,
     do_configure_test=True,
-    cmake_trace=False,
+    detect_configured_files=False,
     **kwargs,  # noqa: ARG001
 ):
     assert set(command.files) == {str(fname) for fname in file_list}
@@ -54,7 +54,7 @@ def run_command_default_assertions(
 
     if read_json_db:
         n_files += len(json_db_file_list)
-    if cmake_trace:
+    if detect_configured_files:
         n_files += len(command.cmake.cmake_configured_files)
 
     assert len(command.files) == n_files
