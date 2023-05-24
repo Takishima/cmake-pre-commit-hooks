@@ -271,9 +271,9 @@ dev_warnings = true
 ### CMake configured file detection
 
 Since v1.9.0, the hooks support the use of CMake with trace mode enabled in order to keep track of files that are
-generated using calls to the `configure_file(...)` CMake function. If `--detect-configured-files` is specified on the command line
-(or in some TOML configuration file), the hooks will attempt to locate those generated files and automatically add them
-to the list of processed files for any hook invocation.
+generated using calls to the `configure_file(...)` CMake function. If `--detect-configured-files` is specified on the
+command line (or in some TOML configuration file), the hooks will attempt to locate those generated files and
+automatically add them to the list of processed files for any hook invocation.
 
 ### Hook Option Comparison
 
