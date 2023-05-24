@@ -23,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Make default logging level `INFO` instead of `WARNING`
 -   Move all CMake handling code into dedicated sub-module
 -   Minor adjustments to logging output format
+-   Update README
 
 ### Repository
 
