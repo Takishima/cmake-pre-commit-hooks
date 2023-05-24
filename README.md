@@ -1,6 +1,6 @@
 # pre-commit hooks
 
-![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks\&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a3a1139e4bed4d4694bb12991b7df775)](https://app.codacy.com/gh/Takishima/cmake-pre-commit-hooks?utm_source=github.com&utm_medium=referral&utm_content=Takishima/cmake-pre-commit-hooks&utm_campaign=Badge_Grade)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks\&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a3a1139e4bed4d4694bb12991b7df775)](https://app.codacy.com/gh/Takishima/cmake-pre-commit-hooks?utm_source=github.com\&utm_medium=referral\&utm_content=Takishima/cmake-pre-commit-hooks\&utm_campaign=Badge_Grade)
 
 This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ linters/formatters to work with
 CMake-based projects.
@@ -26,7 +26,6 @@ This repository is only has Python-based pre-commit hooks.
 
 2.  Currently, arguments set in a TOML configuration file (`pyproject.toml`, `cmake_pc_hooks.toml` or else) are applied
     to all hooks. Future improvements may allow to customize arguments on a per-hook basis.
-
 
 ## Example usage
 
@@ -134,7 +133,6 @@ step. However, if nothing changed in your CMake configuration, this should not c
 For installing the various utilities, refer to your package manager documentation. Some guidance can also be found
 [here](https://github.com/pocc/pre-commit-hooks#installation).
 
-
 ### Hook Info
 
 | Hook Info                | Type                     | Languages        |
@@ -147,12 +145,16 @@ For installing the various utilities, refer to your package manager documentatio
 | [lizard][]               | Code complexity analyzer | C/C++, ObjC, ... |
 
 [clang-format]: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
-[clang-tidy]: https://clang.llvm.org/extra/clang-tidy/
-[cppcheck]: http://cppcheck.sourceforge.net/
-[cpplint]: https://github.com/cpplint/cpplint
-[include-what-you-use]: https://include-what-you-use.org/
-[lizard]: http://www.lizard.ws
 
+[clang-tidy]: https://clang.llvm.org/extra/clang-tidy/
+
+[cppcheck]: http://cppcheck.sourceforge.net/
+
+[cpplint]: https://github.com/cpplint/cpplint
+
+[include-what-you-use]: https://include-what-you-use.org/
+
+[lizard]: http://www.lizard.ws
 
 ### Hook options
 
@@ -238,19 +240,17 @@ Also, builds on Linux and MacOS will set the C++ compiler to `g++-10`, while bui
 Since v1.9.0, the hooks support loading the CLI arguments from TOML files. This can be used to configure all the hooks
 for a particular repository using either of:
 
-
 1.  `pyproject.toml`
 2.  `cmake_pc_hooks.toml`
 3.  TOML file specified using `--config=/path/to/file.toml`
 4.  Command line arguments
-
 
 Note that each step in the above list is overridden by the steps that happen **after** it. For example, CLI arguments
 will always override any arguments read from any TOML file.
 
 A good place to start if you plan on creating a TOML configuration file is to use the hooks using the CLI arguments as
 you would normally and then run the hook manually and with the addition of `--dump-toml`. This will output a
-TOML-formatted configuration on the standard output for all the parameters that _diverge_ from their default values.
+TOML-formatted configuration on the standard output for all the parameters that *diverge* from their default values.
 
 For example, running the following command (assuming that no valid TOML configuration exists):
 
@@ -278,7 +278,11 @@ dev_warnings = true
 
 [^1]: `-fix` will fail if there are compiler errors. `-fix-errors` will `-fix` and fix compiler errors if it can, like missing semicolons.
 
-[^2]: Be careful with `-checks=*`; some checks can have self-contradictory rules in newer versions of LLVM (9+). For example, modernize wants to use [trailing return type](https://clang.llvm.org/extra/clang-tidy/checks/modernize-use-trailing-return-type.html) but Fuchsia [disallows it](https://clang.llvm.org/extra/clang-tidy/checks/fuchsia-trailing-return.html).
+[^2]: Be careful with `-checks=*`; some checks can have self-contradictory rules in newer versions of LLVM (9+). For example, modernize wants to use [trailing return type][] but Fuchsia [disallows it][].
+
+[trailing return type]: https://clang.llvm.org/extra/clang-tidy/checks/modernize-use-trailing-return-type.html
+
+[disallows it]: https://clang.llvm.org/extra/clang-tidy/checks/fuchsia-trailing-return.html
 
 ### The '--' doubledash option
 
