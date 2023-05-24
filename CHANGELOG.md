@@ -23,12 +23,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Make default logging level `INFO` instead of `WARNING`
 -   Move all CMake handling code into dedicated sub-module
 -   Minor adjustments to logging output format
+-   Update README
 
 ### Repository
 
 -   Use [ruff](https://beta.ruff.rs/docs/) for linting over other Python linters
 -   System tests now run using LOGLEVEL=DEBUG
 -   Improved configuration for external linters (e.g. SonarCloud, Codacy)
+-   Update `yamllint` hook to v1.32.0
 
 ## [v1.8.1] - 2023-04-20
 

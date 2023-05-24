@@ -246,11 +246,7 @@ class ArgumentParser(argparse.ArgumentParser):
         overridable_keys: set = None,
     ) -> None:
         """
-        Load a TOML file and return the corresponding config dictionary.
-
-        Note:
-            If no section is specified, this function will only return the dictionary containing the first level of
-            elements (ie. no nested sections).
+        Load a TOML file and set the attributes within the argparse namespace object.
 
         Args:
             namespace: Namespace to store results into
