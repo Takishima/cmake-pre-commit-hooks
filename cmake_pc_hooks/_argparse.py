@@ -71,6 +71,48 @@ def executable_path(path: str) -> Path:
 # ==============================================================================
 
 
+def _load_data_from_toml(
+    path: Path, section: str, path_must_exist: bool = True, section_must_exist: bool = True
+) -> dict:
+    """
+    Load a TOML file and return the corresponding config dictionary.
+
+    Note:
+        If no section is specified, this function will only return the dictionary containing the first level of
+        elements (ie. no nested sections).
+
+    Args:
+        namespace: Namespace to store results into
+        path: Path to TOML file
+        section: Name of section to load in TOML file
+        path_must_exist: Whether a missing TOML file is considered an error or not
+        section_must_exist: Whether a missing section in the TOML file is considered an error or not
+    """
+    try:
+        with path.open(mode='r') as fd:
+            config = toml.load(fd)
+        if section:
+            for sub_section in section.split('.'):
+                config = config[sub_section]
+            logging.debug('Loading data from %s table of %s', section, path)
+        else:
+            config = {key: value for key, value in config.items() if not isinstance(value, dict)}
+            logging.debug('Loading data from root table of %s', path)
+        return config
+    except FileNotFoundError as err:
+        if path_must_exist:
+            raise FileNotFoundError(f'Unable to locate TOML file {path}') from err
+        logging.debug('TOML file %s does not exist (not an error)', str(path))
+    except KeyError as err:
+        if section_must_exist:
+            raise KeyError(f'Unable to locate section {section} in TOML file {path}') from err
+        logging.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
+    return {}
+
+
+# ==============================================================================
+
+
 class ArgumentParser(argparse.ArgumentParser):
     """
     A wrapper of the argparse.ArgumentParser class that supports loading from TOML files.
@@ -218,27 +260,7 @@ class ArgumentParser(argparse.ArgumentParser):
             section_must_exist: Whether a missing section in the TOML file is considered an error or not
             overridable_keys: List of keys that can be overridden by values in the TOML file
         """
-        try:
-            with path.open(mode='r') as fd:
-                config = toml.load(fd)
-            if section:
-                for sub_section in section.split('.'):
-                    config = config[sub_section]
-                logging.debug('Loading data from %s table of %s', section, path)
-            else:
-                config = {key: value for key, value in config.items() if not isinstance(value, dict)}
-                logging.debug('Loading data from root table of %s', path)
-        except FileNotFoundError as err:
-            if path_must_exist:
-                raise FileNotFoundError(f'Unable to locate TOML file {path}') from err
-
-            logging.debug('TOML file %s does not exist (not an error)', str(path))
-            return namespace
-        except KeyError as err:
-            if section_must_exist:
-                raise KeyError(f'Unable to locate section {section} in TOML file {path}') from err
-            logging.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
-            return namespace
+        config = _load_data_from_toml(path, section, path_must_exist, section_must_exist)
 
         for key, value in config.items():
             if key not in self._default_args:
