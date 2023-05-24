@@ -102,8 +102,9 @@ def test_command_parse_args_invalid(mocker, tmp_path, look_behind):
     sys_exit.assert_called_with(0)
 
 
+@pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_file_detect', 'w_file_detect'])
 @pytest.mark.parametrize('parsing_failed', [False, True])
-def test_command_run(mocker, parsing_failed, setup_command):
+def test_command_run(mocker, parsing_failed, setup_command, detect_configured_files):
     path = setup_command.compile_db_path
 
     # ----------------------------------
@@ -118,8 +119,12 @@ def test_command_run(mocker, parsing_failed, setup_command):
     command = _utils.Command(command_name, look_behind=False, args=args)
     command.parse_args(args)
 
+    if detect_configured_files:
+        command.cmake.cmake_configured_files = ['configured.cpp']
+
     run_command_default_assertions(
         command=command,
+        detect_configured_files=detect_configured_files,
         exit_success=not parsing_failed,
         **setup_command._asdict(),
     )
@@ -150,6 +155,9 @@ def test_command_run_invalid(mocker, tmp_path):
 
     configure.assert_called_once_with(command.command)
     sys_exit.assert_called_once_with(1)
+
+
+# ==============================================================================
 
 
 def test_command_parse_output_invalid():

@@ -14,9 +14,12 @@
 
 """CMake related function and classes."""
 
+import contextlib
+import json
 import logging
 import os
 import platform
+import re
 import shutil
 import subprocess as sp
 import sys
@@ -87,6 +90,7 @@ class CMakeCommand:
     """Class used to encapsulate all CMake related functionality."""
 
     DEFAULT_BUILD_DIR = '.cmake_build'
+    DEFAULT_TRACE_LOG = 'trace_log.json'
 
     def __init__(self, cmake_names=None):
         """
@@ -98,8 +102,9 @@ class CMakeCommand:
         self.command = get_cmake_command(cmake_names)
         self.source_dir = None
         self.build_dir = None
-        self.build_dir_discovery = True
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON']
+        self.cmake_trace_log = None
+        self.cmake_configured_files = []
 
     def add_cmake_arguments_to_parser(self, parser):
         """Add CMake options to an argparse.ArgumentParser."""
@@ -123,6 +128,11 @@ class CMakeCommand:
         # Custom options
         options.add_argument('--clean', action='store_true', help='Start from a clean build directory')
         options.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
+        options.add_argument(
+            '--detect-configured-files',
+            action='store_true',
+            help='Enable tracing of files generated  using the configure_file(...) CMake function',
+        )
         options.add_argument(
             '--no-automatic-discovery',
             action='store_false',
@@ -183,7 +193,7 @@ class CMakeCommand:
             '-Wno-dev', dest='no_dev_warnings', action='store_true', help='Suppress developer warnings.'
         )
 
-    def resolve_build_directory(self, build_dir_list=None):
+    def resolve_build_directory(self, build_dir_list=None, automatic_discovery=True):
         """Locate a valid build directory based on internal list and automatic discovery if enabled."""
         # First try to locate a valid build directory based on internal list
         build_dir_list = [] if build_dir_list is None else [Path(path) for path in build_dir_list]
@@ -194,7 +204,7 @@ class CMakeCommand:
                 return
 
         # If that fails or none have been passed, attempt automatic discovery
-        if self.build_dir_discovery:
+        if automatic_discovery:
             for path in sorted(self.source_dir.glob('*')):
                 if path.is_dir() and (path / 'CMakeCache.txt').exists():
                     logging.info('Automatic build dir discovery resulted in: %s', str(path))
@@ -231,7 +241,13 @@ class CMakeCommand:
         self.source_dir = Path(cmake_args.source_dir).resolve()
         if cmake_args.cmake:
             self.command = [Path(cmake_args.cmake).resolve()]
-        self.build_dir_discovery = cmake_args.automatic_discovery
+
+        self.resolve_build_directory(
+            build_dir_list=cmake_args.build_dir, automatic_discovery=cmake_args.automatic_discovery
+        )
+
+        if cmake_args.detect_configured_files:
+            self.cmake_trace_log = self.build_dir / self.DEFAULT_TRACE_LOG
 
         keyword_args = {
             'defines': ([], '-D{}'),
@@ -306,10 +322,30 @@ class CMakeCommand:
             logging.error('CMake configure step failed. See output for more information.')
             sys.exit(returncode)
 
+        if self.cmake_trace_log is not None:
+            self._parse_cmake_trace_log()
+
+    def _call_cmake(self, extra_args=None):
+        command = [str(cmd) for cmd in self.command]
+        if extra_args is None:
+            extra_args = []
+
+        result = _call_process.call_process(
+            [*command, str(self.source_dir), *self.cmake_args, *extra_args], cwd=str(self.build_dir)
+        )
+        result.stdout = '\n'.join(
+            [
+                f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
+                f'  from within {self.build_dir}',
+                result.stdout,
+                '',
+            ]
+        )
+
+        return result
+
     def _configure(self, lock_files, clean_build):
         """Run a CMake configure step."""
-        command = [str(cmd) for cmd in self.command]
-
         self.build_dir.mkdir(exist_ok=True)
 
         if clean_build:
@@ -319,15 +355,11 @@ class CMakeCommand:
                 elif path not in lock_files:
                     path.unlink()
 
-        result = _call_process.call_process([*command, str(self.source_dir), *self.cmake_args], cwd=str(self.build_dir))
-        result.stdout = '\n'.join(
-            [
-                f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
-                f'  from within {self.build_dir}',
-                result.stdout,
-                '',
-            ]
-        )
+        extra_args = []
+        if self.cmake_trace_log:
+            extra_args.extend(['--trace-expand', '--trace-format=json-v1', f'--trace-redirect={self.cmake_trace_log}'])
+
+        result = self._call_cmake(extra_args=extra_args)
 
         compiledb = Path(self.build_dir, 'compile_commands.json')
         if not compiledb.exists():
@@ -338,6 +370,54 @@ class CMakeCommand:
             result.to_stdout_and_stderr()
 
         return result.returncode
+
+    def _parse_cmake_trace_log(self):
+        logging.info('attempting to parse CMake trace log to detect calls to configure_file()')
+        self.cmake_configured_files = []
+
+        if not self.cmake_trace_log:
+            logging.info('no trace log provided, aborting.')
+            return
+
+        result = self._call_cmake(extra_args=['-N', '-LA'])
+        if result.returncode != 0:
+            logging.error('failed to retrieve CMake cache variables')
+            return
+
+        cmake_cache_variables = {}
+        for line in result.stdout.splitlines():
+            cmake_var = re.match(r'^(\w+):(BOOL|FILEPATH|PATH|STRING|INTERNAL)=(.*)$', line)
+            if cmake_var:
+                cmake_cache_variables[cmake_var.group(1)] = cmake_var.group(3)
+
+        # ------------------------------
+
+        def _is_relevant_configure_file_call(json_data):
+            """
+            Filter out the list of configure_file() calls.
+
+            The criteria are:
+              - Being a call to configure_file()
+              - Originating from a CMake file located inside the source directory
+              - Not originating from a CMake file located in FETCHCONTENT_BASE_DIR (if defined)
+            """
+            if json_data.get('cmd', '') != 'configure_file':
+                return False
+
+            is_relevant = self.source_dir.as_posix() in json_data['file']
+            with contextlib.suppress(KeyError):
+                is_relevant &= cmake_cache_variables['FETCHCONTENT_BASE_DIR'] not in json_data['file']
+            return is_relevant
+
+        with self.cmake_trace_log.open('r') as fd:
+            configure_file_calls = [json.loads(line) for line in fd.readlines()]
+
+        for configure_file_call in (data for data in configure_file_calls if _is_relevant_configure_file_call(data)):
+            input_file, configured_file = (Path(arg) for arg in configure_file_call['args'][:2])
+            if not configured_file.is_absolute():
+                configured_file = self.build_dir / configured_file
+            logging.debug('detected call to configure_file(%s %s [...])', str(input_file), str(configured_file))
+            self.cmake_configured_files.append(str(configured_file))
 
 
 # ==============================================================================
