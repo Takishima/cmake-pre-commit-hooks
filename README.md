@@ -2,7 +2,8 @@
 
 ![PyPI - Python Version](https://img.shields.io/pypi/pyversions/cmake-pre-commit-hooks?label=Python) [![PyPI version](https://badge.fury.io/py/cmake-pre-commit-hooks.svg)](https://badge.fury.io/py/cmake-pre-commit-hooks) [![CI Build](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/ci.yml) [![CodeQL](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/Takishima/cmake-pre-commit-hooks/actions/workflows/codeql-analysis.yml) [![pre-commit.ci status](https://results.pre-commit.ci/badge/github/Takishima/cmake-pre-commit-hooks/main.svg)](https://results.pre-commit.ci/latest/github/Takishima/cmake-pre-commit-hooks/main) [![CodeFactor](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks/badge)](https://www.codefactor.io/repository/github/takishima/cmake-pre-commit-hooks) [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=Takishima_cmake-pre-commit-hooks\&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Takishima_cmake-pre-commit-hooks)[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a3a1139e4bed4d4694bb12991b7df775)](https://app.codacy.com/gh/Takishima/cmake-pre-commit-hooks?utm_source=github.com&utm_medium=referral&utm_content=Takishima/cmake-pre-commit-hooks&utm_campaign=Badge_Grade)
 
-This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ linters/formatters to work with CMake-based projects.
+This is a [pre-commit](https://pre-commit.com) hooks repo that integrates C/C++ linters/formatters to work with
+CMake-based projects.
 
 > [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html),
 > [clang-tidy](https://clang.llvm.org/extra/clang-tidy/),
@@ -25,7 +26,6 @@ This repository is only has Python-based pre-commit hooks.
 
 2.  Currently, arguments set in a TOML configuration file (`pyproject.toml`, `cmake_pc_hooks.toml` or else) are applied
     to all hooks. Future improvements may allow to customize arguments on a per-hook basis.
-
 
 ## Example usage
 
@@ -54,7 +54,6 @@ repos:
       - id: cppcheck
       - id: include-what-you-use
 ```
-
 
 __CMakeLists.txt__
 
@@ -129,7 +128,6 @@ in parallel, only one of the hooks will run the CMake configure step while the o
 CMake ends to continue. In the case where the hooks are run serially, all the hooks will be running the CMake configure
 step. However, if nothing changed in your CMake configuration, this should not cost too much time.
 
-
 ### Installation
 
 For installing the various utilities, refer to your package manager documentation. Some guidance can also be found
@@ -138,14 +136,22 @@ For installing the various utilities, refer to your package manager documentatio
 
 ### Hook Info
 
-| Hook Info                                                                | Type                     | Languages        |
-|--------------------------------------------------------------------------|--------------------------|------------------|
-| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | Formatter                | C, C++, ObjC     |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | Static code analyzer     | C, C++, ObjC     |
-| [cppcheck](http://cppcheck.sourceforge.net/)                             | Static code analyzer     | C, C++           |
-| [cpplint](https://github.com/cpplint/cpplint)                            | Static code analyzer     | C, C++           |
-| [include-what-you-use](https://include-what-you-use.org/)                | Static code analyzer     | C, C++           |
-| [lizard](http://www.lizard.ws)                                           | code complexity analyzer | C/C++, ObjC, ... |
+| Hook Info                | Type                     | Languages        |
+|--------------------------|--------------------------|------------------|
+| [clang-format][]         | Formatter                | C, C++, ObjC     |
+| [clang-tidy][]           | Static code analyzer     | C, C++, ObjC     |
+| [cppcheck][]             | Static code analyzer     | C, C++           |
+| [cpplint][]              | Static code analyzer     | C, C++           |
+| [include-what-you-use][] | Static code analyzer     | C, C++           |
+| [lizard][]               | Code complexity analyzer | C/C++, ObjC, ... |
+
+[clang-format]: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
+[clang-tidy]: https://clang.llvm.org/extra/clang-tidy/
+[cppcheck]: http://cppcheck.sourceforge.net/
+[cpplint]: https://github.com/cpplint/cpplint
+[include-what-you-use]: https://include-what-you-use.org/
+[lizard]: http://www.lizard.ws
+
 
 ### Hook options
 
@@ -260,23 +266,22 @@ dev_warnings = true
 
 ### Hook Option Comparison
 
-| Hook Options                                                             | Fix In Place       | Enable all Checks                       | Set key/value |
-|--------------------------------------------------------------------------|--------------------|-----------------------------------------|---------------|
-| [clang-format](https://clang.llvm.org/docs/ClangFormatStyleOptions.html) | `-i`               |                                         |               |
-| [clang-tidy](https://clang.llvm.org/extra/clang-tidy/)                   | `--fix-errors` [1] | `-checks=*` `-warnings-as-errors=*` [2] |               |
-| [cppcheck](http://cppcheck.sourceforge.net/)                             |                    | `-enable=all`                           |               |
-| [include-what-you-use](https://include-what-you-use.org/)                |                    |                                         |               |
 
-[1]: `-fix` will fail if there are compiler errors. `-fix-errors` will `-fix` and fix compiler errors if it can, like missing semicolons.
+| Hook Options             | Fix In Place        | Enable all Checks                        | Set key/value |
+|--------------------------|---------------------|------------------------------------------|---------------|
+| [clang-format][]         | `-i`                |                                          |               |
+| [clang-tidy][]           | `--fix-errors` [^1] | `-checks=*` `-warnings-as-errors=*` [^2] |               |
+| [cppcheck][]             |                     | `-enable=all`                            |               |
+| [include-what-you-use][] |                     |                                          |               |
 
-[2]: Be careful with `-checks=*`.  can have self-contradictory rules in newer versions of llvm (9+): modernize wants to use [trailing return type](https://clang.llvm.org/extra/clang-tidy/checks/modernize-use-trailing-return-type.html) but Fuchsia [disallows it](https://clang.llvm.org/extra/clang-tidy/checks/fuchsia-trailing-return.html).
+[^1]: `-fix` will fail if there are compiler errors. `-fix-errors` will `-fix` and fix compiler errors if it can, like missing semicolons.
 
+[^2]: Be careful with `-checks=*`; some checks can have self-contradictory rules in newer versions of LLVM (9+). For example, modernize wants to use [trailing return type](https://clang.llvm.org/extra/clang-tidy/checks/modernize-use-trailing-return-type.html) but Fuchsia [disallows it](https://clang.llvm.org/extra/clang-tidy/checks/fuchsia-trailing-return.html).
 
 ### The '--' doubledash option
 
 Options after `--` like `-std=c++11` will be interpreted correctly for `clang-tidy`. Make sure they sequentially follow
 the `--` argument in the hook's args list.
-
 
 ### Standalone Hooks
 
