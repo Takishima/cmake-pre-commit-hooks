@@ -116,6 +116,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.cmake.configure(self.command)
         if self.read_json_db:
             self.files.extend(set(_read_compile_commands_json(self.cmake.build_dir)) - set(self.files))
+        self.files.extend(self.cmake.cmake_configured_files)
+
         if self.all_at_once:
             self.run_command(self.files)
         elif self.files:
