@@ -103,31 +103,57 @@ class CMakeCommand:
 
     def add_cmake_arguments_to_parser(self, parser):
         """Add CMake options to an argparse.ArgumentParser."""
+        # Create option group here to control the order
+        cmake_options = parser.add_argument_group(
+            title='CMake options',
+            description='Options mirroring those of CMake and that will be passed onto CMake as-is.',
+        )
+        options = parser.add_argument_group(
+            title='Other CMake related options', description='Options used to configure how CMake is called'
+        )
+        platform_specific_cmake = parser.add_argument_group(
+            title='Options to define platform-dependent CMake variables',
+            description=(
+                'This allows you to set CMake variables during the configuration depending on the platform the hooks '
+                'are currently running on.'
+                'For example --unix="CMAKE_CXX_COMPILER=g++" will only define this CMake variable on UNIX platforms.'
+            ),
+        )
+
         # Custom options
-        parser.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
-        parser.add_argument(
+        options.add_argument('--clean', action='store_true', help='Start from a clean build directory')
+        options.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
+        options.add_argument(
             '--no-automatic-discovery',
             action='store_false',
             dest='automatic_discovery',
             help='Do not attempt to automatically look for a build directory',
         )
-        parser.add_argument(
+
+        # Platform-specific CMake options
+        platform_specific_cmake.add_argument(
             '--unix',
             action=_argparse.OSSpecificAction,
             type=str,
             help='Unix-only (ie. Linux and MacOS) options for CMake',
         )
-        parser.add_argument('--linux', action=_argparse.OSSpecificAction, type=str, help='Linux-only options for CMake')
-        parser.add_argument('--mac', action=_argparse.OSSpecificAction, type=str, help='Mac-only options for CMake')
-        parser.add_argument('--win', action=_argparse.OSSpecificAction, type=str, help='Windows-only options for CMake')
+        platform_specific_cmake.add_argument(
+            '--linux', action=_argparse.OSSpecificAction, type=str, help='Linux-only options for CMake'
+        )
+        platform_specific_cmake.add_argument(
+            '--mac', action=_argparse.OSSpecificAction, type=str, help='Mac-only options for CMake'
+        )
+        platform_specific_cmake.add_argument(
+            '--win', action=_argparse.OSSpecificAction, type=str, help='Windows-only options for CMake'
+        )
 
         # CMake-like options
-        parser.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default='.')
-        parser.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
-        parser.add_argument(
+        cmake_options.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default='.')
+        cmake_options.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
+        cmake_options.add_argument(
             '-D', dest='defines', action='append', type=str, help='Create or update a cmake cache entry.', default=[]
         )
-        parser.add_argument(
+        cmake_options.add_argument(
             '-U',
             dest='undefines',
             action='append',
@@ -135,23 +161,25 @@ class CMakeCommand:
             help='Remove matching entries from CMake cache.',
             default=[],
         )
-        parser.add_argument('-G', dest='generator', type=str, help='Specify a build system generator.')
-        parser.add_argument('-T', dest='toolset', type=str, help='Specify toolset name if supported by generator.')
-        parser.add_argument('-A', dest='platform', type=str, help='Specify platform if supported by generator.')
-        parser.add_argument(
+        cmake_options.add_argument('-G', dest='generator', type=str, help='Specify a build system generator.')
+        cmake_options.add_argument(
+            '-T', dest='toolset', type=str, help='Specify toolset name if supported by generator.'
+        )
+        cmake_options.add_argument('-A', dest='platform', type=str, help='Specify platform if supported by generator.')
+        cmake_options.add_argument(
             '-Werror', dest='errors', choices=['dev'], help='Make developer warnings errors.', default=[]
         )
-        parser.add_argument(
+        cmake_options.add_argument(
             '-Wno-error',
             dest='no_errors',
             choices=['dev'],
             help='Make developer warnings not errors.',
             default=[],
         )
-        parser.add_argument('--preset', type=str, help='Specify a configure preset.')
+        cmake_options.add_argument('--preset', type=str, help='Specify a configure preset.')
 
-        parser.add_argument('-Wdev', dest='dev_warnings', action='store_true', help='Enable developer warnings.')
-        parser.add_argument(
+        cmake_options.add_argument('-Wdev', dest='dev_warnings', action='store_true', help='Enable developer warnings.')
+        cmake_options.add_argument(
             '-Wno-dev', dest='no_dev_warnings', action='store_true', help='Suppress developer warnings.'
         )
 

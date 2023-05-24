@@ -85,7 +85,12 @@ class ArgumentParser(argparse.ArgumentParser):
     """
 
     def __init__(
-        self, *args: Any, default_config_name: str = None, pyproject_section_name: str = None, **kwargs: Any
+        self,
+        *args: Any,
+        default_config_name: str = None,
+        pyproject_section_name: str = None,
+        args_groups: list[dict] = None,
+        **kwargs: Any,
     ) -> None:
         """
         Initialize an instance of ArgumentParser.
@@ -93,23 +98,32 @@ class ArgumentParser(argparse.ArgumentParser):
         Keyword Args:
             default_config_name (str): Default name for a TOML configuration file
             pyproject_section_name (str): Name of section to look for in pyproject.toml file
+            args_groups: List of argument groups to create. Items are dictionaries with keywords to pass onto
+                add_argument_group()
             args: Same as for argparse.ArgumentParser()
             kwargs: Same as for argparse.ArgumentParser()
         """
         self._default_config_name = default_config_name
         self._pyproject_section_name = pyproject_section_name
+        self.groups = []
 
         super().__init__(*args, **kwargs)
-        self.add_argument(
+
+        if args_groups is not None:
+            for arg_group in args_groups:
+                self.groups.append(self.add_argument_group(**arg_group))
+
+        group = self.add_argument_group(title='TOML options')
+        group.add_argument(
             '--config',
             type=str,
             default='',
             help='Path to a TOML configuration file.',
         )
-        self.add_argument(
+        group.add_argument(
             '--dump-toml',
             action='store_true',
-            help='Dump the current set of CLI arguments as TOML on stdout',
+            help='Dump the current set of CLI arguments as TOML-formatted output',
         )
         self._default_args = {}
 

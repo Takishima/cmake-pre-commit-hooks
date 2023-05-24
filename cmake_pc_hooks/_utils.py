@@ -64,15 +64,18 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             args (:obj:`list` of :obj:`str`): list of arguments
         """
         parser = _argparse.ArgumentParser(
-            default_config_name='cmake_pc_hooks.toml', pyproject_section_name='tool.cmake_pc_hooks'
+            default_config_name='cmake_pc_hooks.toml',
+            pyproject_section_name='tool.cmake_pc_hooks',
+            args_groups=[{'title': 'Hook options'}],
         )
         self.cmake.add_cmake_arguments_to_parser(parser)
-        parser.add_argument(
+        hook_options = parser.groups[0]
+        hook_options.add_argument(
             '--all-at-once',
             action='store_true',
             help='Pass all filenames at once to the linter/formatter instead of calling the command once for each file',
         )
-        parser.add_argument(
+        hook_options.add_argument(
             '--read-json-db',
             action='store_true',
             help=(
@@ -82,9 +85,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         )
 
         # Other options
-        parser.add_argument('positionals', metavar='filenames', nargs='*', help='Filenames to check')
-        parser.add_argument('--version', type=str, help='Version check')
-        parser.add_argument('--clean', action='store_true', help='Start from a clean build directory')
+        hook_options.add_argument('--version', type=str, help='Perform a version check')
+        hook_options.add_argument('positionals', metavar='filenames', nargs='*', help='Filenames to check')
 
         known_args, self.args = parser.parse_known_args(args[1:])
 
