@@ -15,6 +15,7 @@
 import argparse
 import platform
 from pathlib import Path
+from textwrap import dedent
 
 import fasteners
 import filelock
@@ -115,17 +116,20 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
             path.mkdir(parents=True)
 
     assert cmake.build_dir is None
-    cmake.resolve_build_directory(None if dir_list is None else [tmp_path / path for path in dir_list])
+    cmake.resolve_build_directory(
+        None if dir_list is None else [tmp_path / path for path in dir_list], automatic_discovery=True
+    )
     assert cmake.build_dir == tmp_path / ref_path
 
     cmake.build_dir = None
-    cmake.build_dir_discovery = False
-    cmake.resolve_build_directory(None if dir_list is None else [tmp_path / path for path in dir_list])
+    cmake.resolve_build_directory(
+        None if dir_list is None else [tmp_path / path for path in dir_list], automatic_discovery=False
+    )
     assert cmake.build_dir == tmp_path / cmake.DEFAULT_BUILD_DIR if dir_list is None else dir_list[0]
 
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
-def test_setup_cmake_args(mocker, system):
+def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
     original_system = platform.system()
 
     def system_stub():
@@ -136,11 +140,14 @@ def test_setup_cmake_args(mocker, system):
     cmake = CMakeCommand()
 
     args = argparse.Namespace()
+    args.cmake_trace = True
     if original_system == 'Windows':
-        args.source_dir = Path('C:/path/to/source')
+        args.source_dir = 'C:/path/to/source'
+        args.build_dir = ['C:/path/to/build', 'C:/path/to/other_build']
         args.cmake = Path('C:/path/to/cmake')
     else:
-        args.source_dir = Path('/path/to/source')
+        args.source_dir = '/path/to/source'
+        args.build_dir = ['/path/to/build', '/path/to/other_build']
         args.cmake = Path('/path/to/cmake')
     args.defines = ['ONE', 'TWO']
     args.undefines = ['THREE', 'FOUR']
@@ -158,11 +165,13 @@ def test_setup_cmake_args(mocker, system):
 
     assert cmake.source_dir is None
     assert cmake.build_dir is None
+    assert not cmake.cmake_trace_log
     cmake.setup_cmake_args(args)
 
-    assert cmake.source_dir == args.source_dir
+    assert cmake.source_dir == Path(args.source_dir)
     assert cmake.command == [args.cmake]
-    assert cmake.build_dir is None
+    assert cmake.build_dir is not None
+    assert cmake.cmake_trace_log == cmake.build_dir / cmake.DEFAULT_TRACE_LOG
 
     assert '-GNinja' in cmake.cmake_args
     assert '-A64' in cmake.cmake_args
@@ -170,6 +179,10 @@ def test_setup_cmake_args(mocker, system):
 
     assert '-Wdev' in cmake.cmake_args
     assert '-Wno_dev' in cmake.cmake_args
+
+    # The arguments are not added to cmake.cmake_args since we only want to add them during a CMake configure call
+    assert '--trace-expand' not in cmake.cmake_args
+    assert '--trace-format=json-v1' not in cmake.cmake_args
 
     for define in args.defines:
         assert any(define in arg for arg in cmake.cmake_args)
@@ -191,9 +204,10 @@ def test_setup_cmake_args(mocker, system):
             assert any(win in arg for arg in cmake.cmake_args)
 
 
+@pytest.mark.parametrize('cmake_trace', [False, True], ids=['no_trace', 'w_trace'])
 @pytest.mark.parametrize('returncode', [0, 1])
 @pytest.mark.parametrize('clean_build', [False, True])
-def test_configure_cmake(mocker, tmp_path, clean_build, returncode):
+def test_configure_cmake(mocker, tmp_path, clean_build, returncode, cmake_trace):
     sys_exit = mocker.patch('sys.exit')
     FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
     mocker.patch('filelock.FileLock', FileLock)
@@ -201,6 +215,7 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode):
     mocker.patch('fasteners.InterProcessReaderWriterLock', InterProcessReaderWriterLock)
     _configure = mocker.Mock(return_value=returncode)
     mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._configure', _configure)
+    parse_log = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._parse_cmake_trace_log')
 
     # ----------------------------------
 
@@ -211,6 +226,8 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode):
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
     cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
+    if cmake_trace:
+        cmake.cmake_trace_log = tmp_path / 'log.json'
 
     cmake.configure(command='test', clean_build=clean_build)
 
@@ -221,6 +238,12 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode):
     _configure.assert_called_once_with(
         lock_files=(InterProcessReaderWriterLock.call_args[0][0], FileLock.call_args[0][0]), clean_build=clean_build
     )
+
+    if cmake_trace:
+        parse_log.assert_called_once_with()
+    else:
+        parse_log.assert_not_called()
+
     if returncode != 0:
         sys_exit.assert_called_once_with(returncode)
     else:
@@ -265,11 +288,12 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     _configure.assert_not_called()
 
 
-@pytest.mark.parametrize('clean_build', [False, True])
-def test_configure_cmake_internal(mocker, tmp_path, clean_build):
+@pytest.mark.parametrize('cmake_trace', [False, True], ids=['no_trace', 'w_trace'])
+@pytest.mark.parametrize('clean_build', [False, True], ids=['no_clean_build', 'clean_build'])
+def test_configure_cmake_internal(mocker, tmp_path, clean_build, cmake_trace):
     mocker.patch('shutil.rmtree')
-    call_process = mocker.patch(
-        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
+    call_cmake = mocker.patch(
+        'cmake_pc_hooks._cmake.CMakeCommand._call_cmake', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
     )
 
     # ----------------------------------
@@ -290,6 +314,8 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build):
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
     cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=clang++')
+    if cmake_trace:
+        cmake.cmake_trace_log = tmp_path / 'log.json'
 
     returncode = cmake._configure(lock_files=lock_files, clean_build=clean_build)
 
@@ -298,9 +324,14 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build):
     for lock_file in lock_files:
         assert lock_file.exists()
 
-    call_process.assert_called_once_with(
-        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args], cwd=str(cmake.build_dir)
-    )
+    if cmake_trace:
+        call_cmake.assert_called_once()
+        extra_args = call_cmake.call_args.kwargs['extra_args']
+        assert '--trace-expand' in extra_args
+        assert '--trace-format=json-v1' in extra_args
+        assert f'--trace-redirect={cmake.cmake_trace_log}' in extra_args
+    else:
+        call_cmake.assert_called_once_with(extra_args=[])
 
     if not clean_build:
         assert compile_commands.exists()
@@ -309,4 +340,154 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build):
         assert not compile_commands.exists()
         assert returncode != 0
 
-    call_process.assert_called_once()
+
+# ==============================================================================
+
+
+def test_call_cmake(mocker, tmp_path):
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
+    )
+
+    # ----------------------------------
+
+    build_dir = tmp_path / 'build'
+    build_dir.mkdir(parents=True, exist_ok=True)
+
+    cmake = CMakeCommand()
+    cmake.command = ['cmake']
+    cmake.source_dir = tmp_path
+    cmake.build_dir = build_dir
+    cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=clang++')
+
+    cmake._call_cmake()
+    call_process.assert_called_once_with(
+        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args], cwd=str(cmake.build_dir)
+    )
+
+    extra_args = ['-N', '-LA']
+    cmake._call_cmake(extra_args=extra_args)
+    call_process.assert_called_with(
+        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args, *extra_args], cwd=str(cmake.build_dir)
+    )
+
+
+# ==============================================================================
+
+
+@pytest.mark.parametrize('cmake_trace', [False, True], ids=['no_trace', 'w_trace'])
+@pytest.mark.parametrize('returncode', [0, 1])
+def test_parse_cmake_trace_log(mocker, tmp_path, cmake_trace, returncode):
+    cmake_cache_output = dedent(
+        f'''
+CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
+CMAKE_AR:FILEPATH=/usr/bin/ar
+CMAKE_BUILD_TYPE:STRING=
+CMAKE_COLOR_MAKEFILE:BOOL=ON
+CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
+CMAKE_CXX_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-10
+CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-10
+CMAKE_CXX_FLAGS:STRING=
+CMAKE_CXX_FLAGS_DEBUG:STRING=-g
+CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
+CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
+CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+CMAKE_DLLTOOL:FILEPATH=CMAKE_DLLTOOL-NOTFOUND
+CMAKE_EXE_LINKER_FLAGS:STRING=
+CMAKE_EXE_LINKER_FLAGS_DEBUG:STRING=
+CMAKE_EXE_LINKER_FLAGS_MINSIZEREL:STRING=
+CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
+CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
+CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
+CMAKE_INSTALL_BINDIR:PATH=bin
+CMAKE_INSTALL_DATADIR:PATH=
+CMAKE_INSTALL_DATAROOTDIR:PATH=share
+CMAKE_INSTALL_DOCDIR:PATH=
+CMAKE_INSTALL_INCLUDEDIR:PATH=include
+CMAKE_INSTALL_INFODIR:PATH=
+CMAKE_INSTALL_LIBDIR:PATH=lib
+CMAKE_INSTALL_LIBEXECDIR:PATH=libexec
+CMAKE_INSTALL_LOCALEDIR:PATH=
+CMAKE_INSTALL_LOCALSTATEDIR:PATH=var
+CMAKE_INSTALL_MANDIR:PATH=
+CMAKE_INSTALL_OLDINCLUDEDIR:PATH=/usr/include
+CMAKE_INSTALL_PREFIX:PATH=/usr/local
+CMAKE_INSTALL_RUNSTATEDIR:PATH=
+CMAKE_INSTALL_SBINDIR:PATH=sbin
+CMAKE_INSTALL_SHAREDSTATEDIR:PATH=com
+CMAKE_INSTALL_SYSCONFDIR:PATH=etc
+CMAKE_LINKER:FILEPATH=/usr/bin/ld
+CMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/gmake
+CMAKE_MODULE_LINKER_FLAGS:STRING=
+CMAKE_MODULE_LINKER_FLAGS_DEBUG:STRING=
+CMAKE_MODULE_LINKER_FLAGS_MINSIZEREL:STRING=
+CMAKE_MODULE_LINKER_FLAGS_RELEASE:STRING=
+CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
+CMAKE_NM:FILEPATH=/usr/bin/nm
+CMAKE_OBJCOPY:FILEPATH=/usr/bin/objcopy
+CMAKE_OBJDUMP:FILEPATH=/usr/bin/objdump
+CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
+CMAKE_READELF:FILEPATH=/usr/bin/readelf
+CMAKE_SHARED_LINKER_FLAGS:STRING=
+CMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING=
+CMAKE_SHARED_LINKER_FLAGS_MINSIZEREL:STRING=
+CMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING=
+CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO:STRING=
+CMAKE_SKIP_INSTALL_RPATH:BOOL=NO
+CMAKE_SKIP_RPATH:BOOL=NO
+CMAKE_STATIC_LINKER_FLAGS:STRING=
+CMAKE_STATIC_LINKER_FLAGS_DEBUG:STRING=
+CMAKE_STATIC_LINKER_FLAGS_MINSIZEREL:STRING=
+CMAKE_STATIC_LINKER_FLAGS_RELEASE:STRING=
+CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
+CMAKE_STRIP:FILEPATH=/usr/bin/strip
+CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
+FETCHCONTENT_BASE_DIR:PATH={tmp_path}/build/_deps
+FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
+FETCHCONTENT_QUIET:BOOL=ON
+FETCHCONTENT_SOURCE_DIR_CATCH2:PATH=
+FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
+FETCHCONTENT_UPDATES_DISCONNECTED_CATCH2:BOOL=OFF
+GIT_EXECUTABLE:FILEPATH=/usr/bin/git
+    '''
+    )
+
+    call_cmake = mocker.patch(
+        'cmake_pc_hooks._cmake.CMakeCommand._call_cmake',
+        return_value=mocker.Mock(stdout=cmake_cache_output, stderr='', returncode=returncode),
+    )
+
+    # ----------------------------------
+
+    cmake_trace_log = tmp_path / 'log.json'
+    cmake_trace_log.write_text(
+        f'''{{"version":{{"major":1,"minor":2}}}}
+{{"args":["VERSION","3.20"],"cmd":"cmake_minimum_required","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":1,"time":1684940081.6217611}}
+{{"args":["test","LANGUAGES","CXX"],"cmd":"project","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":3,"time":1684940081.6219001}}
+{{"args":["/usr/share/cmake/Modules/FetchContent/CMakeLists.cmake.in","{tmp_path}/build/_deps/catch2-subbuild/CMakeLists.txt"],"cmd":"configure_file","file":"/usr/share/cmake/Modules/FetchContent.cmake","frame":5,"global_frame":5,"line":1598,"line_end":1599,"time":1684940081.7072489}}
+{{"args":["{tmp_path}/build/_deps/catch2-src/src/catch2/catch_user_config.hpp.in","{tmp_path}/build/generated-includes/catch2/catch_user_config.hpp"],"cmd":"configure_file","file":"{tmp_path}/build/_deps/catch2-src/src/CMakeLists.txt","frame":1,"global_frame":4,"line":308,"line_end":311,"time":1684940082.2564831}}
+{{"args":["test.cpp.in","test.cpp"],"cmd":"configure_file","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":17,"time":1684940082.260792}}
+{{"args":["test.cpp.in","{tmp_path}/other.cpp"],"cmd":"configure_file","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":18,"time":1684940082.2613621}}
+            '''
+    )
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = tmp_path / 'build'
+    if cmake_trace:
+        cmake.cmake_trace_log = cmake_trace_log
+
+    cmake._parse_cmake_trace_log()
+
+    if not cmake_trace:
+        call_cmake.assert_not_called()
+    else:
+        call_cmake.assert_called_once_with(extra_args=['-N', '-LA'])
+
+    if returncode != 0 or not cmake_trace:
+        assert not cmake.cmake_configured_files
+    else:
+        assert set(cmake.cmake_configured_files) == {
+            str(cmake.source_dir / 'other.cpp'),
+            str(cmake.build_dir / 'test.cpp'),
+        }

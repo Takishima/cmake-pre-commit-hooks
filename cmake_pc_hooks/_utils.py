@@ -98,7 +98,6 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             raise RuntimeError('You *must* specify -B|--build-dir if you pass --preset as a CMake argument!')
 
         self.cmake.setup_cmake_args(known_args)
-        self.cmake.resolve_build_directory(known_args.build_dir)
 
         if not self.cmake.source_dir.exists() and not self.cmake.source_dir.is_dir():
             sys.stderr.write(f'{self.cmake.source_dir} is not a valid source directory\n')
