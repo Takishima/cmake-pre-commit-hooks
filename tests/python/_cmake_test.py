@@ -376,81 +376,29 @@ def test_call_cmake(mocker, tmp_path):
 # ==============================================================================
 
 
+@pytest.mark.parametrize('with_cache_variables', [False, True], ids=['w/o_cache_vars', 'w_cache_vars'])
 @pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
 @pytest.mark.parametrize('returncode', [0, 1])
-def test_parse_cmake_trace_log(mocker, tmp_path, detect_configured_files, returncode):
-    cmake_cache_output = dedent(
-        f'''
+def test_parse_cmake_trace_log(mocker, tmp_path, with_cache_variables, detect_configured_files, returncode):
+    cmake_cache_output = (
+        ''
+        if not with_cache_variables
+        else dedent(
+            f'''
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
-CMAKE_AR:FILEPATH=/usr/bin/ar
-CMAKE_BUILD_TYPE:STRING=
-CMAKE_COLOR_MAKEFILE:BOOL=ON
-CMAKE_CXX_COMPILER:FILEPATH=/usr/bin/c++
-CMAKE_CXX_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-10
-CMAKE_CXX_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-10
 CMAKE_CXX_FLAGS:STRING=
 CMAKE_CXX_FLAGS_DEBUG:STRING=-g
 CMAKE_CXX_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
 CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
-CMAKE_DLLTOOL:FILEPATH=CMAKE_DLLTOOL-NOTFOUND
-CMAKE_EXE_LINKER_FLAGS:STRING=
-CMAKE_EXE_LINKER_FLAGS_DEBUG:STRING=
-CMAKE_EXE_LINKER_FLAGS_MINSIZEREL:STRING=
-CMAKE_EXE_LINKER_FLAGS_RELEASE:STRING=
-CMAKE_EXE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
-CMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
+wCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=
 CMAKE_INSTALL_BINDIR:PATH=bin
 CMAKE_INSTALL_DATADIR:PATH=
-CMAKE_INSTALL_DATAROOTDIR:PATH=share
-CMAKE_INSTALL_DOCDIR:PATH=
-CMAKE_INSTALL_INCLUDEDIR:PATH=include
-CMAKE_INSTALL_INFODIR:PATH=
-CMAKE_INSTALL_LIBDIR:PATH=lib
-CMAKE_INSTALL_LIBEXECDIR:PATH=libexec
-CMAKE_INSTALL_LOCALEDIR:PATH=
-CMAKE_INSTALL_LOCALSTATEDIR:PATH=var
-CMAKE_INSTALL_MANDIR:PATH=
-CMAKE_INSTALL_OLDINCLUDEDIR:PATH=/usr/include
-CMAKE_INSTALL_PREFIX:PATH=/usr/local
-CMAKE_INSTALL_RUNSTATEDIR:PATH=
-CMAKE_INSTALL_SBINDIR:PATH=sbin
-CMAKE_INSTALL_SHAREDSTATEDIR:PATH=com
-CMAKE_INSTALL_SYSCONFDIR:PATH=etc
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
-CMAKE_MAKE_PROGRAM:FILEPATH=/usr/bin/gmake
-CMAKE_MODULE_LINKER_FLAGS:STRING=
-CMAKE_MODULE_LINKER_FLAGS_DEBUG:STRING=
-CMAKE_MODULE_LINKER_FLAGS_MINSIZEREL:STRING=
-CMAKE_MODULE_LINKER_FLAGS_RELEASE:STRING=
-CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO:STRING=
-CMAKE_NM:FILEPATH=/usr/bin/nm
-CMAKE_OBJCOPY:FILEPATH=/usr/bin/objcopy
-CMAKE_OBJDUMP:FILEPATH=/usr/bin/objdump
-CMAKE_RANLIB:FILEPATH=/usr/bin/ranlib
-CMAKE_READELF:FILEPATH=/usr/bin/readelf
-CMAKE_SHARED_LINKER_FLAGS:STRING=
-CMAKE_SHARED_LINKER_FLAGS_DEBUG:STRING=
-CMAKE_SHARED_LINKER_FLAGS_MINSIZEREL:STRING=
-CMAKE_SHARED_LINKER_FLAGS_RELEASE:STRING=
-CMAKE_SHARED_LINKER_FLAGS_RELWITHDEBINFO:STRING=
-CMAKE_SKIP_INSTALL_RPATH:BOOL=NO
-CMAKE_SKIP_RPATH:BOOL=NO
-CMAKE_STATIC_LINKER_FLAGS:STRING=
-CMAKE_STATIC_LINKER_FLAGS_DEBUG:STRING=
-CMAKE_STATIC_LINKER_FLAGS_MINSIZEREL:STRING=
-CMAKE_STATIC_LINKER_FLAGS_RELEASE:STRING=
-CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
-CMAKE_STRIP:FILEPATH=/usr/bin/strip
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 FETCHCONTENT_BASE_DIR:PATH={tmp_path.as_posix()}/build/_deps
-FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
-FETCHCONTENT_QUIET:BOOL=ON
-FETCHCONTENT_SOURCE_DIR_CATCH2:PATH=
-FETCHCONTENT_UPDATES_DISCONNECTED:BOOL=OFF
-FETCHCONTENT_UPDATES_DISCONNECTED_CATCH2:BOOL=OFF
-GIT_EXECUTABLE:FILEPATH=/usr/bin/git
     '''
+        )
     )
 
     call_cmake = mocker.patch(
@@ -490,7 +438,12 @@ GIT_EXECUTABLE:FILEPATH=/usr/bin/git
     if returncode != 0 or not detect_configured_files:
         assert not cmake.cmake_configured_files
     else:
-        assert set(cmake.cmake_configured_files) == {
+        configured_files = {
             str(cmake.source_dir / 'other.cpp'),
             str(cmake.build_dir / 'test.cpp'),
         }
+        if with_cache_variables:
+            assert set(cmake.cmake_configured_files) == configured_files
+        else:
+            # NB: the remaining file is the one configured within FETCHCONTENT_BASE_DIR
+            assert len(set(cmake.cmake_configured_files) ^ configured_files) == 1

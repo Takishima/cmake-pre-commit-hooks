@@ -14,6 +14,7 @@
 
 """CMake related function and classes."""
 
+import contextlib
 import json
 import logging
 import os
@@ -403,9 +404,10 @@ class CMakeCommand:
             if json_data.get('cmd', '') != 'configure_file':
                 return False
 
-            return (self.source_dir.as_posix() in json_data['file']) and (
-                cmake_cache_variables.get('FETCHCONTENT_BASE_DIR', '') not in json_data['file']
-            )
+            is_relevant = self.source_dir.as_posix() in json_data['file']
+            with contextlib.suppress(KeyError):
+                is_relevant &= cmake_cache_variables['FETCHCONTENT_BASE_DIR'] not in json_data['file']
+            return is_relevant
 
         with self.cmake_trace_log.open('r') as fd:
             configure_file_calls = [json.loads(line) for line in fd.readlines()]
