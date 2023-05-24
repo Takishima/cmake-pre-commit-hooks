@@ -443,7 +443,7 @@ CMAKE_STATIC_LINKER_FLAGS_RELEASE:STRING=
 CMAKE_STATIC_LINKER_FLAGS_RELWITHDEBINFO:STRING=
 CMAKE_STRIP:FILEPATH=/usr/bin/strip
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
-FETCHCONTENT_BASE_DIR:PATH={tmp_path}/build/_deps
+FETCHCONTENT_BASE_DIR:PATH={tmp_path.as_posix()}/build/_deps
 FETCHCONTENT_FULLY_DISCONNECTED:BOOL=OFF
 FETCHCONTENT_QUIET:BOOL=ON
 FETCHCONTENT_SOURCE_DIR_CATCH2:PATH=
@@ -462,14 +462,16 @@ GIT_EXECUTABLE:FILEPATH=/usr/bin/git
 
     cmake_trace_log = tmp_path / 'log.json'
     cmake_trace_log.write_text(
-        f'''{{"version":{{"major":1,"minor":2}}}}
-{{"args":["VERSION","3.20"],"cmd":"cmake_minimum_required","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":1,"time":1684940081.6217611}}
-{{"args":["test","LANGUAGES","CXX"],"cmd":"project","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":3,"time":1684940081.6219001}}
-{{"args":["/usr/share/cmake/Modules/FetchContent/CMakeLists.cmake.in","{tmp_path}/build/_deps/catch2-subbuild/CMakeLists.txt"],"cmd":"configure_file","file":"/usr/share/cmake/Modules/FetchContent.cmake","frame":5,"global_frame":5,"line":1598,"line_end":1599,"time":1684940081.7072489}}
-{{"args":["{tmp_path}/build/_deps/catch2-src/src/catch2/catch_user_config.hpp.in","{tmp_path}/build/generated-includes/catch2/catch_user_config.hpp"],"cmd":"configure_file","file":"{tmp_path}/build/_deps/catch2-src/src/CMakeLists.txt","frame":1,"global_frame":4,"line":308,"line_end":311,"time":1684940082.2564831}}
-{{"args":["test.cpp.in","test.cpp"],"cmd":"configure_file","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":17,"time":1684940082.260792}}
-{{"args":["test.cpp.in","{tmp_path}/other.cpp"],"cmd":"configure_file","file":"{tmp_path}/CMakeLists.txt","frame":1,"global_frame":1,"line":18,"time":1684940082.2613621}}
+        dedent(
+            f'''{{"version":{{"major":1,"minor":2}}}}
+{{"args":["VERSION","3.20"],"cmd":"cmake_minimum_required","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":1,"time":1684940081.6217611}}
+{{"args":["test","LANGUAGES","CXX"],"cmd":"project","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":3,"time":1684940081.6219001}}
+{{"args":["/usr/share/cmake/Modules/FetchContent/CMakeLists.cmake.in","{tmp_path.as_posix()}/build/_deps/catch2-subbuild/CMakeLists.txt"],"cmd":"configure_file","file":"/usr/share/cmake/Modules/FetchContent.cmake","frame":5,"global_frame":5,"line":1598,"line_end":1599,"time":1684940081.7072489}}
+{{"args":["{tmp_path.as_posix()}/build/_deps/catch2-src/src/catch2/catch_user_config.hpp.in","{tmp_path.as_posix()}/build/generated-includes/catch2/catch_user_config.hpp"],"cmd":"configure_file","file":"{tmp_path.as_posix()}/build/_deps/catch2-src/src/CMakeLists.txt","frame":1,"global_frame":4,"line":308,"line_end":311,"time":1684940082.2564831}}
+{{"args":["test.cpp.in","test.cpp"],"cmd":"configure_file","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":17,"time":1684940082.260792}}
+{{"args":["test.cpp.in","{tmp_path.as_posix()}/other.cpp"],"cmd":"configure_file","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":18,"time":1684940082.2613621}}
             '''
+        )
     )
 
     cmake = CMakeCommand()

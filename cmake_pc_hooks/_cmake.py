@@ -403,7 +403,7 @@ class CMakeCommand:
             if json_data.get('cmd', '') != 'configure_file':
                 return False
 
-            return (str(self.source_dir) in json_data['file']) and (
+            return (self.source_dir.as_posix() in json_data['file']) and (
                 cmake_cache_variables.get('FETCHCONTENT_BASE_DIR', '') not in json_data['file']
             )
 
