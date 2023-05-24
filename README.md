@@ -27,11 +27,12 @@ This repository is only has Python-based pre-commit hooks.
 2.  Currently, arguments set in a TOML configuration file (`pyproject.toml`, `cmake_pc_hooks.toml` or else) are applied
     to all hooks. Future improvements may allow to customize arguments on a per-hook basis.
 
+
 ## Example usage
 
 Assuming that you have the following directory structure for your projects
 
-```
+```text
 root
 ├── .pre-commit-config.yaml
 ├── CMakeLists.txt
@@ -41,7 +42,7 @@ root
 
 with the following file contents:
 
-__.pre-commit-config.yaml__
+**.pre-commit-config.yaml**
 
 ```yaml
 repos:
@@ -55,7 +56,7 @@ repos:
       - id: include-what-you-use
 ```
 
-__CMakeLists.txt__
+**CMakeLists.txt**
 
 ```cmake
 cmake_minimum_required(VERSION 3.15)
@@ -63,7 +64,7 @@ project(LANGUAGE CXX)
 add_library(mylib STATIC src/err.cpp)
 ```
 
-__src/err.cpp__
+**src/err.cpp**
 
 ```cpp
 #include <string>
@@ -72,7 +73,7 @@ int main() { int i; return 10; }
 
 Running pre-commit on the above project will lead to an output similar to this one:
 
-```
+```text
 $ pre-commit run --all-files
 clang-format.............................................................Failed
 - hook id: clang-format
@@ -237,12 +238,14 @@ Also, builds on Linux and MacOS will set the C++ compiler to `g++-10`, while bui
 Since v1.9.0, the hooks support loading the CLI arguments from TOML files. This can be used to configure all the hooks
 for a particular repository using either of:
 
+
 1.  `pyproject.toml`
 2.  `cmake_pc_hooks.toml`
 3.  TOML file specified using `--config=/path/to/file.toml`
 4.  Command line arguments
 
-Note that each step in the above list is overridden by the steps that happen __after__ it. For example, CLI arguments
+
+Note that each step in the above list is overridden by the steps that happen **after** it. For example, CLI arguments
 will always override any arguments read from any TOML file.
 
 A good place to start if you plan on creating a TOML configuration file is to use the hooks using the CLI arguments as
@@ -251,7 +254,7 @@ TOML-formatted configuration on the standard output for all the parameters that 
 
 For example, running the following command (assuming that no valid TOML configuration exists):
 
-```
+```bash
 cmake-pc-clang-format-hook tests/cmake_bad/bad.cpp  --dump-toml -B /tmp/build -S source -Wdev --no-automatic-discovery
 ```
 
@@ -265,7 +268,6 @@ dev_warnings = true
 ```
 
 ### Hook Option Comparison
-
 
 | Hook Options             | Fix In Place        | Enable all Checks                        | Set key/value |
 |--------------------------|---------------------|------------------------------------------|---------------|
