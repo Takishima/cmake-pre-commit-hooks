@@ -186,17 +186,18 @@ none of the provided options is viable, the first one will automatically be sele
 
 In addition to the above CMake options, the hooks also accept the following:
 
-| Other hook options           | Description                                      | Note         |
-|------------------------------|--------------------------------------------------|--------------|
-| `--all-at-once`              | Pass all filenames to the command at once        | Since v1.4.0 |
-| `--clean`                    | Perform a clean CMake build                      | Since v1.4.0 |
-| `--cmake`                    | Specify path to CMake executable                 | Since v1.4.0 |
-| `--dump-toml`                | Dump the current configuration as TOML on stdout | Since v1.9.0 |
-| `--no-automatic-discovery`   | Disable automatic build directory discovery      | Since v1.9.0 |
-| `--read-json-db`             | Append file list from compile database           | Since v1.7.0 |
-| `--linux`                    | Linux-only CMake options                         | Since v1.3.0 |
-| `--mac`                      | MacOS-only CMake options                         | Since v1.3.0 |
-| `--win`                      | Windows-only CMake options                       | Since v1.3.0 |
+| Other hook options           | Description                                            | Note         |
+|------------------------------|--------------------------------------------------------|--------------|
+| `--all-at-once`              | Pass all filenames to the command at once              | Since v1.4.0 |
+| `--clean`                    | Perform a clean CMake build                            | Since v1.4.0 |
+| `--cmake`                    | Specify path to CMake executable                       | Since v1.4.0 |
+| `--detect-configured-files`  | Enable cmake tracing and detection of configured files | Since v1.9.0 |
+| `--dump-toml`                | Dump the current configuration as TOML on stdout       | Since v1.9.0 |
+| `--no-automatic-discovery`   | Disable automatic build directory discovery            | Since v1.9.0 |
+| `--read-json-db`             | Append file list from compile database                 | Since v1.7.0 |
+| `--linux`                    | Linux-only CMake options                               | Since v1.3.0 |
+| `--mac`                      | MacOS-only CMake options                               | Since v1.3.0 |
+| `--win`                      | Windows-only CMake options                             | Since v1.3.0 |
 
 NB: by specifying `--all-at-once` the linter/formatter command will only be called once for all the files instead of
 calling the command once per file.
@@ -267,6 +268,13 @@ build_dir = [ "/tmp/build",]
 dev_warnings = true
 ```
 
+### CMake configured file detection
+
+Since v1.9.0, the hooks support the use of CMake with trace mode enabled in order to keep track of files that are
+generated using calls to the `configure_file(...)` CMake function. If `--detect-configured-files` is specified on the command line
+(or in some TOML configuration file), the hooks will attempt to locate those generated files and automatically add them
+to the list of processed files for any hook invocation.
+
 ### Hook Option Comparison
 
 | Hook Options             | Fix In Place        | Enable all Checks                        | Set key/value |
@@ -278,7 +286,8 @@ dev_warnings = true
 
 [^1]: `-fix` will fail if there are compiler errors. `-fix-errors` will `-fix` and fix compiler errors if it can, like missing semicolons.
 
-[^2]: Be careful with `-checks=*`; some checks can have self-contradictory rules in newer versions of LLVM (9+). For example, modernize wants to use [trailing return type][] but Fuchsia [disallows it][].
+[^2]: Be careful with `-checks=*`; some checks can have self-contradictory rules in newer versions of LLVM (9+). For
+    example, modernize wants to use [trailing return type][] but Fuchsia [disallows it][].
 
 [trailing return type]: https://clang.llvm.org/extra/clang-tidy/checks/modernize-use-trailing-return-type.html
 
