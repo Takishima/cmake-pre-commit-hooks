@@ -385,7 +385,7 @@ class CMakeCommand:
 
         cmake_cache_variables = {}
         for line in result.stdout.splitlines():
-            cmake_var = re.match(r'^([A-Za-z0-9_]+):(BOOL|FILEPATH|PATH|STRING|INTERNAL)=(.*)$', line)
+            cmake_var = re.match(r'^(\w+):(BOOL|FILEPATH|PATH|STRING|INTERNAL)=(.*)$', line)
             if cmake_var:
                 cmake_cache_variables[cmake_var.group(1)] = cmake_var.group(3)
 
