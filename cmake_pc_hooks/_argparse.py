@@ -14,6 +14,8 @@
 
 """Custom argument parser to support parsing from TOML config files."""
 
+from __future__ import annotations
+
 import argparse
 import logging
 import os
