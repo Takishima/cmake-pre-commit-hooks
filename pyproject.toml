@@ -44,9 +44,14 @@ ignore = ['ANN101', # missing-type-self
           'D212',   # multi-line-summary-first-line
           'S603'    # subprocess-without-shell-equals-true
 ]
-extend-exclude = ["tests/**"]
+
+[tool.ruff.per-file-ignores]
+
+'tests/python/*.py' = ['S101', 'SLF001', 'PLR0913', 'PLR2004', 'D']
+
 
 [tool.ruff.flake8-annotations]
+allow-star-arg-any = true
 ignore-fully-untyped = true
 mypy-init-return = true
 suppress-dummy-args = true
@@ -103,8 +108,7 @@ ignore = [
 [tool.coverage]
 [tool.coverage.run]
 omit = [
-'*_test.py',
-'*_fixtures.py'
+'test_*.py',
 ]
 
 
@@ -129,8 +133,8 @@ disable = [
 
 [tool.pytest.ini_options]
 minversion = '6.0'
-addopts = '-pno:warnings'
-testpaths = ['cmake_pc_hooks']
+testpaths = ['tests/python']
+mock_use_standalone_module = true
 
 [tool.isort]
 

@@ -29,18 +29,13 @@ class LizardCmd(StaticAnalyzerCmd):
     def __init__(self, args):
         """Initialize a LizardCmd object."""
         super().__init__(self.command, self.lookbehind, args)
-        self.file_regex = ''
         self.parse_args(args)
-
-    def set_file_regex(self):
-        """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
-        self.file_regex = r'.*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx|py)$'
 
     def run(self):
         """Run lizard."""
         if self.read_json_db:
-            self.run_cmake_configure()
-            self.files.extend(set(self.files).symmetric_difference(set(_read_compile_commands_json(self.build_dir))))
+            self.cmake.configure(self.command)
+            self.files.extend(set(_read_compile_commands_json(self.cmake.build_dir)) - set(self.files))
 
         if self.all_at_once:
             self.run_command(self.files)
@@ -48,7 +43,7 @@ class LizardCmd(StaticAnalyzerCmd):
         else:
             for filename in self.files:
                 self.run_command([filename])
-                self.exit_on_error()
+            self.exit_on_error()
 
 
 def main(argv=None):
@@ -64,5 +59,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()

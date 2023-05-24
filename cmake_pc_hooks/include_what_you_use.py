@@ -15,7 +15,6 @@
 """Wrapper script for cppcheck."""
 
 import logging
-import re
 import shutil
 import sys
 from pathlib import Path
@@ -68,48 +67,27 @@ def get_iwyu_command(iwyu_names=None):
 class IWYUToolCmd(ClangAnalyzerCmd):
     """Class for the iwyu_tool.py command."""
 
-    command = get_iwyu_tool_command()
-    command_for_version = get_iwyu_command()
+    command = None
+    command_for_version = None
     lookbehind = 'include-what-you-use '
 
     def __init__(self, args):
         """Initialize an IWYUToolCmd object."""
-        if self.command is None:
-            raise RuntimeError('Unable to locate path to iwyu-tool')
-        if self.command_for_version is None:
-            raise RuntimeError('Unable to locate path to include-what-you-use executable!')
+        IWYUToolCmd.command = get_iwyu_tool_command()
+        IWYUToolCmd.command_for_version = get_iwyu_command()
+
+        if IWYUToolCmd.command is None:
+            raise FileNotFoundError('Unable to locate path to iwyu-tool')
+        if IWYUToolCmd.command_for_version is None:
+            raise FileNotFoundError('Unable to locate path to include-what-you-use executable!')
 
         super().__init__(self.command, self.lookbehind, args)
-        self.file_regex = ''
-        self.file_regex = ''
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()
 
         # Force location of compile database
-        self.add_if_missing([f'-p={Path(self.build_dir, "compile_commands.json")}'])
-
-    def get_version_str(self):
-        """Get the version string like 8.0.0 for a given command."""
-        result = self._call_process([self.command_for_version, '--version'])
-        logging.debug('string for version: %s', result)
-        version_str = result.stdout
-
-        # After version like `8.0.0` is expected to be '\n' or ' '
-        if not re.search(self.look_behind, version_str):
-            self.raise_error(
-                'getting version',
-                'The version format for this command has changed. Create an issue at '
-                'github.com/Takishima/cmake-pre-commit-hooks.',
-            )
-        regex = self.look_behind + r'((?:\d+\.)+[\d+_\+\-a-z]+)'
-        version = re.search(regex, version_str).group(1)
-        logging.debug('extracted version: %s', version)
-        return version
-
-    def set_file_regex(self):
-        """Get the file regex for a command's target files from the .pre-commit-hooks.yaml."""
-        self.file_regex = r'.*\.(?:c|cc|cxx|cpp|cu|h|hpp|hxx)$'
+        self.add_if_missing([f'-p={Path(self.cmake.build_dir, "compile_commands.json")}'])
 
     def _parse_output(self, result):
         """
@@ -127,7 +105,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         logging.debug('parsing output from %s', result.stdout)
         is_correct = 'has correct #includes/fwd-decls' in result.stdout
 
-        return result.stdout and not is_correct
+        return bool(result.stdout) and not is_correct
 
 
 def main(argv=None):
@@ -143,5 +121,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()

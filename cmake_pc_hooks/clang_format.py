@@ -55,5 +55,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()

@@ -18,6 +18,7 @@ import logging
 import sys
 from pathlib import Path
 
+from . import _call_process
 from ._utils import Command
 
 
@@ -38,7 +39,13 @@ class CppcheckCmd(Command):
         # Enable all of the checks
         self.add_if_missing(['--enable=all'])
         # Force location of compile database
-        self.add_if_missing([f'--project={Path(self.build_dir, "compile_commands.json")}'])
+        self.add_if_missing([f'--project={Path(self.cmake.build_dir, "compile_commands.json")}'])
+
+    def run_command(self, filenames):
+        """Run the command and check for errors."""
+        filter_args = [f'--file-filter=*{Path(filename).parent.name}/{Path(filename).name}' for filename in filenames]
+        self.history.append(_call_process.call_process([self.command, *filter_args, *self.args, *self.ddash_args]))
+        self._clinters_compat()
 
     def _parse_output(self, result):
         """
@@ -53,8 +60,10 @@ class CppcheckCmd(Command):
         # Useless error see https://stackoverflow.com/questions/6986033
         logging.debug('parsing output from %s', result.stderr)
         useless_error_part = 'Cppcheck cannot find all the include files'
-        result.stderr = [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
-
+        result.stderr = ''.join(
+            [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
+        )
+        self._clinters_compat()
         return result.returncode != 0
 
 
@@ -71,5 +80,5 @@ def main(argv=None):
     cmd.run()
 
 
-if __name__ == '__main__':
+if __name__ == '__main__':  # pragma: nocover
     main()

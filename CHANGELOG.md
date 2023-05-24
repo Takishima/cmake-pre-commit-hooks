@@ -7,9 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+-   Added Python tests using PyTest
+-   Added support for parsing hook parameters from TOML configuration files
+-   Added option to dump the current configuration as TOML-formatted output on the standard output (`--dump-toml`)
+
+### Fixed
+
+-   Fixed potential issue with CppCheck hook always running on all files in compile database
+
+### Changed
+
+-   CppCheck hook will now exclude C++ header files by default since those are not present within the compilatioon databasebecauzse
+-   Make default logging level `INFO` instead of `WARNING`
+-   Move all CMake handling code into dedicated sub-module
+-   Minor adjustments to logging output format
+
 ### Repository
 
 -   Use [ruff](https://beta.ruff.rs/docs/) for linting over other Python linters
+-   System tests now run using LOGLEVEL=DEBUG
+-   Improved configuration for external linters (e.g. SonarCloud, Codacy)
 
 ## [v1.8.1] - 2023-04-20
 
