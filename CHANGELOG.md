@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+- Added new GitHub workflow to help automate CHANGELOG updates by pre-commit.ci
+
 ## [v1.9.0] - 2023-05-24
 
 ### Added
