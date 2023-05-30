@@ -119,7 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `yamllint` hook to v1.29.0
 -   Update `isort` hook to v5.12.0
 
-## [1.5.3] - 2022-06-14
+## [v1.5.3] - 2022-06-14
 
 ### Added
 
@@ -142,13 +142,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `black` hook to v22.3.0
 -   Update `check-manifest` to v0.48
 
-## [1.5.2] - 2021-12-08
+## [v1.5.2] - 2021-12-08
 
 ### Fixed
 
 -   Fixed indentation issue
 
-## [1.5.1] - 2021-12-08
+## [v1.5.1] - 2021-12-08
 
 ### Fixed
 
@@ -161,7 +161,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `isort` hook to v5.10.1
 -   Update `black` hook to v21.12b0
 
-## [1.5.0] - 2021-11-08
+## [v1.5.0] - 2021-11-08
 
 ### Added
 
@@ -177,7 +177,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Update `check-manifest` hook to v0.47
 -   Update `flake8` hook to v4.0.1
 
-## [1.4.0] - 2021-07-16
+## [v1.4.0] - 2021-07-16
 
 ### Added
 
@@ -203,7 +203,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     -   flake8-eradicate
     -   flake8-mutable
 
-## [1.3.0] - 2021-06-27
+## [v1.3.0] - 2021-06-27
 
 ### Added
 
@@ -211,7 +211,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     Use `--linux`, `--mac` and `--win` to specify CMake flags that need to be provided only on the specific
     platform. `--unix` can be used as a shortcut to specifying `--linux` and `--mac`.
 
-## [1.2.0] - 2021-06-27
+## [v1.2.0] - 2021-06-27
 
 ### Added
 
@@ -226,7 +226,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Add tests that use pre-commit directly
 -   Add isort pre-commit hook
 
-## [1.1.2] - 2021-06-26
+## [v1.1.2] - 2021-06-26
 
 ### Added
 
@@ -236,7 +236,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Properly handle double-dash arguments for clang-tidy when multiple files are passed to the hook
 
-## [1.1.1] - 2021-06-26
+## [v1.1.1] - 2021-06-26
 
 ### Updated
 
@@ -250,7 +250,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Fix automatic release publication workflow
 
-## [1.1.0] - 2021-06-22
+## [v1.1.0] - 2021-06-22
 
 ### Updated
 
@@ -268,7 +268,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 -   Update pre-commit configuration
 
-## [1.0.1] - 2021-06-20
+## [v1.0.1] - 2021-06-20
 
 ### Added
 
@@ -284,7 +284,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 -   Issue when passing paths to `subprocess.run()` on Windows
 -   CMake arguments being parsed more than once
 
-## [1.0.0] - 2021-06-18
+## [v1.0.0] - 2021-06-18
 
 Initial release with support for:
 
@@ -304,26 +304,24 @@ Initial release with support for:
 
 [v1.6.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.3...v1.6.0
 
-[1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.2...v1.5.3
+[v1.5.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.2...v1.5.3
 
-[1.5.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.1...v1.5.2
+[v1.5.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.1...v1.5.2
 
-[1.5.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.0...v1.5.1
+[v1.5.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.5.0...v1.5.1
 
-[1.5.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.4.0...v1.5.0
+[v1.5.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.4.0...v1.5.0
 
-[1.4.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.3.0...v1.4.0
+[v1.4.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.3.0...v1.4.0
 
-[1.3.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.2.0...v1.3.0
+[v1.3.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.2.0...v1.3.0
 
-[1.2.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.2...v1.2.0
+[v1.2.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.2...v1.2.0
 
-[1.1.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.1...v1.1.2
+[v1.1.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.1...v1.1.2
 
-[1.1.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.0...v1.1.1
+[v1.1.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.1.0...v1.1.1
 
-[1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
+[v1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
 
-[1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1
-
-[1.0.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/20b1113bf223273cda31a14a82c9d573a342de4a...v1.0.0
+[v1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1
