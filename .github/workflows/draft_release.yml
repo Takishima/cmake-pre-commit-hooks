@@ -16,29 +16,28 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Create release branch
-        run: |
-          git checkout -b release/${{ github.event.inputs.tag }}
-
-      - name: Update changelog
-        uses: thomaseizinger/keep-a-changelog-new-release@1.3.0
+      - name: Setup Python
+        uses: actions/setup-python@v3
         with:
-          version: ${{ github.event.inputs.tag }}
+          python-version: '3.11'
+          cache: 'pip'
+          cache-dependency-path: '**/setup.cfg'
 
-      - name: Initialize mandatory git config
+      - name: Update CHANGELOG
         run: |
-          git config user.name "GitHub actions"
-          git config user.email noreply@github.com
+          python3 -m pip install mdformat-gfm 'git+https://github.com/Takishima/keepachangelog@v1.0.1'
+          python3 -m keepachangelog release "${{ github.event.inputs.tag }}"
+          python3 -m mdformat CHANGELOG.md
 
-      - name: Commit changelog and manifest files
+      - name: Commit changes
+        uses: stefanzweifel/git-auto-commit-action@v4
         id: make-commit
-        run: |
-          git add CHANGELOG.md
-          git commit --message "Preparing release ${{ github.event.inputs.tag }}"
-          echo "::set-output name=commit::$(git rev-parse HEAD)"
-
-      - name: Push new branch
-        run: git push origin release/${{ github.event.inputs.tag }}
+        with:
+          branch: release/${{ github.event.inputs.tag }}
+          create_branch: true
+          file_pattern: 'CHANGELOG.md'
+          commit_message: Preparing release ${{ github.event.inputs.tag }}
+          commit_author: github-actions[bot] <noreply@github.com>
 
       # yamllint disable rule:line-length
       - name: Create pull request
@@ -50,11 +49,8 @@ jobs:
           base: main
           title: Release version ${{ github.event.inputs.tag }}
           reviewers: ${{ github.actor }}
-          # Write a nice message to the user.
-          # We are claiming things here based on the `publish-new-release.yml` workflow.
-          # You should obviously adopt it to say the truth depending on your release workflow :)
           body: |
             Hi @${{ github.actor }}!
             This PR was created in response to a manual trigger of the release workflow here: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.
-            I've updated the changelog and bumped the versions in the manifest files in this commit: ${{ steps.make-commit.outputs.commit }}.
+            I've updated the changelog and bumped the versions in the manifest files in this commit: ${{ steps.make-commit.outputs.commit_hash }}.
             Merging this PR will create a GitHub release and upload any assets that are created as part of the release build.
