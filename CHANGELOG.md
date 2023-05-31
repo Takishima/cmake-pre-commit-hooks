@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Update release drafting GitHub workflow
-- Add workflow to automatically update CHANGELOG when pre-commit.ci updates happen
+- Modify pull requests workflow to automatically update CHANGELOG file if it was created by pre-commit.ci
 - Update `charliermarsh/ruff-pre-commit` hook to v0.0.270
 
 ## [v1.9.0] - 2023-05-24
