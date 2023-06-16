@@ -136,7 +136,9 @@ jobs:
           | Out-File -FilePath $PROFILE -Append -Encoding utf8
           Write-Output 'Enter-VsDevShell -InstanceId $id' | Out-File -FilePath $PROFILE -Append -Encoding utf8
 
+          Write-Output $PWD
           . $PROFILE
+          Write-Output $PWD
           Write-Output "CMAKE_PREFIX_PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
           python -m pip install pre-commit cpplint lizard
