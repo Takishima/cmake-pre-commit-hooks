@@ -190,6 +190,10 @@ class FormatterCmd(Command, hooks.utils.FormatterCmd):
 
     setup_cmake = False
 
+    def __init__(self, command: str, look_behind: str, args: list[str]):
+        super().__init__(command, look_behind, args)
+        self.dry_run = '-n' in self.args or '--dry-run' in self.args
+
     def get_formatted_lines(self, filename: bytes) -> list:  # pragma: nocover
         """Get the expected output for a command applied to a file."""
         filename_opts = self.get_filename_opts(filename)
@@ -199,6 +203,12 @@ class FormatterCmd(Command, hooks.utils.FormatterCmd):
         if len(child.stderr) > 0 or child.returncode != 0:
             problem = f'Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}'
             self.raise_error(problem, child.stdout + child.stderr)
+
+        if self.dry_run:
+            # clang-format dry-run mode is '-n'
+            # If dry-run mode then we only look at the return code -> read the lines
+            self.returncode = 0
+            return self.get_filelines(filename)
         if not child.stdout:
             return []
         return child.stdout.encode().split(b'\x0a')
