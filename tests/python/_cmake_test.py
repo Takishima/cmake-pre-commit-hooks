@@ -20,6 +20,7 @@ from textwrap import dedent
 import fasteners
 import filelock
 import pytest
+from _test_utils import ExitError
 
 from cmake_pc_hooks._cmake import CMakeCommand, get_cmake_command
 
@@ -287,6 +288,24 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     InterProcessReaderWriterLock.assert_called_once()
     interprocess_lock.read_lock.assert_called_once()
     _configure.assert_not_called()
+
+
+def test_configure_invalid(mocker):
+    mocker.patch('sys.exit', side_effect=ExitError)
+
+    FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
+    mocker.patch('filelock.FileLock', FileLock)
+    InterProcessReaderWriterLock = mocker.MagicMock(fasteners.InterProcessReaderWriterLock)  # noqa: N806
+    mocker.patch('fasteners.InterProcessReaderWriterLock', InterProcessReaderWriterLock)
+    _configure = mocker.Mock(return_value=1)
+    mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._configure', _configure)
+
+    # ----------------------------------
+
+    cmake = CMakeCommand()
+    assert cmake.source_dir is None
+    with pytest.raises(ExitError):
+        cmake.configure(command='test')
 
 
 @pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
