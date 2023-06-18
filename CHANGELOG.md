@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## \[v1.9.1\] - 2023-06-18
+
 ### Changed
 
 - Add proper support for clang-format "linter" mode (ie. `--dry-run`)
