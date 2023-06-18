@@ -30,7 +30,7 @@ jobs:
         if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          VERSION=${BRANCH_NAME#release/}
+          VERSION=${BRANCH_NAME#release/v}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
           git tag v${RELEASE_VERSION}
 
@@ -38,7 +38,7 @@ jobs:
         if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
         run: |
           BRANCH_NAME="${{ github.event.pull_request.head.ref }}"
-          VERSION=${BRANCH_NAME#hotfix/}
+          VERSION=${BRANCH_NAME#hotfix/v}
           echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
           git tag v${RELEASE_VERSION}
 
