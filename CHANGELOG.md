@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Add proper support for clang-format "linter" mode (ie. `--dry-run`)
+
+### Fixed
+
+- Avoid setting up CMake arguments for clang-format hook
+
 ### Repository
 
 - Update release drafting GitHub workflow

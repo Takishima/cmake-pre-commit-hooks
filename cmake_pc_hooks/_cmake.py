@@ -297,6 +297,10 @@ class CMakeCommand:
             command (str): Name of calling command
             clean_build (bool): Clean build directory before calling CMake configure
         """
+        if self.source_dir is None:
+            logging.error('No source dir was for CMake! Did you call `setup_cmake_args()`?')
+            sys.exit(1)
+
         cmake_configure_lock_file = Path(self.build_dir, '_cmake_configure_lock')
         cmake_configure_try_lock_file = Path(self.build_dir, '_cmake_configure_try_lock')
 

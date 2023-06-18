@@ -45,6 +45,8 @@ def _read_compile_commands_json(build_dir: Path) -> list[str]:
 class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attributes
     """Super class that all commands inherit."""
 
+    setup_cmake = True
+
     def __init__(self, command, look_behind, args):
         """Initialize a Command object."""
         super().__init__(command, look_behind, args)
@@ -97,11 +99,12 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if not known_args.build_dir and known_args.preset:
             raise RuntimeError('You *must* specify -B|--build-dir if you pass --preset as a CMake argument!')
 
-        self.cmake.setup_cmake_args(known_args)
+        if self.setup_cmake:
+            self.cmake.setup_cmake_args(known_args)
 
-        if not self.cmake.source_dir.exists() and not self.cmake.source_dir.is_dir():
-            sys.stderr.write(f'{self.cmake.source_dir} is not a valid source directory\n')
-            sys.exit(1)
+            if not self.cmake.source_dir.exists() and not self.cmake.source_dir.is_dir():
+                sys.stderr.write(f'{self.cmake.source_dir} is not a valid source directory\n')
+                sys.exit(1)
 
         if known_args.version:
             actual_version = self.get_version_str()
@@ -185,6 +188,12 @@ class ClangAnalyzerCmd(Command):
 class FormatterCmd(Command, hooks.utils.FormatterCmd):
     """Commands that format code: clang-format, uncrustify."""
 
+    setup_cmake = False
+
+    def __init__(self, command: str, look_behind: str, args: list[str]):
+        super().__init__(command, look_behind, args)
+        self.dry_run = '-n' in self.args or '--dry-run' in self.args
+
     def get_formatted_lines(self, filename: bytes) -> list:  # pragma: nocover
         """Get the expected output for a command applied to a file."""
         filename_opts = self.get_filename_opts(filename)
@@ -194,6 +203,12 @@ class FormatterCmd(Command, hooks.utils.FormatterCmd):
         if len(child.stderr) > 0 or child.returncode != 0:
             problem = f'Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}'
             self.raise_error(problem, child.stdout + child.stderr)
+
+        if self.dry_run:
+            # clang-format dry-run mode is '-n'
+            # If dry-run mode then we only look at the return code -> read the lines
+            self.returncode = 0
+            return self.get_filelines(filename)
         if not child.stdout:
             return []
         return child.stdout.encode().split(b'\x0a')
