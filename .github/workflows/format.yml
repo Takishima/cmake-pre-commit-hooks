@@ -22,7 +22,7 @@ jobs:
       - name: Installing parse-changelog
         env:
           target: x86_64-unknown-linux-musl
-          parse_changelog_tag: v0.5.1
+          parse_changelog_tag: v0.5.4
           source_url: https://github.com/taiki-e/parse-changelog/releases/download
         run: |
           curl -LsSf "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
