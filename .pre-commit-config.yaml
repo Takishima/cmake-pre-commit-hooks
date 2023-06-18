@@ -39,7 +39,7 @@ repos:
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.2
+    rev: v0.9.0.5
     hooks:
       - id: shellcheck
         require_serial: false
@@ -64,7 +64,7 @@ repos:
         additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/charliermarsh/ruff-pre-commit
-    rev: v0.0.270
+    rev: v0.0.272
     hooks:
       - id: ruff
         args: [--fix, --exit-non-zero-on-fix, --show-source, --show-fixes]
