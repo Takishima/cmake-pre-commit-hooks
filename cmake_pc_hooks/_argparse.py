@@ -171,7 +171,9 @@ class ArgumentParser(argparse.ArgumentParser):
         )
         self._default_args = {}
 
-    def parse_known_args(self, args: list | None = None, namespace: argparse.Namespace | None = None) -> argparse.Namespace:
+    def parse_known_args(
+        self, args: list | None = None, namespace: argparse.Namespace | None = None
+    ) -> argparse.Namespace:
         """
         Convert argument strings to objects and assign them as attributes of the namespace.
 
