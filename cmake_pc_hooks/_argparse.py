@@ -131,9 +131,9 @@ class ArgumentParser(argparse.ArgumentParser):
     def __init__(
         self,
         *args: Any,
-        default_config_name: str = None,
-        pyproject_section_name: str = None,
-        args_groups: list[dict] = None,
+        default_config_name: str | None = None,
+        pyproject_section_name: str | None = None,
+        args_groups: list[dict] | None = None,
         **kwargs: Any,
     ) -> None:
         """
@@ -171,7 +171,7 @@ class ArgumentParser(argparse.ArgumentParser):
         )
         self._default_args = {}
 
-    def parse_known_args(self, args: list = None, namespace: argparse.Namespace = None) -> argparse.Namespace:
+    def parse_known_args(self, args: list | None = None, namespace: argparse.Namespace | None = None) -> argparse.Namespace:
         """
         Convert argument strings to objects and assign them as attributes of the namespace.
 
@@ -243,7 +243,7 @@ class ArgumentParser(argparse.ArgumentParser):
         section: str = '',
         path_must_exist: bool = True,
         section_must_exist: bool = True,
-        overridable_keys: set = None,
+        overridable_keys: set | None = None,
     ) -> None:
         """
         Load a TOML file and set the attributes within the argparse namespace object.
