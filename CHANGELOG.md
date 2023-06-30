@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Update `asottile/blacken-docs` hook to v1.14.0
+- Update `charliermarsh/ruff-pre-commit` hook to v0.0.275
 - Update `codespell-project/codespell` hook to v2.2.5
 
 ## [v1.9.1] - 2023-06-18
