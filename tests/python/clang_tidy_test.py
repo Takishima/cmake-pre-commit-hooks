@@ -48,7 +48,8 @@ def test_clang_tidy_command(mocker, setup_command, stdout, error_msg):
     args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
     command = clang_tidy.ClangTidyCmd(args=args)
 
-    assert f'-p={path}' in command.args
+    if not setup_command.no_cmake_configure:
+        assert f'-p={path}' in command.args
 
     run_command_default_assertions(
         command=command,

@@ -34,8 +34,9 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         self.edit_in_place = '-fix' in self.args or '--fix-errors' in self.args
         self.handle_ddash_args()
 
-        # Force location of compile database
-        self.add_if_missing([f'-p={Path(self.cmake.build_dir, "compile_commands.json")}'])
+        compile_db = self._resolve_compilation_database(self.build_dir_list)
+        if not self.cmake.no_cmake_configure or compile_db:
+            self.add_if_missing([f'-p={Path(self.cmake.build_dir, "compile_commands.json")}'])
 
     def _parse_output(self, result):
         """

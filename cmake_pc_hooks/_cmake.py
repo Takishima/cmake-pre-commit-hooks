@@ -105,6 +105,7 @@ class CMakeCommand:
         self.cmake_args = ['-DCMAKE_EXPORT_COMPILE_COMMANDS:BOOL=ON']
         self.cmake_trace_log = None
         self.cmake_configured_files = []
+        self.no_cmake_configure = False
 
     def add_cmake_arguments_to_parser(self, parser):
         """Add CMake options to an argparse.ArgumentParser."""
@@ -138,6 +139,15 @@ class CMakeCommand:
             action='store_false',
             dest='automatic_discovery',
             help='Do not attempt to automatically look for a build directory',
+        )
+        options.add_argument(
+            '--no-cmake-configure',
+            action='store_true',
+            dest='no_cmake_configure',
+            help=(
+                'Do not call CMake configure to generate a compilation database '
+                '(ie. do not call CMake but still try to locate a compilation database if possible)'
+            ),
         )
 
         # Platform-specific CMake options
@@ -241,6 +251,7 @@ class CMakeCommand:
         self.source_dir = Path(cmake_args.source_dir).resolve()
         if cmake_args.cmake:
             self.command = [Path(cmake_args.cmake).resolve()]
+        self.no_cmake_configure = cmake_args.no_cmake_configure
 
         self.resolve_build_directory(
             build_dir_list=cmake_args.build_dir, automatic_discovery=cmake_args.automatic_discovery
@@ -297,6 +308,10 @@ class CMakeCommand:
             command (str): Name of calling command
             clean_build (bool): Clean build directory before calling CMake configure
         """
+        if self.no_cmake_configure:
+            logging.debug('Not calling CMake configure')
+            return
+
         if self.source_dir is None:
             logging.error('No source dir was for CMake! Did you call `setup_cmake_args()`?')
             sys.exit(1)

@@ -38,8 +38,10 @@ class CppcheckCmd(Command):
         self.add_if_missing(['--error-exitcode=1'])
         # Enable all of the checks
         self.add_if_missing(['--enable=all'])
-        # Force location of compile database
-        self.add_if_missing([f'--project={Path(self.cmake.build_dir, "compile_commands.json")}'])
+
+        compile_db = self._resolve_compilation_database(self.build_dir_list)
+        if not self.cmake.no_cmake_configure or compile_db:
+            self.add_if_missing([f'--project={Path(self.cmake.build_dir, "compile_commands.json")}'])
 
     def run_command(self, filenames):
         """Run the command and check for errors."""

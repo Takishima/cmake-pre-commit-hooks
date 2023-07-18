@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `--no-cmake-configure` option to avoid calling CMake configure but still use a compilation database if one can
+  be found
+
 ### Repository
 
 - Update `asottile/blacken-docs` hook to v1.15.0

@@ -23,12 +23,12 @@ from cmake_pc_hooks._cmake import CMakeCommand
 
 
 def test_read_compile_commands_no_file(tmp_path):
-    assert not _utils._read_compile_commands_json(tmp_path)
+    assert not _utils._read_compile_commands_json(tmp_path / 'compile_commands.json')
 
 
 def test_read_compile_commands(compile_commands):
     path, file_list = compile_commands
-    files = _utils._read_compile_commands_json(path.parent)
+    files = _utils._read_compile_commands_json(path)
     assert files == [str(fname) for fname in file_list]
 
 
@@ -119,7 +119,7 @@ def test_command_run(mocker, parsing_failed, setup_command, detect_configured_fi
     command = _utils.Command(command_name, look_behind=False, args=args)
     command.parse_args(args)
 
-    if detect_configured_files:
+    if detect_configured_files and not setup_command.no_cmake_configure:
         command.cmake.cmake_configured_files = ['configured.cpp']
 
     run_command_default_assertions(

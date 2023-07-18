@@ -30,6 +30,8 @@ def run_command_default_assertions(
     file_list,
     command,
     all_at_once,
+    no_cmake_configure,
+    create_compilation_db,
     configure,
     call_process,
     returncode,
@@ -44,7 +46,7 @@ def run_command_default_assertions(
     with contextlib.suppress(ExitError):
         command.run()
 
-    if do_configure_test:
+    if do_configure_test and not no_cmake_configure:
         configure.assert_called_once_with(command.command)
 
     if exit_success is None:
@@ -52,9 +54,9 @@ def run_command_default_assertions(
 
     n_files = len(file_list)
 
-    if read_json_db:
+    if read_json_db and create_compilation_db:
         n_files += len(json_db_file_list)
-    if detect_configured_files:
+    if detect_configured_files and not no_cmake_configure:
         n_files += len(command.cmake.cmake_configured_files)
 
     assert len(command.files) == n_files
@@ -62,7 +64,7 @@ def run_command_default_assertions(
     for fname in file_list:
         assert str(fname) in command.files
 
-    if read_json_db:
+    if read_json_db and create_compilation_db:
         for fname in json_db_file_list:
             assert str(fname) in command.files
 
