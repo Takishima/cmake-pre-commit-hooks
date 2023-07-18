@@ -39,9 +39,9 @@ class CppcheckCmd(Command):
         # Enable all of the checks
         self.add_if_missing(['--enable=all'])
 
-        compile_db = self._resolve_compilation_database(self.build_dir_list)
+        compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if not self.cmake.no_cmake_configure or compile_db:
-            self.add_if_missing([f'--project={Path(self.cmake.build_dir, "compile_commands.json")}'])
+            self.add_if_missing([f'--project={compile_db}'])
 
     def run_command(self, filenames):
         """Run the command and check for errors."""

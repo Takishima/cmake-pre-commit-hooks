@@ -37,7 +37,7 @@ class LizardCmd(StaticAnalyzerCmd):
             if not self.cmake.no_cmake_configure:
                 self.cmake.configure(self.command)
 
-            compile_db = self._resolve_compilation_database(self.build_dir_list)
+            compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
             if compile_db:
                 self.files.extend(set(_read_compile_commands_json(compile_db)) - set(self.files))
 

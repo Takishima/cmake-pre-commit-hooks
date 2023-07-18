@@ -16,7 +16,6 @@
 
 import logging
 import sys
-from pathlib import Path
 
 from ._utils import ClangAnalyzerCmd
 
@@ -34,9 +33,9 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         self.edit_in_place = '-fix' in self.args or '--fix-errors' in self.args
         self.handle_ddash_args()
 
-        compile_db = self._resolve_compilation_database(self.build_dir_list)
+        compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if not self.cmake.no_cmake_configure or compile_db:
-            self.add_if_missing([f'-p={Path(self.cmake.build_dir, "compile_commands.json")}'])
+            self.add_if_missing([f'-p={compile_db}'])
 
     def _parse_output(self, result):
         """

@@ -221,6 +221,11 @@ class CMakeCommand:
                     self.build_dir = path
                     return
 
+        if self.no_cmake_configure:
+            logging.info('Unable to locate a valid build directory. Will not be creating one')
+            self.build_dir = None
+            return
+
         if not build_dir_list:
             self.build_dir = self.source_dir / self.DEFAULT_BUILD_DIR
         else:
@@ -257,7 +262,7 @@ class CMakeCommand:
             build_dir_list=cmake_args.build_dir, automatic_discovery=cmake_args.automatic_discovery
         )
 
-        if cmake_args.detect_configured_files:
+        if cmake_args.detect_configured_files and self.build_dir:
             self.cmake_trace_log = self.build_dir / self.DEFAULT_TRACE_LOG
 
         keyword_args = {

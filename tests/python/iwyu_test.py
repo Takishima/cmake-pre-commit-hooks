@@ -78,7 +78,8 @@ def test_iwyu_command(mocker, setup_command):
     args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
 
     command = include_what_you_use.IWYUToolCmd(args=args)
-    assert f'-p={path}' in command.args
+    if not setup_command.no_cmake_configure:
+        assert f'-p={path}' in command.args
 
     run_command_default_assertions(
         command=command,

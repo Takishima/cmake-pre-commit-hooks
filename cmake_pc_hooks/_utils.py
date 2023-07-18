@@ -120,7 +120,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.cmake.configure(self.command)
         self.files.extend(self.cmake.cmake_configured_files)
 
-        compile_db = self._resolve_compilation_database(self.build_dir_list)
+        compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if self.read_json_db and compile_db:
             self.files.extend(set(_read_compile_commands_json(compile_db)) - set(self.files))
 
@@ -155,8 +155,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
     def _parse_output(self, result):  # noqa: ARG002
         return NotImplemented
 
-    def _resolve_compilation_database(self, build_dir_list=None):
+    def _resolve_compilation_database(self, cmake_build_dir, build_dir_list):
         """Locate a compilation database based on internal list of directories."""
+        if cmake_build_dir and cmake_build_dir / 'compile_commands.json':
+            return cmake_build_dir / 'compile_commands.json'
+
         build_dir_list = [] if build_dir_list is None else [Path(path) for path in build_dir_list]
         for build_dir in build_dir_list:
             path = Path(build_dir, 'compile_commands.json')

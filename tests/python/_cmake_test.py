@@ -138,7 +138,8 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
 
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
-def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
+@pytest.mark.parametrize('no_cmake_configure', [False, True])
+def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915, PLR0912
     original_system = platform.system()
 
     def system_stub():
@@ -150,7 +151,7 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
 
     args = argparse.Namespace()
     args.detect_configured_files = True
-    args.no_cmake_configure = True
+    args.no_cmake_configure = no_cmake_configure
     if original_system == 'Windows':
         args.source_dir = 'C:/path/to/source'
         args.build_dir = ['C:/path/to/build', 'C:/path/to/other_build']
@@ -180,8 +181,12 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
 
     assert cmake.source_dir == Path(args.source_dir)
     assert cmake.command == [args.cmake]
-    assert cmake.build_dir is not None
-    assert cmake.cmake_trace_log == cmake.build_dir / cmake.DEFAULT_TRACE_LOG
+    if no_cmake_configure:
+        assert cmake.build_dir is None
+        assert cmake.cmake_trace_log is None
+    else:
+        assert cmake.build_dir is not None
+        assert cmake.cmake_trace_log == cmake.build_dir / cmake.DEFAULT_TRACE_LOG
 
     assert '-GNinja' in cmake.cmake_args
     assert '-A64' in cmake.cmake_args
