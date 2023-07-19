@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.9.2] - 2023-07-19
+
 ### Added
 
 - Added `--no-cmake-configure` option to avoid calling CMake configure but still use a compilation database if one can
@@ -323,7 +325,7 @@ Initial release with support for:
 - clang-tidy
 - cppcheck
 
-[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.1...HEAD
+[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.2...HEAD
 [v1.0.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/20b1113bf223273cda31a14a82c9d573a342de4a...v1.0.0
 [v1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1
 [v1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
@@ -342,3 +344,4 @@ Initial release with support for:
 [v1.8.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.8.0...v1.8.1
 [v1.9.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.8.1...v1.9.0
 [v1.9.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.0...v1.9.1
+[v1.9.2]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.1...v1.9.2
