@@ -34,8 +34,12 @@ class LizardCmd(StaticAnalyzerCmd):
     def run(self):
         """Run lizard."""
         if self.read_json_db:
-            self.cmake.configure(self.command)
-            self.files.extend(set(_read_compile_commands_json(self.cmake.build_dir)) - set(self.files))
+            if not self.cmake.no_cmake_configure:
+                self.cmake.configure(self.command)
+
+            compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
+            if compile_db:
+                self.files.extend(set(_read_compile_commands_json(compile_db)) - set(self.files))
 
         if self.all_at_once:
             self.run_command(self.files)

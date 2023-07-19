@@ -17,7 +17,6 @@
 import logging
 import shutil
 import sys
-from pathlib import Path
 
 from ._utils import ClangAnalyzerCmd
 
@@ -87,7 +86,9 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         self.handle_ddash_args()
 
         # Force location of compile database
-        self.add_if_missing([f'-p={Path(self.cmake.build_dir, "compile_commands.json")}'])
+        compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
+        if compile_db:
+            self.add_if_missing([f'-p={compile_db}'])
 
     def _parse_output(self, result):
         """

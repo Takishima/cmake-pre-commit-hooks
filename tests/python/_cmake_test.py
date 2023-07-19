@@ -138,7 +138,8 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
 
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
-def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
+@pytest.mark.parametrize('no_cmake_configure', [False, True])
+def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915, PLR0912
     original_system = platform.system()
 
     def system_stub():
@@ -150,6 +151,7 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
 
     args = argparse.Namespace()
     args.detect_configured_files = True
+    args.no_cmake_configure = no_cmake_configure
     if original_system == 'Windows':
         args.source_dir = 'C:/path/to/source'
         args.build_dir = ['C:/path/to/build', 'C:/path/to/other_build']
@@ -179,8 +181,12 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
 
     assert cmake.source_dir == Path(args.source_dir)
     assert cmake.command == [args.cmake]
-    assert cmake.build_dir is not None
-    assert cmake.cmake_trace_log == cmake.build_dir / cmake.DEFAULT_TRACE_LOG
+    if no_cmake_configure:
+        assert cmake.build_dir is None
+        assert cmake.cmake_trace_log is None
+    else:
+        assert cmake.build_dir is not None
+        assert cmake.cmake_trace_log == cmake.build_dir / cmake.DEFAULT_TRACE_LOG
 
     assert '-GNinja' in cmake.cmake_args
     assert '-A64' in cmake.cmake_args
@@ -216,7 +222,8 @@ def test_setup_cmake_args(mocker, system):  # noqa: PLR0915
 @pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
 @pytest.mark.parametrize('returncode', [0, 1])
 @pytest.mark.parametrize('clean_build', [False, True])
-def test_configure_cmake(mocker, tmp_path, clean_build, returncode, detect_configured_files):
+@pytest.mark.parametrize('no_cmake_configure', [False, True])
+def test_configure_cmake(mocker, tmp_path, clean_build, returncode, no_cmake_configure, detect_configured_files):
     sys_exit = mocker.patch('sys.exit')
     FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
     mocker.patch(filelock_module_name, FileLock)
@@ -234,6 +241,7 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode, detect_confi
     cmake = CMakeCommand()
     cmake.source_dir = tmp_path
     cmake.build_dir = build_dir
+    cmake.no_cmake_configure = no_cmake_configure
     cmake.cmake_args.append('-DCMAKE_CXX_COMPILER=g++')
     if detect_configured_files:
         cmake.cmake_trace_log = tmp_path / 'log.json'
@@ -241,6 +249,12 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode, detect_confi
     cmake.configure(command='test', clean_build=clean_build)
 
     # ----------------------------------
+
+    if no_cmake_configure:
+        FileLock.assert_not_called()
+        InterProcessReaderWriterLock.assert_not_called()
+        _configure.assert_not_called()
+        return
 
     FileLock.assert_called_once_with(build_dir / '_cmake_configure_try_lock')
     InterProcessReaderWriterLock.assert_called_once_with(build_dir / '_cmake_configure_lock')

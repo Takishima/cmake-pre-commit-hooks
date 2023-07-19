@@ -32,9 +32,8 @@ logging.basicConfig(level=_LOGLEVEL, format='%(levelname)-5s:cmake-pc-hooks:%(me
 logging.getLogger('filelock').setLevel(logging.WARNING)
 
 
-def _read_compile_commands_json(build_dir: Path) -> list[str]:
+def _read_compile_commands_json(compile_db: Path) -> list[str]:
     """Read a JSON compile database and return the list of files contained within."""
-    compile_db = build_dir / 'compile_commands.json'
     if compile_db.exists():
         with compile_db.open(encoding='utf-8') as fd:
             data = json.load(fd)
@@ -55,6 +54,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.clean_build = False
         self.all_at_once = False
         self.read_json_db = False
+        self.build_dir_list = ['.', CMakeCommand.DEFAULT_BUILD_DIR]
 
         self.history = []
 
@@ -95,6 +95,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.all_at_once = known_args.all_at_once
         self.read_json_db = known_args.read_json_db
         self.clean_build = known_args.clean
+        self.build_dir_list.extend(known_args.build_dir if known_args.build_dir else [])
 
         if not known_args.build_dir and known_args.preset:
             raise RuntimeError('You *must* specify -B|--build-dir if you pass --preset as a CMake argument!')
@@ -117,9 +118,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
     def run(self):
         """Run the command."""
         self.cmake.configure(self.command)
-        if self.read_json_db:
-            self.files.extend(set(_read_compile_commands_json(self.cmake.build_dir)) - set(self.files))
         self.files.extend(self.cmake.cmake_configured_files)
+
+        compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
+        if self.read_json_db and compile_db:
+            self.files.extend(set(_read_compile_commands_json(compile_db)) - set(self.files))
 
         if self.all_at_once:
             self.run_command(self.files)
@@ -151,6 +154,20 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
     def _parse_output(self, result):  # noqa: ARG002
         return NotImplemented
+
+    def _resolve_compilation_database(self, cmake_build_dir, build_dir_list):
+        """Locate a compilation database based on internal list of directories."""
+        if cmake_build_dir and cmake_build_dir / 'compile_commands.json':
+            return cmake_build_dir / 'compile_commands.json'
+
+        build_dir_list = [] if build_dir_list is None else [Path(path) for path in build_dir_list]
+        for build_dir in build_dir_list:
+            path = Path(build_dir, 'compile_commands.json')
+            if build_dir.exists() and path.exists():
+                logging.debug('Located valid compilation database at: %s', str(path))
+                return path
+        logging.debug('No valid compilation database located')
+        return None
 
 
 class ClangAnalyzerCmd(Command):
