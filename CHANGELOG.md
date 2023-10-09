@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+- Update `asottile/blacken-docs` hook to v1.16.0
+- Update `astral-sh/ruff-pre-commit` to v0.0.292
+- Update `codespell-project/codespell` hook to v2.2.6
+- Update `Lucas-C/pre-commit-hooks` hook to v1.5.4
+- Update `psf/black` hook to v23.9.1
+- Update `shellcheck-py/shellcheck-py` hook to v0.9.0.6
+
 ## [v1.9.2] - 2023-07-19
 
 ### Added
