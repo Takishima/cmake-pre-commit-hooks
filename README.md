@@ -181,7 +181,7 @@ These hooks accept all the most common CMake options:
 One important thing to note (particularly for those that intend to use this on CIs), you may specify the build directory
 argument (`-B`) multiple times. The hooks will then simply cycle through all of the values provided and choose the first
 directory that contains a configured CMake project (by looking at the presence of the `CMakeCache.txt` file). This may
-be useful if you already have a build directory available somewhere that you would like to re-use. In the case where
+be useful if you already have a build directory available somewhere that you would like to reuse. In the case where
 none of the provided options is viable, the first one will automatically be selected as the build directory.
 
 In addition to the above CMake options, the hooks also accept the following:
