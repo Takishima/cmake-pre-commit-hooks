@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- Fixed an issue when handling `--` arguments
+
 ### Repository
 
 - Update `asottile/blacken-docs` hook to v1.16.0
