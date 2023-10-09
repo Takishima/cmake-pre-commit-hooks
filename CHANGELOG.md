@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Repository
+
+- Update GitHub Action `stefanzweifel/git-auto-commit-action` to v5
+
 ## [v1.9.2] - 2023-07-19
 
 ### Added
