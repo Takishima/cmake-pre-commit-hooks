@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.5.4
 - Update `psf/black` hook to v23.9.1
 - Update `shellcheck-py/shellcheck-py` hook to v0.9.0.6
+- Update GitHub Action `stefanzweifel/git-auto-commit-action` to v5
 
 ## [v1.9.2] - 2023-07-19
 
