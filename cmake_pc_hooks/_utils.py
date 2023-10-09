@@ -188,18 +188,17 @@ class ClangAnalyzerCmd(Command):
             In the case above, the content of self.files would be: ['-std=c++17', 'file1.cpp', 'file2.cpp'] which needs
             to be converted to: ['file1.cpp', 'file2.cpp'] while ['--', '-std=c++17'] should be added to `self.args`.
         """
-        idx = -1
         files = []
+        other_args = []
         for _, fname in enumerate(reversed(self.files)):
             if Path(fname).is_file():
                 files.append(fname)
             else:
-                break
+                other_args.append(fname)
 
-        if idx != len(files) - 1:
-            # We have more than just filenames after '--'
-            self.ddash_args.extend(['--'] + self.files[0:-idx])
-        self.files = files
+        if other_args:
+            self.ddash_args.extend(['--', *other_args])
+        self.files = list(reversed(files))
 
 
 class FormatterCmd(Command, hooks.utils.FormatterCmd):
