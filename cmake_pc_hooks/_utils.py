@@ -135,8 +135,8 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
 
         has_errors = False
         for res in self.history:
-            res.to_stdout_and_stderr()
             has_errors |= self._parse_output(res)
+            res.to_stdout_and_stderr()
 
         if has_errors:
             sys.exit(1)
