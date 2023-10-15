@@ -14,16 +14,21 @@
 
 import subprocess as sp
 
+import pytest
+
 from cmake_pc_hooks._call_process import History, call_process
 
 # ==============================================================================
 
 
-def test_history(mocker):
+@pytest.mark.parametrize('disable_print', [False, True])
+def test_history(mocker, disable_print):
     stdout = 'out'
     stderr = 'err'
     returncode = 1
     history = History(stdout=stdout, stderr=stderr, returncode=returncode)
+    if disable_print:
+        history.disable_print_output()
 
     assert history.stdout == stdout
     assert history.stderr == stderr
@@ -31,11 +36,14 @@ def test_history(mocker):
 
     sys_stdout = mocker.patch('sys.stdout')
     sys_stderr = mocker.patch('sys.stderr')
-
     history.to_stdout_and_stderr()
 
-    sys_stdout.write.assert_called_once()
-    sys_stderr.write.assert_called_once()
+    if disable_print:
+        sys_stdout.write.assert_not_called()
+        sys_stderr.write.assert_not_called()
+    else:
+        sys_stdout.write.assert_called_once()
+        sys_stderr.write.assert_called_once()
 
 
 # ==============================================================================

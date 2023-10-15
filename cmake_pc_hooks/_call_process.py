@@ -20,19 +20,26 @@ import logging
 import subprocess as sp
 import sys
 
+import attrs
 
+
+@attrs.define(slots=True)
 class History:  # pylint: disable=too-few-public-methods
     """Process execution data."""
 
-    __slots__ = ('stdout', 'stderr', 'returncode')
+    stdout: str
+    stderr: str
+    returncode: int
+    _print_output: bool = True
 
-    def __init__(self, stdout, stderr, returncode):
-        self.stdout = stdout
-        self.stderr = stderr
-        self.returncode = returncode
+    def disable_print_output(self) -> None:
+        """Disable output printing."""
+        self._print_output = False
 
-    def to_stdout_and_stderr(self):
+    def to_stdout_and_stderr(self) -> None:
         """Copy the relevant content to the standard output and error streams."""
+        if not self._print_output:
+            return
         sys.stdout.write(self.stdout)
         sys.stdout.flush()
         sys.stderr.write(self.stderr)
