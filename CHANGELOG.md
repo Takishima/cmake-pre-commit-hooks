@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Improved the printing of output when multiple files have been processed
 
+### Repository
+
+- Update `pre-commit/pre-commit-hooks` hook to v4.5.0
+
 ## [v1.9.3] - 2023-10-09
 
 ### Fixed
