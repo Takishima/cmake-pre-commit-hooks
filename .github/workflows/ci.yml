@@ -43,7 +43,7 @@ jobs:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
           cache: 'pip'
-          cache-dependency-path: '**/setup.cfg'
+          cache-dependency-path: '**/pyproject.toml'
 
       - name: Prepare env
         run: python -m pip install -U pytest-github-actions-annotate-failures wheel build
@@ -103,7 +103,7 @@ jobs:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
           cache: 'pip'
-          cache-dependency-path: '**/setup.cfg'
+          cache-dependency-path: '**/pyproject.toml'
 
       - name: Prepare env
         run: python -m pip install -U pytest-github-actions-annotate-failures wheel build
