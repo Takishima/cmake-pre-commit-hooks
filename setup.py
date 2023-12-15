@@ -14,6 +14,8 @@
 
 """Dummy setup script."""
 
+from __future__ import annotations
+
 import logging
 import os
 import shutil
@@ -23,6 +25,25 @@ from pathlib import Path
 
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
+
+
+def _try_calling_executable(exec_cmd: list[str | Path]) -> bool:
+    """
+    Try to call CMake using the provided command.
+
+    Args:
+        exec_cmd: CMake command line
+
+    Return:
+        True if command line is valid, False otherwise
+    """
+    with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
+        try:
+            subprocess.check_call([*exec_cmd, '--version'], stdout=devnull, stderr=devnull)
+        except (OSError, subprocess.CalledProcessError):
+            return False
+        else:
+            return True
 
 
 def get_executable(exec_name):
@@ -43,27 +64,20 @@ def get_executable(exec_name):
 
     # First try executing the program directly
     for base_path in search_paths:
-        try:
-            cmd = base_path / exec_name
-            with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
-                subprocess.check_call([cmd, '--version'], stdout=devnull, stderr=devnull)
-        except (OSError, subprocess.CalledProcessError):
-            logging.info('  failed in %s', base_path)
-        else:
+        cmd = [base_path / exec_name]
+        if _try_calling_executable(cmd):
             logging.info('  command found: %s', cmd)
             return cmd
+        logging.info('  failed in %s', base_path)
 
     # That did not work: try calling it through Python
     for base_path in search_paths:
-        try:
-            cmd = [python, base_path / exec_name]
-            with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
-                subprocess.check_call([*cmd, '--version'], stdout=devnull, stderr=devnull)
-        except (OSError, subprocess.CalledProcessError):
-            logging.info('  failed in %s', base_path)
-        else:
+        cmd = [python, base_path / exec_name]
+
+        if _try_calling_executable(cmd):
             logging.info('  command found: %s', cmd)
             return cmd
+        logging.info('  failed in %s', base_path)
 
     logging.info('  command *not* found in virtualenv!')
 

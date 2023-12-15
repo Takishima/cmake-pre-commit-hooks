@@ -37,7 +37,7 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         if not self.cmake.no_cmake_configure or compile_db:
             self.add_if_missing([f'-p={compile_db}'])
 
-    def _parse_output(self, result):
+    def _parse_output(self, result):  # noqa: PLR6301
         """
         Parse output and check whether some errors occurred.
 

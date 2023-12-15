@@ -14,15 +14,16 @@
 
 import argparse
 import platform
+import sys
 from pathlib import Path
 from textwrap import dedent
+
+from cmake_pc_hooks._cmake import CMakeCommand, _try_calling_cmake, get_cmake_command
 
 import fasteners
 import filelock
 import pytest
 from _test_utils import ExitError
-
-from cmake_pc_hooks._cmake import CMakeCommand, get_cmake_command
 
 # ==============================================================================
 
@@ -44,6 +45,14 @@ def parser():
 filelock_module_name = 'filelock.FileLock'
 interprocess_rw_lock_module_name = 'fasteners.InterProcessReaderWriterLock'
 internal_cmake_configure_name = 'cmake_pc_hooks._cmake.CMakeCommand._configure'
+
+
+# ==============================================================================
+
+
+@pytest.mark.parametrize(('cmd', 'is_valid'), [('cmake-INVALID', False), (sys.executable, True)])
+def test_try_calling_cmake(cmd, is_valid):
+    assert _try_calling_cmake([cmd]) == is_valid
 
 
 # ==============================================================================
@@ -139,7 +148,7 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
 @pytest.mark.parametrize('no_cmake_configure', [False, True])
-def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915, PLR0912
+def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915, PLR0912, C901
     original_system = platform.system()
 
     def system_stub():
@@ -223,7 +232,7 @@ def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915,
 @pytest.mark.parametrize('returncode', [0, 1])
 @pytest.mark.parametrize('clean_build', [False, True])
 @pytest.mark.parametrize('no_cmake_configure', [False, True])
-def test_configure_cmake(mocker, tmp_path, clean_build, returncode, no_cmake_configure, detect_configured_files):
+def test_configure_cmake(mocker, tmp_path, clean_build, returncode, no_cmake_configure, detect_configured_files):  # noqa: PLR0917
     sys_exit = mocker.patch('sys.exit')
     FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
     mocker.patch(filelock_module_name, FileLock)
@@ -424,7 +433,7 @@ def test_parse_cmake_trace_log(mocker, tmp_path, with_cache_variables, detect_co
         ''
         if not with_cache_variables
         else dedent(
-            f'''
+            f"""
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
 CMAKE_CXX_FLAGS:STRING=
 CMAKE_CXX_FLAGS_DEBUG:STRING=-g
@@ -437,7 +446,7 @@ CMAKE_INSTALL_DATADIR:PATH=
 CMAKE_LINKER:FILEPATH=/usr/bin/ld
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 FETCHCONTENT_BASE_DIR:PATH={tmp_path.as_posix()}/build/_deps
-    '''
+    """
         )
     )
 
@@ -451,14 +460,14 @@ FETCHCONTENT_BASE_DIR:PATH={tmp_path.as_posix()}/build/_deps
     cmake_trace_log = tmp_path / 'log.json'
     cmake_trace_log.write_text(
         dedent(
-            f'''{{"version":{{"major":1,"minor":2}}}}
+            f"""{{"version":{{"major":1,"minor":2}}}}
 {{"args":["VERSION","3.20"],"cmd":"cmake_minimum_required","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":1,"time":1684940081.6217611}}
 {{"args":["test","LANGUAGES","CXX"],"cmd":"project","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":3,"time":1684940081.6219001}}
 {{"args":["/usr/share/cmake/Modules/FetchContent/CMakeLists.cmake.in","{tmp_path.as_posix()}/build/_deps/catch2-subbuild/CMakeLists.txt"],"cmd":"configure_file","file":"/usr/share/cmake/Modules/FetchContent.cmake","frame":5,"global_frame":5,"line":1598,"line_end":1599,"time":1684940081.7072489}}
 {{"args":["{tmp_path.as_posix()}/build/_deps/catch2-src/src/catch2/catch_user_config.hpp.in","{tmp_path.as_posix()}/build/generated-includes/catch2/catch_user_config.hpp"],"cmd":"configure_file","file":"{tmp_path.as_posix()}/build/_deps/catch2-src/src/CMakeLists.txt","frame":1,"global_frame":4,"line":308,"line_end":311,"time":1684940082.2564831}}
 {{"args":["test.cpp.in","test.cpp"],"cmd":"configure_file","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":17,"time":1684940082.260792}}
 {{"args":["test.cpp.in","{tmp_path.as_posix()}/other.cpp"],"cmd":"configure_file","file":"{tmp_path.as_posix()}/CMakeLists.txt","frame":1,"global_frame":1,"line":18,"time":1684940082.2613621}}
-            '''
+            """
         )
     )
 

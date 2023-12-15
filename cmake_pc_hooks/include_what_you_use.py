@@ -76,9 +76,11 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         IWYUToolCmd.command_for_version = get_iwyu_command()
 
         if IWYUToolCmd.command is None:
-            raise FileNotFoundError('Unable to locate path to iwyu-tool')
+            msg = 'Unable to locate path to iwyu-tool'
+            raise FileNotFoundError(msg)
         if IWYUToolCmd.command_for_version is None:
-            raise FileNotFoundError('Unable to locate path to include-what-you-use executable!')
+            msg = 'Unable to locate path to include-what-you-use executable!'
+            raise FileNotFoundError(msg)
 
         super().__init__(self.command, self.lookbehind, args)
         self.check_installed()
@@ -90,7 +92,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         if compile_db:
             self.add_if_missing([f'-p={compile_db}'])
 
-    def _parse_output(self, result):
+    def _parse_output(self, result):  # noqa: PLR6301
         """
         Parse output and check whether some errors occurred.
 

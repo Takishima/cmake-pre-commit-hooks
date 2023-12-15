@@ -7,10 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Remove all Python linters/formatters in favour of ruff
+- Require setuptools>=61.0 in preparation for PEP-621
+
 ### Repository
 
-- Update `astral-sh/ruff-pre-commit` to v0.1.7
-- Update `psf/black` hook to v23.11.1
+- Update `astral-sh/ruff-pre-commit` to v0.1.8
 - Update `adrienverge/yamllint` hook to v1.33.0
 
 ## [v1.9.4] - 2023-10-15

@@ -62,9 +62,9 @@ class CppcheckCmd(Command):
         # Useless error see https://stackoverflow.com/questions/6986033
         logging.debug('parsing output from %s', result.stderr)
         useless_error_part = 'Cppcheck cannot find all the include files'
-        result.stderr = ''.join(
-            [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
-        )
+        result.stderr = ''.join([
+            line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line
+        ])
         self._clinters_compat()
         return result.returncode != 0
 

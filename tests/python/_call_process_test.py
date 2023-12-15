@@ -14,9 +14,9 @@
 
 import subprocess as sp
 
-import pytest
-
 from cmake_pc_hooks._call_process import History, call_process
+
+import pytest
 
 # ==============================================================================
 

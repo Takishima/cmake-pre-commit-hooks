@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=45", "wheel", "setuptools_scm[toml]>=6"]
+requires = ["setuptools>=61", "wheel", "setuptools_scm[toml]>=6"]
 build-backend = "setuptools.build_meta"
 
 # ==============================================================================
@@ -8,42 +8,85 @@ build-backend = "setuptools.build_meta"
 line-length = 120
 target-version = 'py38'
 
-select = ['F',   # pyflakes
-          'E',   # pycodestyle
-          'W',   # pycodestyle
-          'I',   # isort
-          'N',   # pep8-naming
-          'D',   # pydocstyle
-          'UP',  # pyupgrade
-          'YTT', # flake-2020
-          'ANN', # flake8-annotations
-          'S',   # flake8-bandit
-          'BLE', # flake8-blind-except
-          'B',   # flake8-bugbear
-          'A',   # flake8-builtins
-          'C4',  # flake8-comprehensions
-          'T10', # flake8-debugger
-          'ISC', # flake8-implicit-str-concat
-          'ICN', # flake8-import-conventions
-          'PIE', # flake8-pie
-          'PT',  # flake8-pytest-style
-          'Q',   # flake8-quotes
-          'RSE', # flake8-raise
-          'RET', # flake8-return
-          'SLF', # flake8-self
-          'SIM', # flake8-simplify
-          'TID', # flake8-tidy-imports
-          'ARG', # flake8-unused-arguments
-          'PTH', # flake8-use-pathlib
-          'ERA', # eradicate
-          'PL',  # pylint
-          'RUF', # ruff-specific rules
+select = ['F',     # pyflakes
+          'E',     # pycodestyle
+          'W',     # pycodestyle
+          'C90',   # mccabe
+          'I',     # isort
+          'N',     # pep8-naming
+          'D',     # pydocstyle
+          'UP',    # pyupgrade
+          'YTT',   # flake-2020
+          'ANN',   # flake8-annotations
+          'ASYNC', # flake8-async
+          'TRIO',  # flake8-trio
+          'S',     # flake8-bandit
+          'BLE',   # flake8-blind-except
+          'FBT',   # flake8-boolean-trap
+          'B',     # flake8-bugbear
+          'A',     # flake8-builtins
+          'C4',    # flake8-comprehensions
+          'DTZ',   # flake8-datetimez
+          'T10',   # flake8-debugger
+          'EM',    # flake8-errmsg
+          'EXE',   # flake8-executable
+          'FA',    # flake8-future-annotations
+          'ISC',   # flake8-implicit-str-concat
+          'ICN',   # flake8-import-conventions
+          'G',     # flake8-logging-format
+          'PIE',   # flake8-pie
+          'PT',    # flake8-pytest-style
+          'Q',     # flake8-quotes
+          'RSE',   # flake8-raise
+          'RET',   # flake8-return
+          'SLF',   # flake8-self
+          'SLOT',  # flake8-slots
+          'SIM',   # flake8-simplify
+          'TID',   # flake8-tidy-imports
+          'TCH',   # flake8-type-checking
+          'INT',   # flake8-gettext
+          'ARG',   # flake8-unused-arguments
+          'PTH',   # flake8-use-pathlib
+          'TD',    # flake8-todos
+          'FIX',   # flake8-fixme
+          'ERA',   # eradicate
+          'PL',    # pylint
+          'TRY',   # tryceratops
+          'FLY',   # flynt
+          'NPY',   # numpy specific rules
+          'PERF',  # perflint
+          'FURB',  # refurb
+          'LOG',   # flake8-logging
+          'RUF',   # ruff-specific rules
 ]
+
 ignore = ['ANN101', # missing-type-self
           'D203',   # one-blank-line-before-class
           'D212',   # multi-line-summary-first-line
-          'S603'    # subprocess-without-shell-equals-true
+          'S603',    # subprocess-without-shell-equals-true
+          # Ignore rulues below are actually to prevent conflicts between formatting and linting (with fixing)
+          # cf. https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+          'COM812',  # missing-trailing-comma
+          'COM819',  # prohibited-trailing-comma
+          'D206',    # indent-with-spaces
+          'E111',    # indentation-with-invalid-multiple
+          'E114',    # indentation-with-invalid-multiple-comment
+          'E117',    # over-indented
+          'ISC001',  # single-line-implicit-string-concatenation
+          'ISC002',  # multi-line-implicit-string-concatenation
+          'Q000',    # bad-quotes-inline-string
+          'Q001',    # bad-quotes-multiline-string
+          'Q002',    # bad-quotes-docstring
+          'Q003',    # avoidable-escaped-quote
+          'S603',    # subprocess-without-shell-equals-true
+          'W191',    # tab-indentation
 ]
+
+[tool.ruff.format]
+quote-style = "single"
+indent-style = "space"
+line-ending = 'lf'
+skip-magic-trailing-comma = false
 
 [tool.ruff.per-file-ignores]
 
@@ -62,16 +105,15 @@ docstring-quotes = 'double'
 inline-quotes = 'single'
 multiline-quotes = 'single'
 
+[tool.ruff.isort]
+combine-as-imports = true
+section-order = ["future", "standard-library", "first-party", "third-party", "local-folder"]
+split-on-trailing-comma = false
+
 [tool.ruff.pydocstyle]
 convention = 'google'
 
 # ------------------------------------------------------------------------------
-
-[tool.black]
-line-length = 120
-target-version = ['py38','py39','py310']
-skip-string-normalization = true
-
 
 [tool.check-manifest]
 ignore = [
@@ -111,44 +153,12 @@ omit = [
 'test_*.py',
 ]
 
-
-[tool.pylint]
-[tool.pylint.master]
-ignore-patterns = [
-'__init__.py'
-]
-
-[tool.pylint.format]
-max-line-length = 120
-
-[tool.pylint.reports]
-msg-template = '{path}:{line}: [{msg_id}, {obj}] {msg} ({symbol})'
-
-[tool.pylint.messages_control]
-disable = [
-'invalid-name',
-'duplicate-code'
-]
-
-
 [tool.pytest.ini_options]
 minversion = '6.0'
 testpaths = ['tests/python']
 mock_use_standalone_module = true
 
-[tool.isort]
-
-profile = "black"
-
 [tool.setuptools_scm]
 write_to = 'VERSION.txt'
 write_to_template = '{version}'
 local_scheme = 'no-local-version'
-
-[tool.yapf]
-column_limit = 120
-
-[tool.bandit]
-exclude_dirs = ["tests"]
-tests = []
-skips = ['B404', 'B603']
