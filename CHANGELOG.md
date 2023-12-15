@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added metadata to mark support for Python 3.12 and enabled CI checks for it
+
 ### Changed
 
 - Remove all Python linters/formatters in favour of ruff

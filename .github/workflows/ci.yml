@@ -21,6 +21,7 @@ jobs:
           - 3.9
           - '3.10'
           - '3.11'
+          - '3.12'
 
     name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
