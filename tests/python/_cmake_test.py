@@ -14,11 +14,11 @@
 
 import argparse
 import platform
+import sys
 from pathlib import Path
 from textwrap import dedent
-import sys
 
-from cmake_pc_hooks._cmake import CMakeCommand, get_cmake_command, _try_calling_cmake
+from cmake_pc_hooks._cmake import CMakeCommand, _try_calling_cmake, get_cmake_command
 
 import fasteners
 import filelock
