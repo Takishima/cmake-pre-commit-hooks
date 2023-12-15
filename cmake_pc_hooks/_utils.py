@@ -32,6 +32,13 @@ logging.basicConfig(level=_LOGLEVEL, format='%(levelname)-5s:cmake-pc-hooks:%(me
 logging.getLogger('filelock').setLevel(logging.WARNING)
 
 
+class CMakePresetError(Exception):
+    """Exception raised if a command line incompatibility with --preset is detected."""
+
+    def __init__(self) -> None:
+        super().__init__('You *must* specify -B|--build-dir if you pass --preset as a CMake argument!')
+
+
 def _read_compile_commands_json(compile_db: Path) -> list[str]:
     """Read a JSON compile database and return the list of files contained within."""
     if compile_db.exists():
@@ -98,7 +105,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.build_dir_list.extend(known_args.build_dir if known_args.build_dir else [])
 
         if not known_args.build_dir and known_args.preset:
-            raise RuntimeError('You *must* specify -B|--build-dir if you pass --preset as a CMake argument!')
+            raise CMakePresetError
 
         if self.setup_cmake:
             self.cmake.setup_cmake_args(known_args)
@@ -152,10 +159,11 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.stderr = self.history[-1].stderr.encode()
         self.returncode = self.history[-1].returncode
 
-    def _parse_output(self, result):  # noqa: ARG002
+    def _parse_output(self, result):  # noqa: ARG002, PLR6301
         return NotImplemented
 
-    def _resolve_compilation_database(self, cmake_build_dir, build_dir_list):
+    @staticmethod
+    def _resolve_compilation_database(cmake_build_dir: Path, build_dir_list: list[Path]) -> Path | None:
         """Locate a compilation database based on internal list of directories."""
         if cmake_build_dir and cmake_build_dir / 'compile_commands.json':
             return cmake_build_dir / 'compile_commands.json'

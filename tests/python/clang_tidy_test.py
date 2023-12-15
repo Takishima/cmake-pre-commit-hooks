@@ -13,10 +13,10 @@
 #   limitations under the License.
 
 
+from cmake_pc_hooks import clang_tidy
+
 import pytest
 from _test_utils import command_main_asserts, run_command_default_assertions
-
-from cmake_pc_hooks import clang_tidy
 
 # ==============================================================================
 

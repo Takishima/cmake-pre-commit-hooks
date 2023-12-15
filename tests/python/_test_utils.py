@@ -24,7 +24,8 @@ class ExitError(Exception):
 # ==============================================================================
 
 
-def run_command_default_assertions(
+def run_command_default_assertions(  # noqa: C901
+    *,
     read_json_db,
     json_db_file_list,
     file_list,

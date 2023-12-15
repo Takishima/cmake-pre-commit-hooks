@@ -12,10 +12,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from cmake_pc_hooks import clang_format
+
 import pytest
 from _test_utils import command_main_asserts
-
-from cmake_pc_hooks import clang_format
 
 # ==============================================================================
 
@@ -24,9 +24,7 @@ from cmake_pc_hooks import clang_format
 def test_clang_format_command(mocker, tmp_path, format_success):
     mocker.patch('hooks.utils.Command.check_installed', return_value=True)
 
-    return_values = []
-    for char in (chr(n) for n in range(ord('a'), ord('z') + 1)):
-        return_values.append(f'{char*3}'.encode())
+    return_values = [f'{char * 3}'.encode() for char in (chr(n) for n in range(ord('a'), ord('z') + 1))]
 
     def _get_filelines(filename_str):  # noqa: ARG001
         if format_success:

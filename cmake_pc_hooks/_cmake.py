@@ -14,6 +14,8 @@
 
 """CMake related function and classes."""
 
+from __future__ import annotations
+
 import contextlib
 import json
 import logging
@@ -33,6 +35,25 @@ from . import _argparse, _call_process
 # ==============================================================================
 
 
+def _try_calling_cmake(cmake_cmd: list[str | Path]) -> bool:
+    """
+    Try to call CMake using the provided command.
+
+    Args:
+        cmake_cmd: CMake command line
+
+    Return:
+        True if command line is valid, False otherwise
+    """
+    with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
+        try:
+            sp.check_call([*cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
+        except (OSError, sp.CalledProcessError):
+            return False
+        else:
+            return True
+
+
 def get_cmake_command(cmake_names=None):  # pragma: nocover
     """
     Get the path to a CMake executable on the PATH or in the virtual environment.
@@ -45,42 +66,33 @@ def get_cmake_command(cmake_names=None):  # pragma: nocover
         cmake_names = ['cmake', 'cmake3']
 
     for cmake in cmake_names:
-        with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
-            try:
-                sp.check_call([cmake, '--version'], stdout=devnull, stderr=devnull)
-                return [shutil.which(cmake)]
-            except (OSError, sp.CalledProcessError):
-                pass
+        cmake_cmd = [shutil.which(cmake)]
+        if cmake_cmd is not None and _try_calling_cmake(cmake_cmd):
+            return cmake_cmd
 
-            # CMake not in PATH, should have installed Python CMake module
-            # -> try to find out where it is
-            python_executable = Path(sys.executable)
-            try:
-                root_path = Path(os.environ['VIRTUAL_ENV'])
-                python = python_executable.name
-            except KeyError:
-                root_path = python_executable.parent
-                python = python_executable.name
+        # CMake not in PATH, should have installed Python CMake module
+        # -> try to find out where it is
+        python_executable = Path(sys.executable)
+        try:
+            root_path = Path(os.environ['VIRTUAL_ENV'])
+            python = python_executable.name
+        except KeyError:
+            root_path = python_executable.parent
+            python = python_executable.name
 
-            search_paths = [root_path, root_path / 'bin', root_path / 'Scripts']
+        search_paths = [root_path, root_path / 'bin', root_path / 'Scripts']
 
-            # First try executing CMake directly
-            for base_path in search_paths:
-                try:
-                    cmake_cmd = base_path / cmake
-                    sp.check_call([cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
-                    return [cmake_cmd]
-                except (OSError, sp.CalledProcessError):
-                    pass
+        # First try executing CMake directly
+        for base_path in search_paths:
+            cmake_cmd = [base_path / cmake]
+            if _try_calling_cmake(cmake_cmd):
+                return cmake_cmd
 
-            # That did not work: try calling it through Python
-            for base_path in search_paths:
-                try:
-                    cmake_cmd = [python, base_path / 'cmake']
-                    sp.check_call([*cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
-                    return cmake_cmd
-                except (OSError, sp.CalledProcessError):
-                    pass
+        # That did not work: try calling it through Python
+        for base_path in search_paths:
+            cmake_cmd = [python, base_path / 'cmake']
+            if _try_calling_cmake(cmake_cmd):
+                return cmake_cmd
 
     # Nothing worked -> give up!
     return None
@@ -107,7 +119,8 @@ class CMakeCommand:
         self.cmake_configured_files = []
         self.no_cmake_configure = False
 
-    def add_cmake_arguments_to_parser(self, parser):
+    @staticmethod
+    def add_cmake_arguments_to_parser(parser):
         """Add CMake options to an argparse.ArgumentParser."""
         # Create option group here to control the order
         cmake_options = parser.add_argument_group(
@@ -203,7 +216,7 @@ class CMakeCommand:
             '-Wno-dev', dest='no_dev_warnings', action='store_true', help='Suppress developer warnings.'
         )
 
-    def resolve_build_directory(self, build_dir_list=None, automatic_discovery=True):
+    def resolve_build_directory(self, build_dir_list=None, *, automatic_discovery=True):
         """Locate a valid build directory based on internal list and automatic discovery if enabled."""
         # First try to locate a valid build directory based on internal list
         build_dir_list = [] if build_dir_list is None else [Path(path) for path in build_dir_list]
@@ -232,7 +245,7 @@ class CMakeCommand:
             self.build_dir = Path(build_dir_list[0]).resolve()
         logging.info('Unable to locate a valid build directory. Will be creating one at %s', str(self.build_dir))
 
-    def setup_cmake_args(self, cmake_args):
+    def setup_cmake_args(self, cmake_args):  # noqa: C901
         """
         Setup CMake arguments.
 
@@ -305,7 +318,7 @@ class CMakeCommand:
                 for arg in platform_args:
                     self.cmake_args.append(arg.strip('"\''))
 
-    def configure(self, command, clean_build=False):
+    def configure(self, command, *, clean_build=False):
         """
         Run a CMake configure step (multi-process safe).
 
@@ -357,14 +370,12 @@ class CMakeCommand:
         result = _call_process.call_process(
             [*command, str(self.source_dir), *self.cmake_args, *extra_args], cwd=str(self.build_dir)
         )
-        result.stdout = '\n'.join(
-            [
-                f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
-                f'  from within {self.build_dir}',
-                result.stdout,
-                '',
-            ]
-        )
+        result.stdout = '\n'.join([
+            f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
+            f'  from within {self.build_dir}',
+            result.stdout,
+            '',
+        ])
 
         return result
 

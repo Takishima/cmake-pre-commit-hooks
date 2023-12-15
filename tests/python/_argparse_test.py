@@ -17,10 +17,10 @@ import contextlib
 import platform
 from textwrap import dedent
 
+from cmake_pc_hooks import _argparse
+
 import pytest
 from _test_utils import ExitError
-
-from cmake_pc_hooks import _argparse
 
 # ==============================================================================
 
@@ -38,7 +38,7 @@ def _add_simple_args(parser):
 @pytest.fixture()
 def simple_toml_content():
     return dedent(
-        '''
+        """
         flag = false
         no_flag = true
         int = 1
@@ -49,7 +49,7 @@ def simple_toml_content():
         no_flag = false
         int = 2
         string = 'two'
-        '''
+        """
     )
 
 
@@ -97,7 +97,7 @@ def toml_generate(tmp_path, request):
                 'non_overridable': 'none',
             }
         content = dedent(
-            '''
+            """
             flag = true
             no_flag = false
             string = 'one'
@@ -120,7 +120,7 @@ def toml_generate(tmp_path, request):
             int = 3
             files = ['100.txt', '200.txt']
             non_overridable = 'none'
-        '''
+        """
         )
         path.write_text(content)
 
@@ -179,7 +179,8 @@ def test_argument_parser_init():
 
 def test_argument_parser_load_from_toml_unknown_key(mocker, toml_generate):
     def exit_raise(status):
-        raise RuntimeError(f'{status}')
+        msg = f'{status}'
+        raise RuntimeError(msg)
 
     mocker.patch('sys.exit', exit_raise)
     path, with_content, toml_section, _ = toml_generate
@@ -202,16 +203,16 @@ def test_argument_parser_load_from_toml_invalid(toml_generate):
         return
 
     content = dedent(
-        '''
+        """
         other = 'one'
-    '''
+    """
     )
     if toml_section:
         content += dedent(
-            f'''
+            f"""
             [{toml_section}]
             other = 'ten'
-        '''
+        """
         )
     path.write_text(content)
 
@@ -287,11 +288,11 @@ def test_argument_parser_pyproject_toml_missing_section(tmp_path, monkeypatch):
     pyproject_file.parent.mkdir(parents=True, exist_ok=True)
     pyproject_file.write_text(
         dedent(
-            '''
+            """
             flag = true
             int = 1
             string = 'one'
-            '''
+            """
         )
     )
 

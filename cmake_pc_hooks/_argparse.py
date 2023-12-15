@@ -28,6 +28,44 @@ import toml
 # ==============================================================================
 
 
+class InvalidExecutablePathError(argparse.ArgumentTypeError):
+    """Exception raised when a path to an executable is invalid."""
+
+    def __init__(self, path: Path) -> None:
+        """Initialize an InvalidExecutablePathError."""
+        super().__init__(f'{path} is not a valid file and/or does not appear executable')
+
+
+class TOMLFileNotFoundError(FileNotFoundError):
+    """Exception raised when a TOML file cannot be found."""
+
+    def __init__(self, path: Path) -> None:
+        """Initialize a TOMLFileNotFoundError object."""
+        super().__init__(f'Unable to locate TOML file {path}')
+
+
+class TOMLSectionKeyError(KeyError):
+    """Exception raised when a TOML key cannot be found."""
+
+    def __init__(self, section: str, path: Path) -> None:
+        """Initialize a TOMLSectionKeyError object."""
+        super().__init__(f'Unable to locate section {section} in TOML file {path}')
+
+
+class TOMLTypeError(argparse.ArgumentTypeError):
+    """Exception raised when a TOML key does not match the type of a default value."""
+
+    def __init__(self, value_type: type, default_value_type: type, toml_key: str) -> None:
+        """Initialize a TOMLSectionKeyError object."""
+        super().__init__(
+            f'TOML value type {value_type} not compatible with parser argument '
+            f'{default_value_type} for key "{toml_key}"'
+        )
+
+
+# ==============================================================================
+
+
 def _append_in_namespace(namespace, key, values):
     current = getattr(namespace, key, [])
     if current is None:
@@ -65,14 +103,14 @@ def executable_path(path: str) -> Path:
     """
     if Path(path).is_file() and os.access(path, os.X_OK):
         return path
-    raise argparse.ArgumentTypeError(f'{path} is not a valid file and/or does not appear executable')
+    raise InvalidExecutablePathError(path)
 
 
 # ==============================================================================
 
 
 def _load_data_from_toml(
-    path: Path, section: str, path_must_exist: bool = True, section_must_exist: bool = True
+    path: Path, section: str, *, path_must_exist: bool = True, section_must_exist: bool = True
 ) -> dict:
     """
     Load a TOML file and return the corresponding config dictionary.
@@ -98,15 +136,16 @@ def _load_data_from_toml(
         else:
             config = {key: value for key, value in config.items() if not isinstance(value, dict)}
             logging.debug('Loading data from root table of %s', path)
-        return config
     except FileNotFoundError as err:
         if path_must_exist:
-            raise FileNotFoundError(f'Unable to locate TOML file {path}') from err
+            raise TOMLFileNotFoundError(path) from err
         logging.debug('TOML file %s does not exist (not an error)', str(path))
     except KeyError as err:
         if section_must_exist:
-            raise KeyError(f'Unable to locate section {section} in TOML file {path}') from err
+            raise TOMLSectionKeyError(section, path) from err
         logging.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
+    else:
+        return config
     return {}
 
 
@@ -226,13 +265,11 @@ class ArgumentParser(argparse.ArgumentParser):
         if namespace.dump_toml:
             exclude_keys = {'positionals', 'dump_toml'}
             print(
-                toml.dumps(
-                    {
-                        key: value
-                        for key, value in vars(namespace).items()
-                        if value != self._default_args[key] and key not in exclude_keys
-                    }
-                )
+                toml.dumps({
+                    key: value
+                    for key, value in vars(namespace).items()
+                    if value != self._default_args[key] and key not in exclude_keys
+                })
             )
             sys.exit(0)
 
@@ -243,6 +280,7 @@ class ArgumentParser(argparse.ArgumentParser):
         namespace: argparse.Namespace,
         path: Path,
         section: str = '',
+        *,
         path_must_exist: bool = True,
         section_must_exist: bool = True,
         overridable_keys: set | None = None,
@@ -258,7 +296,9 @@ class ArgumentParser(argparse.ArgumentParser):
             section_must_exist: Whether a missing section in the TOML file is considered an error or not
             overridable_keys: List of keys that can be overridden by values in the TOML file
         """
-        config = _load_data_from_toml(path, section, path_must_exist, section_must_exist)
+        config = _load_data_from_toml(
+            path, section, path_must_exist=path_must_exist, section_must_exist=section_must_exist
+        )
 
         for key, value in config.items():
             if key not in self._default_args:
@@ -267,10 +307,7 @@ class ArgumentParser(argparse.ArgumentParser):
             # NB: we can only do proper type check if the default value is given...
             default_value = self._default_args[key]
             if default_value is not None and not isinstance(value, type(default_value)):
-                raise argparse.ArgumentTypeError(
-                    f'TOML value type {type(value)} not compatible with parser argument '
-                    f'{type(default_value)} for key "{key}"'
-                )
+                raise TOMLTypeError(type(value), type(default_value), key)
             if overridable_keys is not None and key not in overridable_keys:
                 logging.debug('  skipping non-overridable key: "%s"', key)
                 continue

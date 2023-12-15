@@ -13,11 +13,11 @@
 #   limitations under the License.
 
 
-import pytest
-from _test_utils import run_command_default_assertions
-
 from cmake_pc_hooks import _utils
 from cmake_pc_hooks._cmake import CMakeCommand
+
+import pytest
+from _test_utils import run_command_default_assertions
 
 # ==============================================================================
 
@@ -92,7 +92,7 @@ def test_command_parse_args_invalid(mocker, tmp_path, look_behind):
 
     # ----------------------------------
 
-    with pytest.raises(RuntimeError, match='pass --preset as a CMake argument'):
+    with pytest.raises(_utils.CMakePresetError, match='pass --preset as a CMake argument'):
         command.parse_args([*args, f'-S{source_dir}', '--preset=/path/to/CMakePreset.json'])
 
     command.parse_args([*args, f'-S{tmp_path / "other"}'])
