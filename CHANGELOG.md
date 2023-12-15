@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+- Fix GitHub workflows
 - Update `astral-sh/ruff-pre-commit` to v0.1.8
 - Update `adrienverge/yamllint` hook to v1.33.0
 
