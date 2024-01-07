@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+- Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
 - Update `astral-sh/ruff-pre-commit` hook to v0.1.9
 
 ## [v1.9.5] - 2023-12-15
