@@ -18,12 +18,12 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 
-from cmake_pc_hooks._cmake import CMakeCommand, _try_calling_cmake, get_cmake_command
+from cmake_pc_hooks._cmake import CMakeCommand, _try_calling_cmake, get_cmake_command  # noqa: PLC2701
 
 import fasteners
 import filelock
 import pytest
-from _test_utils import ExitError
+from _test_utils import ExitError  # noqa: PLC2701
 
 # ==============================================================================
 

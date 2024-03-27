@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import logging
-import subprocess as sp
+import subprocess as sp  # noqa: S404
 import sys
 
 import attrs

@@ -23,7 +23,7 @@ import os
 import platform
 import re
 import shutil
-import subprocess as sp
+import subprocess as sp  # noqa: S404
 import sys
 from pathlib import Path
 

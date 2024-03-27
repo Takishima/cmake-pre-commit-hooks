@@ -1,5 +1,5 @@
 $build_dir = "build"
-$CMakeArgs = '-GNinja', '-DCMAKE_C_COMPILER="cl.exe"', '-DCMAKE_CXX_COMPILER="cl.exe"'
+$CMakeArgs = '-GNinja', '-DCMAKE_C_COMPILER=cl.exe', '-DCMAKE_CXX_COMPILER=cl.exe'
 
 Set-PSDebug -trace 1
 

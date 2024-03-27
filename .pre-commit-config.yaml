@@ -20,7 +20,7 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/Lucas-C/pre-commit-hooks
-    rev: v1.5.4
+    rev: v1.5.5
     hooks:
       - id: remove-tabs
 
@@ -39,14 +39,14 @@ repos:
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.9.0.6
+    rev: v0.10.0.1
     hooks:
       - id: shellcheck
         require_serial: false
         args: [-x, --severity=info]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.33.0
+    rev: v1.35.1
     hooks:
       - id: yamllint
 
@@ -58,7 +58,7 @@ repos:
         additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.1.11
+    rev: v0.3.4
     hooks:
       - id: ruff-format
         name: ruff (format)
@@ -70,6 +70,6 @@ repos:
         args:
           - --fix
           - --exit-non-zero-on-fix
-          - --show-source
+          - --output-format=full
           - --show-fixes
           - --preview
