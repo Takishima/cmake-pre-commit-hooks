@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Update GitHub Action github/codeql-action from v2 to v3
+- Update GitHub Action actions/checkout from v3 to v4
+- Update GitHub Action actions/setup-python from v4 to v5
 - Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
 - Update GitHub Action `codecov/codecov-action` from v3 to v4
 - Update `adrienverge/yamllint` hook to v1.35.1
