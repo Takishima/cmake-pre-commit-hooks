@@ -17,10 +17,10 @@ import contextlib
 import platform
 from textwrap import dedent
 
-from cmake_pc_hooks import _argparse
+from cmake_pc_hooks import _argparse  # noqa: PLC2701
 
 import pytest
-from _test_utils import ExitError
+from _test_utils import ExitError  # noqa: PLC2701
 
 # ==============================================================================
 

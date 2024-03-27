@@ -3,7 +3,7 @@ import json
 from collections import namedtuple
 
 import pytest
-from _test_utils import ExitError
+from _test_utils import ExitError  # noqa: PLC2701
 
 # ==============================================================================
 

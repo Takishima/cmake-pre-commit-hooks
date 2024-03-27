@@ -68,6 +68,8 @@ namespaces = false
 line-length = 120
 target-version = 'py38'
 
+[tool.ruff.lint]
+
 select = ['F',     # pyflakes
           'E',     # pycodestyle
           'W',     # pycodestyle
@@ -153,24 +155,24 @@ skip-magic-trailing-comma = false
 'tests/python/*.py' = ['S101', 'SLF001', 'PLR0913', 'PLR2004', 'D']
 
 
-[tool.ruff.flake8-annotations]
+[tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
 ignore-fully-untyped = true
 mypy-init-return = true
 suppress-dummy-args = true
 suppress-none-returning = true
 
-[tool.ruff.flake8-quotes]
+[tool.ruff.lint.flake8-quotes]
 docstring-quotes = 'double'
 inline-quotes = 'single'
 multiline-quotes = 'single'
 
-[tool.ruff.isort]
+[tool.ruff.lint.isort]
 combine-as-imports = true
 section-order = ["future", "standard-library", "first-party", "third-party", "local-folder"]
 split-on-trailing-comma = false
 
-[tool.ruff.pydocstyle]
+[tool.ruff.lint.pydocstyle]
 convention = 'google'
 
 # ------------------------------------------------------------------------------

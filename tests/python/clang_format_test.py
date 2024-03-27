@@ -15,7 +15,7 @@
 from cmake_pc_hooks import clang_format
 
 import pytest
-from _test_utils import command_main_asserts
+from _test_utils import command_main_asserts  # noqa: PLC2701
 
 # ==============================================================================
 

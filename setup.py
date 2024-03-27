@@ -19,7 +19,7 @@ from __future__ import annotations
 import logging
 import os
 import shutil
-import subprocess
+import subprocess  # noqa: S404
 import sys
 from pathlib import Path
 
