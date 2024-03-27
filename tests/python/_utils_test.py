@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 
-from cmake_pc_hooks import _utils
+from cmake_pc_hooks import _utils  # noqa: PLC2701
 from cmake_pc_hooks._cmake import CMakeCommand  # noqa: PLC2701
 
 import pytest
