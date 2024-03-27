@@ -13,7 +13,7 @@ jobs:
       (github.event.pull_request.title == '[pre-commit.ci] pre-commit autoupdate') &&
       (github.event.action == 'opened')
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
@@ -48,7 +48,7 @@ jobs:
     name: CHANGELOG enforcer
     if: '!cancelled()'
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0

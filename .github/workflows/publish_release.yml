@@ -23,7 +23,7 @@ jobs:
               || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -104,7 +104,7 @@ jobs:
           dist/*
 
       - name: Setup Python for Pypi upload
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
 
       - name: Publish standard package
         uses: pypa/gh-action-pypi-publish@release/v1
