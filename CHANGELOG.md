@@ -12,11 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
 - Update GitHub Action `codecov/codecov-action` from v3 to v4
 - Update `adrienverge/yamllint` hook to v1.35.1
-- Update `astral-sh/ruff-pre-commit` hook to v0.3.4
-- Update `astral-sh/ruff-pre-commit` hook to v0.3.4
-- Update `shellcheck-py/shellcheck-py` hook to v0.10.0.1
+- Update `astral-sh/ruff-pre-commit` hook to v0.3.5
 - Update `Lucas-C/pre-commit-hook` hook to v1.5.5
-
+- Update `shellcheck-py/shellcheck-py` hook to v0.10.0
 
 ## [v1.9.5] - 2023-12-15
 
