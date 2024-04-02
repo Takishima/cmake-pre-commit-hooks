@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+- Update `action/setup-python` GitHub Action to v5
 - Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
 - Update GitHub Action `codecov/codecov-action` from v3 to v4
 - Update `adrienverge/yamllint` hook to v1.35.1
@@ -195,7 +196,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
-- Update `action/setup-python` GitHub Action to v4
+- Update `action/setup-python` GitHub Action to v5
+- Update `action/checkout` GitHub Action to v4
+- Update `github/codeql-action/analyze` GitHub Action to v3
 - Update `ilammy/msvc-dev-cmd` GitHub Action to v1.12.1
 - Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.4.2

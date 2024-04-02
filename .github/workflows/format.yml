@@ -18,7 +18,7 @@ jobs:
       && (startsWith(github.event.pull_request.head.ref, 'release/')
           || startsWith(github.event.pull_request.head.ref, 'hotfix/'))
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Installing parse-changelog
         env:
           target: x86_64-unknown-linux-musl
