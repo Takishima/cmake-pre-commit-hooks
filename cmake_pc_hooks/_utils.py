@@ -102,7 +102,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.all_at_once = known_args.all_at_once
         self.read_json_db = known_args.read_json_db
         self.clean_build = known_args.clean
-        self.build_dir_list.extend(known_args.build_dir if known_args.build_dir else [])
+        self.build_dir_list.extend(known_args.build_dir or [])
 
         if not known_args.build_dir and known_args.preset:
             raise CMakePresetError
