@@ -22,6 +22,14 @@ jobs:
           - '3.10'
           - '3.11'
           - '3.12'
+        exclude:
+          # macos-latest is now running on M1 macs
+          - runs-on: macos-latest
+            python: 3.8
+          - runs-on: macos-latest
+            python: 3.9
+          - runs-on: macos-latest
+            python: 3.10
 
     name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -77,6 +85,15 @@ jobs:
           - 3.9
           - '3.10'
           - '3.11'
+          - '3.12'
+        exclude:
+          # macos-latest is now running on M1 macs
+          - runs-on: macos-latest
+            python: 3.8
+          - runs-on: macos-latest
+            python: 3.9
+          - runs-on: macos-latest
+            python: 3.10
 
     name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
