@@ -254,6 +254,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and release/\_ branches
 - Update `isort` hook to v5.10.1
 - Update `black` hook to v21.12b0
+- Disable macOS CI for Python < 3.11 (now runs on M1 macs on GitHub)
 
 ## [v1.5.0] - 2021-11-08
 
