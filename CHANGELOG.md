@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.9.6] - 2024-06-02
+
+### Changed
+
+- Apply new linter/formatters
+
+### Fixed
+
+- Fixed a bug where a condition always evaluated to `true`
+
 ### Repository
 
 - Update GitHub Action github/codeql-action from v2 to v3
@@ -14,11 +24,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update GitHub Action actions/setup-python from v4 to v5
 - Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
 - Update GitHub Action `codecov/codecov-action` from v3 to v4
+- Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
+- Update GitHub Action `thomaseizinger/create-pull-request` to v1.4.0
 - Update `adrienverge/yamllint` hook to v1.35.1
-- Update `astral-sh/ruff-pre-commit` hook to v0.3.4
-- Update `shellcheck-py/shellcheck-py` hook to v0.10.0.1
+- Update `astral-sh/ruff-pre-commit` hook to v0.4.5
+- Update `codespell-project/codespell` hook to v2.3.0
 - Update `Lucas-C/pre-commit-hook` hook to v1.5.5
-
+- Update `pre-commit/pre-commit-hooks` hook to v4.6.0
+- Update `shellcheck-py/shellcheck-py` hook to v0.10.0.1
 
 ## [v1.9.5] - 2023-12-15
 
@@ -199,7 +212,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
-- Update `action/setup-python` GitHub Action to v4
+- Update `action/setup-python` GitHub Action to v5
+- Update `action/checkout` GitHub Action to v4
+- Update `github/codeql-action/analyze` GitHub Action to v3
 - Update `ilammy/msvc-dev-cmd` GitHub Action to v1.12.1
 - Update `thomaseizinger/create-pull-request` GitHub Action to v1.3.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.4.2
@@ -228,6 +243,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Update GitHub's CodeQL action to v2
+- Update `astral-sh/ruff-pre-commit` hook to v0.4.7
 - Update `pre-commit/pre-commit-hooks` hook to v4.3.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.2.0
 - Update `pre-commit/mirrors-pylint` hook to v3.0.0a5
@@ -254,6 +270,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and release/\_ branches
 - Update `isort` hook to v5.10.1
 - Update `black` hook to v21.12b0
+- Disable macOS CI for Python \< 3.11 (now runs on M1 macs on GitHub)
 
 ## [v1.5.0] - 2021-11-08
 
@@ -386,7 +403,7 @@ Initial release with support for:
 - clang-tidy
 - cppcheck
 
-[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.5...HEAD
+[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.6...HEAD
 [v1.0.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/20b1113bf223273cda31a14a82c9d573a342de4a...v1.0.0
 [v1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1
 [v1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
@@ -409,3 +426,4 @@ Initial release with support for:
 [v1.9.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.2...v1.9.3
 [v1.9.4]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.3...v1.9.4
 [v1.9.5]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.4...v1.9.5
+[v1.9.6]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.5...v1.9.6
