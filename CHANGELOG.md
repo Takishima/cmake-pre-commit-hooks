@@ -233,6 +233,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Update GitHub's CodeQL action to v2
+- Update `astral-sh/ruff-pre-commit` hook to v0.4.7
 - Update `pre-commit/pre-commit-hooks` hook to v4.3.0
 - Update `Lucas-C/pre-commit-hooks` hook to v1.2.0
 - Update `pre-commit/mirrors-pylint` hook to v3.0.0a5
