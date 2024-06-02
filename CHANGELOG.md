@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v1.9.6] - 2024-06-02
+
 ### Changed
 
 - Apply new linter/formatters
@@ -265,7 +267,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and release/\_ branches
 - Update `isort` hook to v5.10.1
 - Update `black` hook to v21.12b0
-- Disable macOS CI for Python < 3.11 (now runs on M1 macs on GitHub)
+- Disable macOS CI for Python \< 3.11 (now runs on M1 macs on GitHub)
 
 ## [v1.5.0] - 2021-11-08
 
@@ -398,7 +400,7 @@ Initial release with support for:
 - clang-tidy
 - cppcheck
 
-[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.5...HEAD
+[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.6...HEAD
 [v1.0.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/20b1113bf223273cda31a14a82c9d573a342de4a...v1.0.0
 [v1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1
 [v1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
@@ -421,3 +423,4 @@ Initial release with support for:
 [v1.9.3]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.2...v1.9.3
 [v1.9.4]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.3...v1.9.4
 [v1.9.5]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.4...v1.9.5
+[v1.9.6]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.5...v1.9.6
