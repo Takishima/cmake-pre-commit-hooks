@@ -150,10 +150,9 @@ indent-style = "space"
 line-ending = 'lf'
 skip-magic-trailing-comma = false
 
-[tool.ruff.per-file-ignores]
+[tool.ruff.lint.per-file-ignores]
 
 'tests/python/*.py' = ['S101', 'SLF001', 'PLR0913', 'PLR2004', 'D']
-
 
 [tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true

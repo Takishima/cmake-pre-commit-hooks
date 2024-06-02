@@ -66,9 +66,9 @@ def get_cmake_command(cmake_names=None):  # pragma: nocover
         cmake_names = ['cmake', 'cmake3']
 
     for cmake in cmake_names:
-        cmake_cmd = [shutil.which(cmake)]
-        if cmake_cmd is not None and _try_calling_cmake(cmake_cmd):
-            return cmake_cmd
+        cmake_cmd = shutil.which(cmake)
+        if cmake_cmd is not None and _try_calling_cmake([cmake_cmd]):
+            return [cmake_cmd]
 
         # CMake not in PATH, should have installed Python CMake module
         # -> try to find out where it is
@@ -128,7 +128,8 @@ class CMakeCommand:
             description='Options mirroring those of CMake and that will be passed onto CMake as-is.',
         )
         options = parser.add_argument_group(
-            title='Other CMake related options', description='Options used to configure how CMake is called'
+            title='Other CMake related options',
+            description='Options used to configure how CMake is called',
         )
         platform_specific_cmake = parser.add_argument_group(
             title='Options to define platform-dependent CMake variables',
@@ -141,7 +142,11 @@ class CMakeCommand:
 
         # Custom options
         options.add_argument('--clean', action='store_true', help='Start from a clean build directory')
-        options.add_argument('--cmake', type=_argparse.executable_path, help='Specify path to CMake executable.')
+        options.add_argument(
+            '--cmake',
+            type=_argparse.executable_path,
+            help='Specify path to CMake executable.',
+        )
         options.add_argument(
             '--detect-configured-files',
             action='store_true',
@@ -171,20 +176,40 @@ class CMakeCommand:
             help='Unix-only (ie. Linux and MacOS) options for CMake',
         )
         platform_specific_cmake.add_argument(
-            '--linux', action=_argparse.OSSpecificAction, type=str, help='Linux-only options for CMake'
+            '--linux',
+            action=_argparse.OSSpecificAction,
+            type=str,
+            help='Linux-only options for CMake',
         )
         platform_specific_cmake.add_argument(
-            '--mac', action=_argparse.OSSpecificAction, type=str, help='Mac-only options for CMake'
+            '--mac',
+            action=_argparse.OSSpecificAction,
+            type=str,
+            help='Mac-only options for CMake',
         )
         platform_specific_cmake.add_argument(
-            '--win', action=_argparse.OSSpecificAction, type=str, help='Windows-only options for CMake'
+            '--win',
+            action=_argparse.OSSpecificAction,
+            type=str,
+            help='Windows-only options for CMake',
         )
 
         # CMake-like options
         cmake_options.add_argument('-S', '--source-dir', type=str, help='Path to build directory', default='.')
-        cmake_options.add_argument('-B', '--build-dir', action='append', type=str, help='Path to build directory')
         cmake_options.add_argument(
-            '-D', dest='defines', action='append', type=str, help='Create or update a cmake cache entry.', default=[]
+            '-B',
+            '--build-dir',
+            action='append',
+            type=str,
+            help='Path to build directory',
+        )
+        cmake_options.add_argument(
+            '-D',
+            dest='defines',
+            action='append',
+            type=str,
+            help='Create or update a cmake cache entry.',
+            default=[],
         )
         cmake_options.add_argument(
             '-U',
@@ -196,11 +221,23 @@ class CMakeCommand:
         )
         cmake_options.add_argument('-G', dest='generator', type=str, help='Specify a build system generator.')
         cmake_options.add_argument(
-            '-T', dest='toolset', type=str, help='Specify toolset name if supported by generator.'
+            '-T',
+            dest='toolset',
+            type=str,
+            help='Specify toolset name if supported by generator.',
         )
-        cmake_options.add_argument('-A', dest='platform', type=str, help='Specify platform if supported by generator.')
         cmake_options.add_argument(
-            '-Werror', dest='errors', choices=['dev'], help='Make developer warnings errors.', default=[]
+            '-A',
+            dest='platform',
+            type=str,
+            help='Specify platform if supported by generator.',
+        )
+        cmake_options.add_argument(
+            '-Werror',
+            dest='errors',
+            choices=['dev'],
+            help='Make developer warnings errors.',
+            default=[],
         )
         cmake_options.add_argument(
             '-Wno-error',
@@ -211,9 +248,17 @@ class CMakeCommand:
         )
         cmake_options.add_argument('--preset', type=str, help='Specify a configure preset.')
 
-        cmake_options.add_argument('-Wdev', dest='dev_warnings', action='store_true', help='Enable developer warnings.')
         cmake_options.add_argument(
-            '-Wno-dev', dest='no_dev_warnings', action='store_true', help='Suppress developer warnings.'
+            '-Wdev',
+            dest='dev_warnings',
+            action='store_true',
+            help='Enable developer warnings.',
+        )
+        cmake_options.add_argument(
+            '-Wno-dev',
+            dest='no_dev_warnings',
+            action='store_true',
+            help='Suppress developer warnings.',
         )
 
     def resolve_build_directory(self, build_dir_list=None, *, automatic_discovery=True):
@@ -222,7 +267,10 @@ class CMakeCommand:
         build_dir_list = [] if build_dir_list is None else [Path(path) for path in build_dir_list]
         for build_dir in build_dir_list:
             if build_dir.exists() and Path(build_dir, 'CMakeCache.txt').exists():
-                logging.debug('Located valid build directory with CMakeCache.txt at: %s', str(build_dir))
+                logging.debug(
+                    'Located valid build directory with CMakeCache.txt at: %s',
+                    str(build_dir),
+                )
                 self.build_dir = build_dir.resolve()
                 return
 
@@ -243,7 +291,10 @@ class CMakeCommand:
             self.build_dir = self.source_dir / self.DEFAULT_BUILD_DIR
         else:
             self.build_dir = Path(build_dir_list[0]).resolve()
-        logging.info('Unable to locate a valid build directory. Will be creating one at %s', str(self.build_dir))
+        logging.info(
+            'Unable to locate a valid build directory. Will be creating one at %s',
+            str(self.build_dir),
+        )
 
     def setup_cmake_args(self, cmake_args):  # noqa: C901
         """
@@ -272,7 +323,8 @@ class CMakeCommand:
         self.no_cmake_configure = cmake_args.no_cmake_configure
 
         self.resolve_build_directory(
-            build_dir_list=cmake_args.build_dir, automatic_discovery=cmake_args.automatic_discovery
+            build_dir_list=cmake_args.build_dir,
+            automatic_discovery=cmake_args.automatic_discovery,
         )
 
         if cmake_args.detect_configured_files and self.build_dir:
@@ -344,13 +396,29 @@ class CMakeCommand:
         try:
             with cmake_configure_try_lock.acquire(blocking=False):  # noqa: SIM117
                 with cmake_configure_lock.write_lock():
-                    logging.debug('Command %s with id %s is running CMake configure', command, os.getpid())
-                    returncode = self._configure(
-                        lock_files=(cmake_configure_lock_file, cmake_configure_try_lock_file), clean_build=clean_build
+                    logging.debug(
+                        'Command %s with id %s is running CMake configure',
+                        command,
+                        os.getpid(),
                     )
-                    logging.debug('Command %s with id %s is done running CMake configure', command, os.getpid())
+                    returncode = self._configure(
+                        lock_files=(
+                            cmake_configure_lock_file,
+                            cmake_configure_try_lock_file,
+                        ),
+                        clean_build=clean_build,
+                    )
+                    logging.debug(
+                        'Command %s with id %s is done running CMake configure',
+                        command,
+                        os.getpid(),
+                    )
         except filelock.Timeout:
-            logging.debug('Command %s with id %s is not running CMake configure and waiting', command, os.getpid())
+            logging.debug(
+                'Command %s with id %s is not running CMake configure and waiting',
+                command,
+                os.getpid(),
+            )
             with cmake_configure_lock.read_lock():
                 logging.debug('Command %s with id %s is done waiting', command, os.getpid())
                 returncode = 0
@@ -368,7 +436,8 @@ class CMakeCommand:
             extra_args = []
 
         result = _call_process.call_process(
-            [*command, str(self.source_dir), *self.cmake_args, *extra_args], cwd=str(self.build_dir)
+            [*command, str(self.source_dir), *self.cmake_args, *extra_args],
+            cwd=str(self.build_dir),
         )
         result.stdout = '\n'.join([
             f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
@@ -392,7 +461,11 @@ class CMakeCommand:
 
         extra_args = []
         if self.cmake_trace_log:
-            extra_args.extend(['--trace-expand', '--trace-format=json-v1', f'--trace-redirect={self.cmake_trace_log}'])
+            extra_args.extend([
+                '--trace-expand',
+                '--trace-format=json-v1',
+                f'--trace-redirect={self.cmake_trace_log}',
+            ])
 
         result = self._call_cmake(extra_args=extra_args)
 
@@ -451,7 +524,11 @@ class CMakeCommand:
             input_file, configured_file = (Path(arg) for arg in configure_file_call['args'][:2])
             if not configured_file.is_absolute():
                 configured_file = self.build_dir / configured_file
-            logging.debug('detected call to configure_file(%s %s [...])', str(input_file), str(configured_file))
+            logging.debug(
+                'detected call to configure_file(%s %s [...])',
+                str(input_file),
+                str(configured_file),
+            )
             self.cmake_configured_files.append(str(configured_file))
 
 

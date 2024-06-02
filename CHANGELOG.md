@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Apply new linter/formatters
 
+### Fixed
+
+- Fixed a bug where a condition always evaluated to `true`
+
 ### Repository
 
 - Update GitHub Action `action/setup-python` to v5
