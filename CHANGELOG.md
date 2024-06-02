@@ -13,9 +13,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
-- Update `action/setup-python` GitHub Action to v5
-- Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
+- Update GitHub Action `action/setup-python` to v5
 - Update GitHub Action `codecov/codecov-action` from v3 to v4
+- Update GitHub Action `ilammy/msvc-dev-cmd` from v1.12.1 to v1.13.0
+- Update GitHub Action `thomaseizinger/create-pull-request` to v1.4.0
 - Update `adrienverge/yamllint` hook to v1.35.1
 - Update `astral-sh/ruff-pre-commit` hook to v0.4.5
 - Update `codespell-project/codespell` hook to v2.3.0
