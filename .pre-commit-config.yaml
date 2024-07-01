@@ -51,14 +51,14 @@ repos:
       - id: yamllint
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.16.0
+    rev: 1.18.0
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
         additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
+    rev: v0.5.0
     hooks:
       - id: ruff-format
         name: ruff (format)
