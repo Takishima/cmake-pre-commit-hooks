@@ -6,7 +6,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v5.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -25,7 +25,7 @@ repos:
       - id: remove-tabs
 
   - repo: https://github.com/PyCQA/doc8/
-    rev: v1.1.1
+    rev: v1.1.2
     hooks:
       - id: doc8
         require_serial: false
@@ -51,14 +51,14 @@ repos:
       - id: yamllint
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.16.0
+    rev: 1.19.0
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
         additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
+    rev: v0.6.9
     hooks:
       - id: ruff-format
         name: ruff (format)
