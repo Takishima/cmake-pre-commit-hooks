@@ -245,7 +245,7 @@ Also, builds on Linux and MacOS will set the C++ compiler to `g++-10`, while bui
 Since v1.9.0, the hooks support loading the CLI arguments from TOML files. This can be used to configure all the hooks
 for a particular repository using either of:
 
-1.  `pyproject.toml`
+1.  `pyproject.toml` (under `tool.cmake_pc_hooks` section)
 2.  `cmake_pc_hooks.toml`
 3.  TOML file specified using `--config=/path/to/file.toml`
 4.  Command line arguments
