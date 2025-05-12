@@ -88,8 +88,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             '--read-json-db',
             action='store_true',
             help=(
-                'Run hooks on files found in compile_commands.json '
-                '(if found and in addition to files specified on CLI)'
+                'Run hooks on files found in compile_commands.json (if found and in addition to files specified on CLI)'
             ),
         )
 
