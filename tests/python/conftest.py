@@ -8,7 +8,7 @@ from _test_utils import ExitError  # noqa: PLC2701
 # ==============================================================================
 
 
-@pytest.fixture()
+@pytest.fixture
 def compile_commands(tmp_path):
     path = tmp_path / 'build' / 'compile_commands.json'
 
