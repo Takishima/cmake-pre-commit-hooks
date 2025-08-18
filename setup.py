@@ -26,6 +26,8 @@ from pathlib import Path
 from setuptools import setup
 from setuptools.command.egg_info import egg_info
 
+log = logging.getLogger(__name__)
+
 
 def _try_calling_executable(exec_cmd: list[str | Path]) -> bool:
     """
@@ -58,7 +60,7 @@ def get_executable(exec_name):
 
     exec_name = Path(exec_name).name
 
-    logging.info('trying to locate %s in %s', exec_name, root_path)
+    log.info('trying to locate %s in %s', exec_name, root_path)
 
     search_paths = [root_path, root_path / 'bin', root_path / 'Scripts']
 
@@ -66,20 +68,20 @@ def get_executable(exec_name):
     for base_path in search_paths:
         cmd = [base_path / exec_name]
         if _try_calling_executable(cmd):
-            logging.info('  command found: %s', cmd)
+            log.info('  command found: %s', cmd)
             return cmd
-        logging.info('  failed in %s', base_path)
+        log.info('  failed in %s', base_path)
 
     # That did not work: try calling it through Python
     for base_path in search_paths:
         cmd = [python, base_path / exec_name]
 
         if _try_calling_executable(cmd):
-            logging.info('  command found: %s', cmd)
+            log.info('  command found: %s', cmd)
             return cmd
-        logging.info('  failed in %s', base_path)
+        log.info('  failed in %s', base_path)
 
-    logging.info('  command *not* found in virtualenv!')
+    log.info('  command *not* found in virtualenv!')
 
     return shutil.which(exec_name)
 

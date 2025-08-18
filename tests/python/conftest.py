@@ -8,7 +8,7 @@ from _test_utils import ExitError  # noqa: PLC2701
 # ==============================================================================
 
 
-@pytest.fixture()
+@pytest.fixture
 def compile_commands(tmp_path):
     path = tmp_path / 'build' / 'compile_commands.json'
 
@@ -22,11 +22,13 @@ def compile_commands(tmp_path):
     for fname in file_list:
         fname.parent.mkdir(parents=True, exist_ok=True)
         fname.write_text('')
-        data.append({
-            'directory': str(fname.parent),
-            'file': str(fname),
-            'command': f'/usr/bin/c++ -DONE -DTWO -Wall -c {fname}',
-        })
+        data.append(
+            {
+                'directory': str(fname.parent),
+                'file': str(fname),
+                'command': f'/usr/bin/c++ -DONE -DTWO -Wall -c {fname}',
+            }
+        )
 
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open(mode='w', encoding='utf-8') as fd:

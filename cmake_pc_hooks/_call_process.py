@@ -22,6 +22,8 @@ import sys
 
 import attrs
 
+log = logging.getLogger(__name__)
+
 
 @attrs.define(slots=True)
 class History:  # pylint: disable=too-few-public-methods
@@ -64,9 +66,9 @@ def call_process(args: list, **kwargs: any) -> History:
     else:
         ret = History(sp_child.stdout.decode(), sp_child.stderr.decode(), sp_child.returncode)
 
-    logging.debug('command `%s` exited with %d', ' '.join(args), ret.returncode)
+    log.debug('command `%s` exited with %d', ' '.join(args), ret.returncode)
     for line in ret.stdout.split('\n'):
-        logging.debug('(stdout) %s', line)
+        log.debug('(stdout) %s', line)
     for line in ret.stderr.split('\n'):
-        logging.debug('(stderr) %s', line)
+        log.debug('(stderr) %s', line)
     return ret

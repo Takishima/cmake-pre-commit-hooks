@@ -31,6 +31,8 @@ _LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
 logging.basicConfig(level=_LOGLEVEL, format='%(levelname)-5s:cmake-pc-hooks:%(message)s')
 logging.getLogger('filelock').setLevel(logging.WARNING)
 
+log = logging.getLogger(__name__)
+
 
 class CMakePresetError(Exception):
     """Exception raised if a command line incompatibility with --preset is detected."""
@@ -88,8 +90,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             '--read-json-db',
             action='store_true',
             help=(
-                'Run hooks on files found in compile_commands.json '
-                '(if found and in addition to files specified on CLI)'
+                'Run hooks on files found in compile_commands.json (if found and in addition to files specified on CLI)'
             ),
         )
 
@@ -137,7 +138,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
             for filename in self.files:
                 self.run_command([filename])
         else:
-            logging.error('No files to process!')
+            log.error('No files to process!')
             sys.exit(1)
 
         has_errors = False
@@ -172,9 +173,9 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         for build_dir in build_dir_list:
             path = Path(build_dir, 'compile_commands.json')
             if build_dir.exists() and path.exists():
-                logging.debug('Located valid compilation database at: %s', str(path))
+                log.debug('Located valid compilation database at: %s', str(path))
                 return path
-        logging.debug('No valid compilation database located')
+        log.debug('No valid compilation database located')
         return None
 
 

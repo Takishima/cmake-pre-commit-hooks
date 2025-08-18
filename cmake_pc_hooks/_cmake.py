@@ -32,6 +32,8 @@ import filelock
 
 from . import _argparse, _call_process
 
+log = logging.getLogger(__name__)
+
 # ==============================================================================
 
 
@@ -267,7 +269,7 @@ class CMakeCommand:
         build_dir_list = [] if build_dir_list is None else [Path(path) for path in build_dir_list]
         for build_dir in build_dir_list:
             if build_dir.exists() and Path(build_dir, 'CMakeCache.txt').exists():
-                logging.debug(
+                log.debug(
                     'Located valid build directory with CMakeCache.txt at: %s',
                     str(build_dir),
                 )
@@ -278,12 +280,12 @@ class CMakeCommand:
         if automatic_discovery:
             for path in sorted(self.source_dir.glob('*')):
                 if path.is_dir() and (path / 'CMakeCache.txt').exists():
-                    logging.info('Automatic build dir discovery resulted in: %s', str(path))
+                    log.info('Automatic build dir discovery resulted in: %s', str(path))
                     self.build_dir = path
                     return
 
         if self.no_cmake_configure:
-            logging.info('Unable to locate a valid build directory. Will not be creating one')
+            log.info('Unable to locate a valid build directory. Will not be creating one')
             self.build_dir = None
             return
 
@@ -291,7 +293,7 @@ class CMakeCommand:
             self.build_dir = self.source_dir / self.DEFAULT_BUILD_DIR
         else:
             self.build_dir = Path(build_dir_list[0]).resolve()
-        logging.info(
+        log.info(
             'Unable to locate a valid build directory. Will be creating one at %s',
             str(self.build_dir),
         )
@@ -379,11 +381,11 @@ class CMakeCommand:
             clean_build (bool): Clean build directory before calling CMake configure
         """
         if self.no_cmake_configure:
-            logging.debug('Not calling CMake configure')
+            log.debug('Not calling CMake configure')
             return
 
         if self.source_dir is None:
-            logging.error('No source dir was for CMake! Did you call `setup_cmake_args()`?')
+            log.error('No source dir was for CMake! Did you call `setup_cmake_args()`?')
             sys.exit(1)
 
         cmake_configure_lock_file = Path(self.build_dir, '_cmake_configure_lock')
@@ -396,7 +398,7 @@ class CMakeCommand:
         try:
             with cmake_configure_try_lock.acquire(blocking=False):  # noqa: SIM117
                 with cmake_configure_lock.write_lock():
-                    logging.debug(
+                    log.debug(
                         'Command %s with id %s is running CMake configure',
                         command,
                         os.getpid(),
@@ -408,23 +410,23 @@ class CMakeCommand:
                         ),
                         clean_build=clean_build,
                     )
-                    logging.debug(
+                    log.debug(
                         'Command %s with id %s is done running CMake configure',
                         command,
                         os.getpid(),
                     )
         except filelock.Timeout:
-            logging.debug(
+            log.debug(
                 'Command %s with id %s is not running CMake configure and waiting',
                 command,
                 os.getpid(),
             )
             with cmake_configure_lock.read_lock():
-                logging.debug('Command %s with id %s is done waiting', command, os.getpid())
+                log.debug('Command %s with id %s is done waiting', command, os.getpid())
                 returncode = 0
 
         if returncode != 0:
-            logging.error('CMake configure step failed. See output for more information.')
+            log.error('CMake configure step failed. See output for more information.')
             sys.exit(returncode)
 
         if self.cmake_trace_log is not None:
@@ -439,12 +441,14 @@ class CMakeCommand:
             [*command, str(self.source_dir), *self.cmake_args, *extra_args],
             cwd=str(self.build_dir),
         )
-        result.stdout = '\n'.join([
-            f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
-            f'  from within {self.build_dir}',
-            result.stdout,
-            '',
-        ])
+        result.stdout = '\n'.join(
+            [
+                f'Running CMake with: {[*command, str(self.source_dir), *self.cmake_args]}',
+                f'  from within {self.build_dir}',
+                result.stdout,
+                '',
+            ]
+        )
 
         return result
 
@@ -461,11 +465,13 @@ class CMakeCommand:
 
         extra_args = []
         if self.cmake_trace_log:
-            extra_args.extend([
-                '--trace-expand',
-                '--trace-format=json-v1',
-                f'--trace-redirect={self.cmake_trace_log}',
-            ])
+            extra_args.extend(
+                [
+                    '--trace-expand',
+                    '--trace-format=json-v1',
+                    f'--trace-redirect={self.cmake_trace_log}',
+                ]
+            )
 
         result = self._call_cmake(extra_args=extra_args)
 
@@ -480,16 +486,16 @@ class CMakeCommand:
         return result.returncode
 
     def _parse_cmake_trace_log(self):
-        logging.info('attempting to parse CMake trace log to detect calls to configure_file()')
+        log.info('attempting to parse CMake trace log to detect calls to configure_file()')
         self.cmake_configured_files = []
 
         if not self.cmake_trace_log:
-            logging.info('no trace log provided, aborting.')
+            log.info('no trace log provided, aborting.')
             return
 
         result = self._call_cmake(extra_args=['-N', '-LA'])
         if result.returncode != 0:
-            logging.error('failed to retrieve CMake cache variables')
+            log.error('failed to retrieve CMake cache variables')
             return
 
         cmake_cache_variables = {}
@@ -524,7 +530,7 @@ class CMakeCommand:
             input_file, configured_file = (Path(arg) for arg in configure_file_call['args'][:2])
             if not configured_file.is_absolute():
                 configured_file = self.build_dir / configured_file
-            logging.debug(
+            log.debug(
                 'detected call to configure_file(%s %s [...])',
                 str(input_file),
                 str(configured_file),

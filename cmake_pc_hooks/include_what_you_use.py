@@ -20,6 +20,8 @@ import sys
 
 from ._utils import ClangAnalyzerCmd
 
+log = logging.getLogger(__name__)
+
 
 def get_iwyu_tool_command(iwyu_tool_names=None):
     """
@@ -35,7 +37,7 @@ def get_iwyu_tool_command(iwyu_tool_names=None):
     for iwyu_tool in iwyu_tool_names:
         fname = shutil.which(iwyu_tool)
         if fname:
-            logging.debug('found iwyu-tool command at %s', fname)
+            log.debug('found iwyu-tool command at %s', fname)
             return fname
 
     # Nothing worked -> give up!
@@ -56,7 +58,7 @@ def get_iwyu_command(iwyu_names=None):
     for iwyu in iwyu_names:
         fname = shutil.which(iwyu)
         if fname:
-            logging.debug('found iwyu command at %s', fname)
+            log.debug('found iwyu command at %s', fname)
             return fname
 
     # Nothing worked -> give up!
@@ -86,13 +88,14 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()
+        self.log = logging.getLogger(__name__)
 
         # Force location of compile database
         compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if compile_db:
             self.add_if_missing([f'-p={compile_db}'])
 
-    def _parse_output(self, result):  # noqa: PLR6301
+    def _parse_output(self, result):
         """
         Parse output and check whether some errors occurred.
 
@@ -105,7 +108,7 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         Notes:
             Include-What-You-Use return code is never 0
         """
-        logging.debug('parsing output from %s', result.stdout)
+        self.log.debug('parsing output from %s', result.stdout)
         is_correct = 'has correct #includes/fwd-decls' in result.stdout
 
         return bool(result.stdout) and not is_correct

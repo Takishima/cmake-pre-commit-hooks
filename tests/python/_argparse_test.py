@@ -35,7 +35,7 @@ def _add_simple_args(parser):
 # ------------------------------------------------------------------------------
 
 
-@pytest.fixture()
+@pytest.fixture
 def simple_toml_content():
     return dedent(
         """

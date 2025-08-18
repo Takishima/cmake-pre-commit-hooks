@@ -32,12 +32,13 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         self.parse_args(args)
         self.edit_in_place = '-fix' in self.args or '--fix-errors' in self.args
         self.handle_ddash_args()
+        self.log = logging.getLogger(__name__)
 
         compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if not self.cmake.no_cmake_configure or compile_db:
             self.add_if_missing([f'-p={compile_db}'])
 
-    def _parse_output(self, result):  # noqa: PLR6301
+    def _parse_output(self, result):
         """
         Parse output and check whether some errors occurred.
 
@@ -51,8 +52,8 @@ class ClangTidyCmd(ClangAnalyzerCmd):
         if not result.stdout or 'non-user code' in result.stderr:
             result.stderr = ''
 
-        logging.debug('returncode %d', result.returncode)
-        logging.debug('parsing output from %s', result.stderr)
+        self.log.debug('returncode %d', result.returncode)
+        self.log.debug('parsing output from %s', result.stderr)
         return result.returncode != 0 or any(
             msg in result.stderr
             for msg in (
