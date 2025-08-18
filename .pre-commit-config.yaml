@@ -6,7 +6,7 @@ repos:
       - id: check-useless-excludes
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict
@@ -25,40 +25,40 @@ repos:
       - id: remove-tabs
 
   - repo: https://github.com/PyCQA/doc8/
-    rev: v1.1.1
+    rev: v2.0.0
     hooks:
       - id: doc8
         require_serial: false
         additional_dependencies: [tomli]
 
   - repo: https://github.com/codespell-project/codespell
-    rev: v2.3.0
+    rev: v2.4.1
     hooks:
       - id: codespell
         files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.10.0.1
+    rev: v0.11.0.1
     hooks:
       - id: shellcheck
         require_serial: false
         args: [-x, --severity=info]
 
   - repo: https://github.com/adrienverge/yamllint.git
-    rev: v1.35.1
+    rev: v1.37.1
     hooks:
       - id: yamllint
 
   - repo: https://github.com/asottile/blacken-docs
-    rev: 1.16.0
+    rev: 1.19.1
     hooks:
       - id: blacken-docs
         args: [-S, -l, '120']
         additional_dependencies: [black==22.12.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.4.7
+    rev: v0.12.9
     hooks:
       - id: ruff-format
         name: ruff (format)
