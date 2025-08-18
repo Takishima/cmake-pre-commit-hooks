@@ -25,6 +25,8 @@ from typing import Any
 
 import toml
 
+log = logging.getLogger(__name__)
+
 # ==============================================================================
 
 
@@ -110,7 +112,11 @@ def executable_path(path: str) -> Path:
 
 
 def _load_data_from_toml(
-    path: Path, section: str, *, path_must_exist: bool = True, section_must_exist: bool = True
+    path: Path,
+    section: str,
+    *,
+    path_must_exist: bool = True,
+    section_must_exist: bool = True,
 ) -> dict:
     """
     Load a TOML file and return the corresponding config dictionary.
@@ -127,23 +133,23 @@ def _load_data_from_toml(
         section_must_exist: Whether a missing section in the TOML file is considered an error or not
     """
     try:
-        with path.open(mode='r') as fd:
+        with path.open(mode='r', encoding='utf-8') as fd:
             config = toml.load(fd)
         if section:
             for sub_section in section.split('.'):
                 config = config[sub_section]
-            logging.debug('Loading data from %s table of %s', section, path)
+            log.debug('Loading data from %s table of %s', section, path)
         else:
             config = {key: value for key, value in config.items() if not isinstance(value, dict)}
-            logging.debug('Loading data from root table of %s', path)
+            log.debug('Loading data from root table of %s', path)
     except FileNotFoundError as err:
         if path_must_exist:
             raise TOMLFileNotFoundError(path) from err
-        logging.debug('TOML file %s does not exist (not an error)', str(path))
+        log.debug('TOML file %s does not exist (not an error)', str(path))
     except KeyError as err:
         if section_must_exist:
             raise TOMLSectionKeyError(section, path) from err
-        logging.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
+        log.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
     else:
         return config
     return {}
@@ -245,7 +251,9 @@ class ArgumentParser(argparse.ArgumentParser):
 
         if self._default_config_name is not None:
             namespace = self._load_from_toml(
-                namespace=namespace, path=Path(self._default_config_name), path_must_exist=False
+                namespace=namespace,
+                path=Path(self._default_config_name),
+                path_must_exist=False,
             )
 
         namespace, args = super().parse_known_args(args=args, namespace=namespace)
@@ -265,11 +273,13 @@ class ArgumentParser(argparse.ArgumentParser):
         if namespace.dump_toml:
             exclude_keys = {'positionals', 'dump_toml'}
             print(
-                toml.dumps({
-                    key: value
-                    for key, value in vars(namespace).items()
-                    if value != self._default_args[key] and key not in exclude_keys
-                })
+                toml.dumps(
+                    {
+                        key: value
+                        for key, value in vars(namespace).items()
+                        if value != self._default_args[key] and key not in exclude_keys
+                    }
+                )
             )
             sys.exit(0)
 
@@ -297,7 +307,10 @@ class ArgumentParser(argparse.ArgumentParser):
             overridable_keys: List of keys that can be overridden by values in the TOML file
         """
         config = _load_data_from_toml(
-            path, section, path_must_exist=path_must_exist, section_must_exist=section_must_exist
+            path,
+            section,
+            path_must_exist=path_must_exist,
+            section_must_exist=section_must_exist,
         )
 
         for key, value in config.items():
@@ -309,9 +322,9 @@ class ArgumentParser(argparse.ArgumentParser):
             if default_value is not None and not isinstance(value, type(default_value)):
                 raise TOMLTypeError(type(value), type(default_value), key)
             if overridable_keys is not None and key not in overridable_keys:
-                logging.debug('  skipping non-overridable key: "%s"', key)
+                log.debug('  skipping non-overridable key: "%s"', key)
                 continue
 
-            logging.debug('  setting %s = %s', key, value)
+            log.debug('  setting %s = %s', key, value)
             setattr(namespace, key, value)
         return namespace

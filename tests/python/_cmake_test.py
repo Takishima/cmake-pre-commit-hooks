@@ -73,8 +73,16 @@ def test_cmake_command_init():
         ([], 'automatic_discovery', True),
         (['--no-automatic-discovery'], 'automatic_discovery', False),
         (['--detect-configured-files'], 'detect_configured_files', True),
-        (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
-        (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ['"-DCMAKE_CXX_COMPILER=clang++"']),
+        (
+            ['--linux="-DCMAKE_CXX_COMPILER=g++"'],
+            'linux',
+            ['"-DCMAKE_CXX_COMPILER=g++"'],
+        ),
+        (
+            ['--mac="-DCMAKE_CXX_COMPILER=clang++"'],
+            'mac',
+            ['"-DCMAKE_CXX_COMPILER=clang++"'],
+        ),
         (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ['"-DCMAKE_CXX_COMPILER=cl"']),
         # CMake-like options
         (['-S/path/to/source'], 'source_dir', '/path/to/source'),
@@ -118,7 +126,15 @@ def test_cmake_parser_unix_platform_setup(parser):
         (None, ['gcc-build/CMakeCache.txt', 'build/CMakeCache.txt'], 'build'),
         (['clang', 'gcc'], ['gcc-build/compile_commands.json'], 'clang'),
         (['clang'], ['gcc-build/CMakeCache.txt'], 'gcc-build'),
-        (['clang'], ['gcc-build/CMakeCache.txt', 'clang/CMakeCache.txt', 'build/CMakeCache.txt'], 'clang'),
+        (
+            ['clang'],
+            [
+                'gcc-build/CMakeCache.txt',
+                'clang/CMakeCache.txt',
+                'build/CMakeCache.txt',
+            ],
+            'clang',
+        ),
     ],
 )
 def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
@@ -135,20 +151,24 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
 
     assert cmake.build_dir is None
     cmake.resolve_build_directory(
-        None if dir_list is None else [tmp_path / path for path in dir_list], automatic_discovery=True
+        None if dir_list is None else [tmp_path / path for path in dir_list],
+        automatic_discovery=True,
     )
     assert cmake.build_dir == tmp_path / ref_path
 
     cmake.build_dir = None
     cmake.resolve_build_directory(
-        None if dir_list is None else [tmp_path / path for path in dir_list], automatic_discovery=False
+        None if dir_list is None else [tmp_path / path for path in dir_list],
+        automatic_discovery=False,
     )
     assert cmake.build_dir == tmp_path / cmake.DEFAULT_BUILD_DIR if dir_list is None else dir_list[0]
 
 
 @pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
 @pytest.mark.parametrize('no_cmake_configure', [False, True])
-def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915, PLR0912, C901
+def test_setup_cmake_args(  # noqa: PLR0912, PLR0915, C901
+    mocker, system, no_cmake_configure
+):
     original_system = platform.system()
 
     def system_stub():
@@ -232,14 +252,23 @@ def test_setup_cmake_args(mocker, system, no_cmake_configure):  # noqa: PLR0915,
 @pytest.mark.parametrize('returncode', [0, 1])
 @pytest.mark.parametrize('clean_build', [False, True])
 @pytest.mark.parametrize('no_cmake_configure', [False, True])
-def test_configure_cmake(mocker, tmp_path, clean_build, returncode, no_cmake_configure, detect_configured_files):  # noqa: PLR0917
+def test_configure_cmake(  # noqa: PLR0917
+    mocker,
+    tmp_path,
+    clean_build,
+    returncode,
+    no_cmake_configure,
+    detect_configured_files,
+):
     sys_exit = mocker.patch('sys.exit')
     FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
     mocker.patch(filelock_module_name, FileLock)
-    InterProcessReaderWriterLock = mocker.MagicMock(fasteners.InterProcessReaderWriterLock)  # noqa: N806
+    InterProcessReaderWriterLock = mocker.MagicMock(  # noqa: N806
+        fasteners.InterProcessReaderWriterLock
+    )
     mocker.patch(interprocess_rw_lock_module_name, InterProcessReaderWriterLock)
-    _configure = mocker.Mock(return_value=returncode)
-    mocker.patch(internal_cmake_configure_name, _configure)
+    configure = mocker.Mock(return_value=returncode)
+    mocker.patch(internal_cmake_configure_name, configure)
     parse_log = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._parse_cmake_trace_log')
 
     # ----------------------------------
@@ -262,13 +291,17 @@ def test_configure_cmake(mocker, tmp_path, clean_build, returncode, no_cmake_con
     if no_cmake_configure:
         FileLock.assert_not_called()
         InterProcessReaderWriterLock.assert_not_called()
-        _configure.assert_not_called()
+        configure.assert_not_called()
         return
 
     FileLock.assert_called_once_with(build_dir / '_cmake_configure_try_lock')
     InterProcessReaderWriterLock.assert_called_once_with(build_dir / '_cmake_configure_lock')
-    _configure.assert_called_once_with(
-        lock_files=(InterProcessReaderWriterLock.call_args[0][0], FileLock.call_args[0][0]), clean_build=clean_build
+    configure.assert_called_once_with(
+        lock_files=(
+            InterProcessReaderWriterLock.call_args[0][0],
+            FileLock.call_args[0][0],
+        ),
+        clean_build=clean_build,
     )
 
     if detect_configured_files:
@@ -295,10 +328,12 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     mocker.patch(filelock_module_name, FileLock)
 
     interprocess_lock = mocker.MagicMock()
-    InterProcessReaderWriterLock = mocker.MagicMock(return_value=interprocess_lock)  # noqa: N806
+    InterProcessReaderWriterLock = mocker.MagicMock(  # noqa: N806
+        return_value=interprocess_lock
+    )
     mocker.patch(interprocess_rw_lock_module_name, InterProcessReaderWriterLock)
-    _configure = mocker.Mock(return_value=0)
-    mocker.patch(internal_cmake_configure_name, _configure)
+    configure = mocker.Mock(return_value=0)
+    mocker.patch(internal_cmake_configure_name, configure)
 
     # ----------------------------------
 
@@ -317,7 +352,7 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     FileLock.assert_called_once()
     InterProcessReaderWriterLock.assert_called_once()
     interprocess_lock.read_lock.assert_called_once()
-    _configure.assert_not_called()
+    configure.assert_not_called()
 
 
 def test_configure_invalid(mocker):
@@ -325,10 +360,12 @@ def test_configure_invalid(mocker):
 
     FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
     mocker.patch(filelock_module_name, FileLock)
-    InterProcessReaderWriterLock = mocker.MagicMock(fasteners.InterProcessReaderWriterLock)  # noqa: N806
+    InterProcessReaderWriterLock = mocker.MagicMock(  # noqa: N806
+        fasteners.InterProcessReaderWriterLock
+    )
     mocker.patch(interprocess_rw_lock_module_name, InterProcessReaderWriterLock)
-    _configure = mocker.Mock(return_value=1)
-    mocker.patch(internal_cmake_configure_name, _configure)
+    configure = mocker.Mock(return_value=1)
+    mocker.patch(internal_cmake_configure_name, configure)
 
     # ----------------------------------
 
@@ -343,7 +380,8 @@ def test_configure_invalid(mocker):
 def test_configure_cmake_internal(mocker, tmp_path, clean_build, detect_configured_files):
     mocker.patch('shutil.rmtree')
     call_cmake = mocker.patch(
-        'cmake_pc_hooks._cmake.CMakeCommand._call_cmake', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
+        'cmake_pc_hooks._cmake.CMakeCommand._call_cmake',
+        return_value=mocker.Mock(stdout='', stderr='', returncode=0),
     )
 
     # ----------------------------------
@@ -396,7 +434,8 @@ def test_configure_cmake_internal(mocker, tmp_path, clean_build, detect_configur
 
 def test_call_cmake(mocker, tmp_path):
     call_process = mocker.patch(
-        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout='', stderr='', returncode=0),
     )
 
     # ----------------------------------
@@ -412,13 +451,15 @@ def test_call_cmake(mocker, tmp_path):
 
     cmake._call_cmake()
     call_process.assert_called_once_with(
-        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args], cwd=str(cmake.build_dir)
+        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args],
+        cwd=str(cmake.build_dir),
     )
 
     extra_args = ['-N', '-LA']
     cmake._call_cmake(extra_args=extra_args)
     call_process.assert_called_with(
-        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args, *extra_args], cwd=str(cmake.build_dir)
+        [*cmake.command, str(cmake.source_dir), *cmake.cmake_args, *extra_args],
+        cwd=str(cmake.build_dir),
     )
 
 

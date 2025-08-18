@@ -10,6 +10,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Clarify where to put the settings in `pyproject.toml`
+- Update GitHub Action `actions/download-artifact` to v4
+- Update GitHub Action `actions/upload-artifact` to v4
+- Update GitHub Action `codecov/codecov-action` from v4 to v5
+- Use GitHub Action `SonarSource/sonarqube-scan-action` v5
+- Update `github.com/pre-commit/pre-commit-hooks` hook to v6.0.0
+- Update `https://github.com/PyCQA/doc8/` hook to v2.0.0
+- Update `github.com/codespell-project/codespell` hook to v2.4.1
+- Update `github.com/shellcheck-py/shellcheck-py` hook to v0.11.0.1
+- Update `github.com/adrienverge/yamllint.git` hook to v1.37.1
+- Update `github.com/asottile/blacken-docs` hook to 1.19.1
+- Update `github.com/astral-sh/ruff-pre-commit` hook to v0.12.9
 
 ## [v1.9.6] - 2024-06-02
 

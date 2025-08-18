@@ -38,6 +38,7 @@ class CppcheckCmd(Command):
         self.add_if_missing(['--error-exitcode=1'])
         # Enable all of the checks
         self.add_if_missing(['--enable=all'])
+        self.log = logging.getLogger(__name__)
 
         compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if not self.cmake.no_cmake_configure or compile_db:
@@ -60,11 +61,11 @@ class CppcheckCmd(Command):
             False if no errors were detected, True in all other cases.
         """
         # Useless error see https://stackoverflow.com/questions/6986033
-        logging.debug('parsing output from %s', result.stderr)
+        self.log.debug('parsing output from %s', result.stderr)
         useless_error_part = 'Cppcheck cannot find all the include files'
-        result.stderr = ''.join([
-            line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line
-        ])
+        result.stderr = ''.join(
+            [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
+        )
         self._clinters_compat()
         return result.returncode != 0
 
