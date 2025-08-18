@@ -62,9 +62,8 @@ repos:
     hooks:
       - id: ruff-format
         name: ruff (format)
-        args: [--preview]
 
-      - id: ruff
+      - id: ruff-check
         name: ruff (fix)
         alias: ruff-fix
         args:
