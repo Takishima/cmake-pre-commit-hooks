@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Repository
 
 - Clarify where to put the settings in `pyproject.toml`
+- Update GitHub Action `actions/download-artifact` to v4
+- Update GitHub Action `actions/upload-artifact` to v4
+- Update GitHub Action `codecov/codecov-action` from v4 to v5
+- Use GitHub Action `SonarSource/sonarqube-scan-action` v5
 
 ## [v1.9.6] - 2024-06-02
 
