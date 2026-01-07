@@ -126,7 +126,6 @@ def _load_data_from_toml(
         elements (ie. no nested sections).
 
     Args:
-        namespace: Namespace to store results into
         path: Path to TOML file
         section: Name of section to load in TOML file
         path_must_exist: Whether a missing TOML file is considered an error or not
