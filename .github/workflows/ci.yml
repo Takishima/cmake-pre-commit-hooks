@@ -17,19 +17,14 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
         python:
-          - 3.8
-          - 3.9
           - '3.10'
           - '3.11'
           - '3.12'
+          - '3.13'
         exclude:
-          # macos-latest is now running on M1 macs
+          # Python 3.10 has issues on macOS M1 runners (missing gettext/libintl)
           - runs-on: macos-latest
-            python: 3.8
-          - runs-on: macos-latest
-            python: 3.9
-          - runs-on: macos-latest
-            python: 3.10
+            python: '3.10'
 
     name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -81,19 +76,14 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
         python:
-          - 3.8
-          - 3.9
           - '3.10'
           - '3.11'
           - '3.12'
+          - '3.13'
         exclude:
-          # macos-latest is now running on M1 macs
+          # Python 3.10 has issues on macOS M1 runners (missing gettext/libintl)
           - runs-on: macos-latest
-            python: 3.8
-          - runs-on: macos-latest
-            python: 3.9
-          - runs-on: macos-latest
-            python: 3.10
+            python: '3.10'
 
     name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -109,10 +99,6 @@ jobs:
         run: |
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Enable Developer Command Prompt
-        if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1.13.0
 
       - name: Setup Python ${{ matrix.python }}
         uses: actions/setup-python@v5
@@ -142,28 +128,36 @@ jobs:
       - name: Prepare env (Windows)
         if: runner.os == 'Windows'
         run: |
-          choco install -y llvm cppcheck ninja
-          if (!(Test-Path -Path $PROFILE)) {
-              New-Item -ItemType File -Path $PROFILE -Force
-          }
+          choco install -y llvm ninja
+          Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"
+          Update-SessionEnvironment
 
-          Write-Output 'Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"' | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Write-Output 'Update-SessionEnvironment' | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Write-Output '$id = vswhere -property instanceId' | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Write-Output 'Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"' `
-          | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Write-Output 'Enter-VsDevShell -InstanceId $id' | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Write-Output 'Set-Location -Path "${ENV:GITHUB_WORKSPACE}"' | Out-File -FilePath $PROFILE -Append -Encoding utf8
-          Get-Content -Path $PROFILE
+          # Restore Python to PATH after Update-SessionEnvironment (it resets PATH from system)
+          $env:PATH = "$env:pythonLocation;$env:pythonLocation\Scripts;$env:PATH"
 
-          . $PROFILE
-          Get-Location
-
-          Write-Output "CMAKE_PREFIX_PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
-
-          python -m pip install pre-commit cpplint lizard
+          # Install cppcheck via pip (choco package is broken, pip wheel works correctly)
+          python -m pip install pre-commit cpplint lizard cppcheck
 
           Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "lizard", "pre-commit")
+
+      # Enable MSVC dev command AFTER chocolatey packages are installed to avoid
+      # Update-SessionEnvironment overwriting MSVC environment variables
+      - name: Enable Developer Command Prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1.13.0
+
+      # Restore Python to front of PATH after MSVC setup
+      # (MSVC's vcvarsall.bat prepends paths including VS's bundled Python 3.9,
+      # which conflicts with our Python 3.10+ requirement)
+      - name: Restore Python PATH
+        if: runner.os == 'Windows'
+        run: |
+          "$env:pythonLocation" >> $env:GITHUB_PATH
+          "$env:pythonLocation\Scripts" >> $env:GITHUB_PATH
+          # Ensure python3 also points to the correct Python (pre-commit looks for python3)
+          if (-not (Test-Path "$env:pythonLocation\python3.exe")) {
+            Copy-Item "$env:pythonLocation\python.exe" "$env:pythonLocation\python3.exe"
+          }
 
       - name: Build and install package
         run: python -m pip install -e .[test]
@@ -180,6 +174,8 @@ jobs:
           CC: cl
           CXX: cl
           LOGLEVEL: DEBUG
+          # Use a fresh pre-commit cache to avoid Python version mismatch
+          PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit-cache
         run: ./tests/run_tests.ps1
 
   sonarcloud:
