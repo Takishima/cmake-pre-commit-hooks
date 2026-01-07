@@ -145,6 +145,15 @@ jobs:
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1.13.0
 
+      # Restore Python to front of PATH after MSVC setup
+      # (MSVC's vcvarsall.bat prepends paths including VS's bundled Python 3.9,
+      # which conflicts with our Python 3.10+ requirement)
+      - name: Restore Python PATH
+        if: runner.os == 'Windows'
+        run: |
+          echo "$env:pythonLocation" >> $env:GITHUB_PATH
+          echo "$env:pythonLocation\Scripts" >> $env:GITHUB_PATH
+
       - name: Build and install package
         run: python -m pip install -e .[test]
 
