@@ -132,11 +132,17 @@ jobs:
           Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"
           Update-SessionEnvironment
 
+          # Restore Python to PATH after Update-SessionEnvironment (it resets PATH from system)
+          $env:PATH = "$env:pythonLocation;$env:pythonLocation\Scripts;$env:PATH"
+
+          # Verify we're using the correct Python
+          Write-Host "Python executable: $(Get-Command python | Select-Object -First 1 -ExpandProperty Source)"
+          python --version
+
           # Install cppcheck via pip (choco package is broken, pip wheel works correctly)
           python -m pip install pre-commit cpplint lizard cppcheck
 
           Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "lizard", "pre-commit")
-          python --version
           cppcheck --version
 
       # Enable MSVC dev command AFTER chocolatey packages are installed to avoid
