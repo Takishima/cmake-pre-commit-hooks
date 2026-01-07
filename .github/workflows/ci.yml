@@ -142,7 +142,10 @@ jobs:
       - name: Prepare env (Windows)
         if: runner.os == 'Windows'
         run: |
-          choco install -y llvm cppcheck ninja
+          choco install -y llvm ninja
+          # Install cppcheck via scoop instead of choco (choco package is broken)
+          iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
+          scoop install cppcheck
           if (!(Test-Path -Path $PROFILE)) {
               New-Item -ItemType File -Path $PROFILE -Force
           }
@@ -159,6 +162,9 @@ jobs:
           . $PROFILE
           Get-Location
 
+          # Add scoop shims to PATH for this job
+          $scoopShims = "$env:USERPROFILE\scoop\shims"
+          Write-Output "PATH=$scoopShims;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Output "CMAKE_PREFIX_PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
           python -m pip install pre-commit cpplint lizard
