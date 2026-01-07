@@ -293,7 +293,7 @@ class ArgumentParser(argparse.ArgumentParser):
         path_must_exist: bool = True,
         section_must_exist: bool = True,
         overridable_keys: set | None = None,
-    ) -> None:
+    ) -> argparse.Namespace:
         """
         Load a TOML file and set the attributes within the argparse namespace object.
 

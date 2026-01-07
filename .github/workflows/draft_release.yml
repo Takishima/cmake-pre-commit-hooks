@@ -13,7 +13,16 @@ jobs:
   new-release:
     name: "Draft a new release"
     runs-on: ubuntu-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.tag }}
     steps:
+      - name: Validate release tag format
+        run: |
+          if ! echo "$RELEASE_TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "Error: Tag must be in format vXX.YY.ZZ"
+            exit 1
+          fi
+
       - uses: actions/checkout@v4
 
       - name: Setup Python
@@ -26,7 +35,7 @@ jobs:
       - name: Update CHANGELOG
         run: |
           python3 -m pip install mdformat-gfm 'git+https://github.com/Takishima/keepachangelog@v1.0.1'
-          python3 -m keepachangelog release "${{ github.event.inputs.tag }}"
+          python3 -m keepachangelog release "$RELEASE_TAG"
           python3 -m mdformat CHANGELOG.md
 
       - name: Commit changes
