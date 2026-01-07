@@ -84,11 +84,11 @@ cp .pre-commit-win.yaml .pre-commit-win.yaml.bak
 git add *.txt *.cpp .pre-commit*.yaml
 git commit -m 'Initial commit'
 pre-commit run -c .pre-commit-win.yaml --all-files
-$ret=$?
+$ret=$LASTEXITCODE
 mv -Force .pre-commit-win.yaml.bak .pre-commit-win.yaml
 rm -Force -Recurse .git
-if ($ret -eq 0) {
-    echo "Pre-commit on tests/cmake_good failed!"
+if ($ret -ne 0) {
+    echo "Pre-commit on tests/cmake_good failed with exit code $ret!"
     Exit 1
 }
 cd ../..
@@ -102,10 +102,10 @@ cp .pre-commit-win.yaml .pre-commit-win.yaml.bak
 git add *.txt *.cpp .pre-commit*.yaml
 git commit -m 'Initial commit'
 pre-commit run -c .pre-commit-win.yaml --all-files
-$ret=$?
+$ret=$LASTEXITCODE
 mv -Force .pre-commit-win.yaml.bak .pre-commit-win.yaml
 rm -Force -Recurse .git
-if ($ret -eq 1) {
+if ($ret -eq 0) {
     echo "Pre-commit on tests/cmake_bad unexpectedly passed!"
     Exit 1
 }
