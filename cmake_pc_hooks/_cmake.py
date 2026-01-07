@@ -271,7 +271,7 @@ class CMakeCommand:
             if build_dir.exists() and Path(build_dir, 'CMakeCache.txt').exists():
                 log.debug(
                     'Located valid build directory with CMakeCache.txt at: %s',
-                    str(build_dir),
+                    build_dir,
                 )
                 self.build_dir = build_dir.resolve()
                 return
@@ -280,7 +280,7 @@ class CMakeCommand:
         if automatic_discovery:
             for path in sorted(self.source_dir.glob('*')):
                 if path.is_dir() and (path / 'CMakeCache.txt').exists():
-                    log.info('Automatic build dir discovery resulted in: %s', str(path))
+                    log.info('Automatic build dir discovery resulted in: %s', path)
                     self.build_dir = path
                     return
 
@@ -295,7 +295,7 @@ class CMakeCommand:
             self.build_dir = Path(build_dir_list[0]).resolve()
         log.info(
             'Unable to locate a valid build directory. Will be creating one at %s',
-            str(self.build_dir),
+            self.build_dir,
         )
 
     def setup_cmake_args(self, cmake_args):  # noqa: C901
@@ -532,8 +532,8 @@ class CMakeCommand:
                 configured_file = self.build_dir / configured_file
             log.debug(
                 'detected call to configure_file(%s %s [...])',
-                str(input_file),
-                str(configured_file),
+                input_file,
+                configured_file,
             )
             self.cmake_configured_files.append(str(configured_file))
 

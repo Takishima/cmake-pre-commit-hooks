@@ -145,11 +145,11 @@ def _load_data_from_toml(
     except FileNotFoundError as err:
         if path_must_exist:
             raise TOMLFileNotFoundError(path) from err
-        log.debug('TOML file %s does not exist (not an error)', str(path))
+        log.debug('TOML file %s does not exist (not an error)', path)
     except KeyError as err:
         if section_must_exist:
             raise TOMLSectionKeyError(section, path) from err
-        log.debug('TOML file %s does not have a %s section (not an error)', str(path), section)
+        log.debug('TOML file %s does not have a %s section (not an error)', path, section)
     else:
         return config
     return {}
