@@ -7,13 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Drop support for Python 3.8 and 3.9 (end-of-life)
+- Add support for Python 3.13
+- Minimum required Python version is now 3.10
+
 ### Fixed
 
 - Fixed PowerShell system test script using `$?` instead of `$LASTEXITCODE` for exit code handling
 
 ### Repository
 
-- Fixed Windows CI by using Scoop instead of Chocolatey to install cppcheck (Chocolatey package is broken)
+- Fixed Windows CI by using pip to install cppcheck (Chocolatey package is broken)
 
 - Clarify where to put the settings in `pyproject.toml`
 - Update GitHub Action `actions/download-artifact` to v4

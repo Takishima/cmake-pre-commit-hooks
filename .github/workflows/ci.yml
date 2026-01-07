@@ -17,19 +17,10 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
         python:
-          - 3.8
-          - 3.9
           - '3.10'
           - '3.11'
           - '3.12'
-        exclude:
-          # macos-latest is now running on M1 macs
-          - runs-on: macos-latest
-            python: 3.8
-          - runs-on: macos-latest
-            python: 3.9
-          - runs-on: macos-latest
-            python: 3.10
+          - '3.13'
 
     name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -81,19 +72,10 @@ jobs:
       matrix:
         runs-on: [ubuntu-latest, windows-latest, macos-latest]
         python:
-          - 3.8
-          - 3.9
           - '3.10'
           - '3.11'
           - '3.12'
-        exclude:
-          # macos-latest is now running on M1 macs
-          - runs-on: macos-latest
-            python: 3.8
-          - runs-on: macos-latest
-            python: 3.9
-          - runs-on: macos-latest
-            python: 3.10
+          - '3.13'
 
     name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -143,9 +125,6 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install -y llvm ninja
-          # Install cppcheck via scoop instead of choco (choco package is broken)
-          iex "& {$(irm get.scoop.sh)} -RunAsAdmin"
-          scoop install cppcheck
           if (!(Test-Path -Path $PROFILE)) {
               New-Item -ItemType File -Path $PROFILE -Force
           }
@@ -162,14 +141,13 @@ jobs:
           . $PROFILE
           Get-Location
 
-          # Add scoop shims to PATH for this job
-          $scoopShims = "$env:USERPROFILE\scoop\shims"
-          Write-Output "PATH=$scoopShims;$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           Write-Output "CMAKE_PREFIX_PATH=$env:PATH" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
-          python -m pip install pre-commit cpplint lizard
+          # Install cppcheck via pip (choco package is broken, pip wheel works correctly)
+          python -m pip install pre-commit cpplint lizard cppcheck
 
           Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "lizard", "pre-commit")
+          cppcheck --version
 
       - name: Build and install package
         run: python -m pip install -e .[test]
