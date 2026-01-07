@@ -153,18 +153,26 @@ jobs:
         run: |
           "$env:pythonLocation" >> $env:GITHUB_PATH
           "$env:pythonLocation\Scripts" >> $env:GITHUB_PATH
+          # Ensure python3 also points to the correct Python (pre-commit looks for python3)
+          if (-not (Test-Path "$env:pythonLocation\python3.exe")) {
+            Copy-Item "$env:pythonLocation\python.exe" "$env:pythonLocation\python3.exe"
+          }
 
       - name: Verify Python PATH
         if: runner.os == 'Windows'
         run: |
           Write-Host "Python location: $env:pythonLocation"
-          Write-Host "PATH entries (first 5):"
-          $env:PATH -split ';' | Select-Object -First 5
-          Write-Host "Which python:"
-          Get-Command python | Select-Object -First 1
+          Write-Host "PATH entries (first 10):"
+          $env:PATH -split ';' | Select-Object -First 10
+          Write-Host "`nWhich python:"
+          Get-Command python -ErrorAction SilentlyContinue | Select-Object -First 3
           python --version
-          Write-Host "Which pre-commit:"
-          Get-Command pre-commit | Select-Object -First 1
+          Write-Host "`nWhich python3:"
+          Get-Command python3 -ErrorAction SilentlyContinue | Select-Object -First 3
+          Write-Host "`nWhich pre-commit:"
+          Get-Command pre-commit -ErrorAction SilentlyContinue | Select-Object -First 3
+          Write-Host "`nPre-commit Python:"
+          python -c "import sys; print(sys.executable)"
 
       - name: Build and install package
         run: python -m pip install -e .[test]
@@ -181,6 +189,8 @@ jobs:
           CC: cl
           CXX: cl
           LOGLEVEL: DEBUG
+          # Use a fresh pre-commit cache to avoid Python version mismatch
+          PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit-cache
         run: ./tests/run_tests.ps1
 
   sonarcloud:
