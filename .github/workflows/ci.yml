@@ -132,18 +132,32 @@ jobs:
           Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"
           Update-SessionEnvironment
 
+          # Restore Python to PATH after Update-SessionEnvironment (it resets PATH from system)
+          $env:PATH = "$env:pythonLocation;$env:pythonLocation\Scripts;$env:PATH"
+
           # Install cppcheck via pip (choco package is broken, pip wheel works correctly)
           python -m pip install pre-commit cpplint lizard cppcheck
 
           Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "lizard", "pre-commit")
-          python --version
-          cppcheck --version
 
       # Enable MSVC dev command AFTER chocolatey packages are installed to avoid
       # Update-SessionEnvironment overwriting MSVC environment variables
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1.13.0
+
+      # Restore Python to front of PATH after MSVC setup
+      # (MSVC's vcvarsall.bat prepends paths including VS's bundled Python 3.9,
+      # which conflicts with our Python 3.10+ requirement)
+      - name: Restore Python PATH
+        if: runner.os == 'Windows'
+        run: |
+          "$env:pythonLocation" >> $env:GITHUB_PATH
+          "$env:pythonLocation\Scripts" >> $env:GITHUB_PATH
+          # Ensure python3 also points to the correct Python (pre-commit looks for python3)
+          if (-not (Test-Path "$env:pythonLocation\python3.exe")) {
+            Copy-Item "$env:pythonLocation\python.exe" "$env:pythonLocation\python3.exe"
+          }
 
       - name: Build and install package
         run: python -m pip install -e .[test]
@@ -160,6 +174,8 @@ jobs:
           CC: cl
           CXX: cl
           LOGLEVEL: DEBUG
+          # Use a fresh pre-commit cache to avoid Python version mismatch
+          PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit-cache
         run: ./tests/run_tests.ps1
 
   sonarcloud:
