@@ -25,7 +25,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Update GitHub Action `actions/download-artifact` to v4
 - Update GitHub Action `actions/upload-artifact` to v4
 - Update GitHub Action `codecov/codecov-action` from v4 to v5
-- Use GitHub Action `SonarSource/sonarqube-scan-action` v5
+- Use GitHub Action `SonarSource/sonarqube-scan-action` v7
+- Update GitHub Action `github/codeql-action` from v3 to v4
+- Update GitHub Action `stefanzweifel/git-auto-commit-action` from v5 to v7
 - Update `github.com/pre-commit/pre-commit-hooks` hook to v6.0.0
 - Update `https://github.com/PyCQA/doc8/` hook to v2.0.0
 - Update `github.com/codespell-project/codespell` hook to v2.4.1

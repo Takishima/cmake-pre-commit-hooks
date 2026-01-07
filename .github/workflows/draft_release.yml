@@ -30,7 +30,7 @@ jobs:
           python3 -m mdformat CHANGELOG.md
 
       - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@v5
+        uses: stefanzweifel/git-auto-commit-action@v7
         id: make-commit
         with:
           branch: release/${{ github.event.inputs.tag }}
