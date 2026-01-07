@@ -151,8 +151,20 @@ jobs:
       - name: Restore Python PATH
         if: runner.os == 'Windows'
         run: |
-          echo "$env:pythonLocation" >> $env:GITHUB_PATH
-          echo "$env:pythonLocation\Scripts" >> $env:GITHUB_PATH
+          "$env:pythonLocation" >> $env:GITHUB_PATH
+          "$env:pythonLocation\Scripts" >> $env:GITHUB_PATH
+
+      - name: Verify Python PATH
+        if: runner.os == 'Windows'
+        run: |
+          Write-Host "Python location: $env:pythonLocation"
+          Write-Host "PATH entries (first 5):"
+          $env:PATH -split ';' | Select-Object -First 5
+          Write-Host "Which python:"
+          Get-Command python | Select-Object -First 1
+          python --version
+          Write-Host "Which pre-commit:"
+          Get-Command pre-commit | Select-Object -First 1
 
       - name: Build and install package
         run: python -m pip install -e .[test]
