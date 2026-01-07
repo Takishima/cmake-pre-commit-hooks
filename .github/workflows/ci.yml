@@ -100,10 +100,6 @@ jobs:
           git fetch --prune --unshallow
           git fetch --depth=1 origin +refs/tags/*:refs/tags/*
 
-      - name: Enable Developer Command Prompt
-        if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1.13.0
-
       - name: Setup Python ${{ matrix.python }}
         uses: actions/setup-python@v5
         with:
@@ -142,6 +138,12 @@ jobs:
           Get-Command @("python", "clang-format", "clang-tidy", "cppcheck", "cpplint", "lizard", "pre-commit")
           python --version
           cppcheck --version
+
+      # Enable MSVC dev command AFTER chocolatey packages are installed to avoid
+      # Update-SessionEnvironment overwriting MSVC environment variables
+      - name: Enable Developer Command Prompt
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1.13.0
 
       - name: Build and install package
         run: python -m pip install -e .[test]
