@@ -133,14 +133,8 @@ jobs:
         if: runner.os == 'Windows'
         run: |
           choco install -y llvm ninja
-
-          # Set up Visual Studio environment for this step only (not in PROFILE)
           Import-Module "${ENV:ChocolateyInstall}\helpers\chocolateyProfile.psm1"
           Update-SessionEnvironment
-          $id = vswhere -property instanceId
-          Import-Module "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
-          Enter-VsDevShell -InstanceId $id
-          Set-Location -Path "${ENV:GITHUB_WORKSPACE}"
 
           # Install cppcheck via pip (choco package is broken, pip wheel works correctly)
           python -m pip install pre-commit cpplint lizard cppcheck
