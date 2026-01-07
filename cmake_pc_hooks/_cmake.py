@@ -298,7 +298,53 @@ class CMakeCommand:
             self.build_dir,
         )
 
-    def setup_cmake_args(self, cmake_args):  # noqa: C901
+    def _process_keyword_cmake_args(self, cmake_args):
+        """Process keyword-style CMake arguments."""
+        keyword_args = {
+            'defines': ([], '-D{}'),
+            'undefines': ([], '-U{}'),
+            'errors': ([], '-Werror={}'),
+            'no_errors': ([], '-Wno-error={}'),
+            'generator': ('', '-G{}'),
+            'toolset': ('', '-T{}'),
+            'platform': ('', '-A{}'),
+            'preset': ('', '--preset={}'),
+        }
+
+        for key, (default, format_str) in keyword_args.items():
+            value = getattr(cmake_args, key, default)
+            if value:
+                if isinstance(value, str):
+                    self.cmake_args.append(format_str.format(value))
+                else:
+                    for element in value:
+                        self.cmake_args.append(format_str.format(element))
+
+    def _process_flag_cmake_args(self, cmake_args):
+        """Process flag-style CMake arguments."""
+        flag_args = {
+            'dev_warnings': (False, '-Wdev'),
+            'no_dev_warnings': (False, '-Wno_dev'),
+        }
+        for key, (default, flag_str) in flag_args.items():
+            if getattr(cmake_args, key, default):
+                self.cmake_args.append(flag_str)
+
+    def _process_platform_cmake_args(self, cmake_args):
+        """Process platform-specific CMake arguments."""
+        platform_args_config = {
+            'linux': ([], 'Linux'),
+            'mac': ([], 'Darwin'),
+            'win': ([], 'Windows'),
+        }
+
+        for key, (default, platform_name) in platform_args_config.items():
+            platform_arg_values = getattr(cmake_args, key, default)
+            if platform.system() == platform_name and platform_arg_values:
+                for arg in platform_arg_values:
+                    self.cmake_args.append(arg.strip('"\''))
+
+    def setup_cmake_args(self, cmake_args):
         """
         Setup CMake arguments.
 
@@ -332,45 +378,9 @@ class CMakeCommand:
         if cmake_args.detect_configured_files and self.build_dir:
             self.cmake_trace_log = self.build_dir / self.DEFAULT_TRACE_LOG
 
-        keyword_args = {
-            'defines': ([], '-D{}'),
-            'undefines': ([], '-U{}'),
-            'errors': ([], '-Werror={}'),
-            'no_errors': ([], '-Wno-error={}'),
-            'generator': ('', '-G{}'),
-            'toolset': ('', '-T{}'),
-            'platform': ('', '-A{}'),
-            'preset': ('', '--preset={}'),
-        }
-
-        for key, (default, format_str) in keyword_args.items():
-            value = getattr(cmake_args, key, default)
-            if value:
-                if isinstance(value, str):
-                    self.cmake_args.append(format_str.format(value))
-                else:
-                    for element in value:
-                        self.cmake_args.append(format_str.format(element))
-
-        flag_args = {
-            'dev_warnings': (False, '-Wdev'),
-            'no_dev_warnings': (False, '-Wno_dev'),
-        }
-        for key, (default, flag_str) in flag_args.items():
-            if getattr(cmake_args, key, default):
-                self.cmake_args.append(flag_str)
-
-        platform_args = {
-            'linux': ([], 'Linux'),
-            'mac': ([], 'Darwin'),
-            'win': ([], 'Windows'),
-        }
-
-        for key, (default, platform_name) in platform_args.items():
-            platform_args = getattr(cmake_args, key, default)
-            if platform.system() == platform_name and platform_args:
-                for arg in platform_args:
-                    self.cmake_args.append(arg.strip('"\''))
+        self._process_keyword_cmake_args(cmake_args)
+        self._process_flag_cmake_args(cmake_args)
+        self._process_platform_cmake_args(cmake_args)
 
     def configure(self, command, *, clean_build=False):
         """

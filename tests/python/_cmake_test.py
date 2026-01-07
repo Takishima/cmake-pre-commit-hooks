@@ -164,20 +164,27 @@ def test_resolve_build_directory(tmp_path, dir_list, build_dir_tree, ref_path):
     assert cmake.build_dir == tmp_path / cmake.DEFAULT_BUILD_DIR if dir_list is None else dir_list[0]
 
 
-@pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
-@pytest.mark.parametrize('no_cmake_configure', [False, True])
-def test_setup_cmake_args(  # noqa: PLR0912, PLR0915, C901
-    mocker, system, no_cmake_configure
-):
-    original_system = platform.system()
+def _assert_args_in_cmake_args(cmake_args, items, format_str='{}'):
+    """Helper to verify items are present in cmake_args."""
+    for item in items:
+        expected = format_str.format(item)
+        assert any(expected in arg for arg in cmake_args), f'Expected {expected} in cmake_args'
 
-    def system_stub():
-        return system
 
-    mocker.patch('platform.system', system_stub)
+def _assert_platform_args(cmake_args, args):
+    """Helper to verify platform-specific args."""
+    platform_config = {
+        'Linux': args.linux,
+        'Darwin': args.mac,
+        'Windows': args.win,
+    }
+    current_platform = platform.system()
+    if current_platform in platform_config:
+        _assert_args_in_cmake_args(cmake_args, platform_config[current_platform])
 
-    cmake = CMakeCommand()
 
+def _create_test_args(original_system, no_cmake_configure):
+    """Create test arguments namespace."""
     args = argparse.Namespace()
     args.detect_configured_files = True
     args.no_cmake_configure = no_cmake_configure
@@ -202,6 +209,17 @@ def test_setup_cmake_args(  # noqa: PLR0912, PLR0915, C901
     args.linux = ['LNX_A', 'LNX_B']
     args.mac = ['MAC_A', 'MAC_B']
     args.win = ['WIN_A', 'WIN_B']
+    return args
+
+
+@pytest.mark.parametrize('system', ['Linux', 'Darwin', 'Windows'])
+@pytest.mark.parametrize('no_cmake_configure', [False, True])
+def test_setup_cmake_args(mocker, system, no_cmake_configure):
+    original_system = platform.system()
+    mocker.patch('platform.system', return_value=system)
+
+    cmake = CMakeCommand()
+    args = _create_test_args(original_system, no_cmake_configure)
 
     assert cmake.source_dir is None
     assert cmake.build_dir is None
@@ -220,7 +238,6 @@ def test_setup_cmake_args(  # noqa: PLR0912, PLR0915, C901
     assert '-GNinja' in cmake.cmake_args
     assert '-A64' in cmake.cmake_args
     assert '-Tclang-toolset' in cmake.cmake_args
-
     assert '-Wdev' in cmake.cmake_args
     assert '-Wno_dev' in cmake.cmake_args
 
@@ -228,24 +245,11 @@ def test_setup_cmake_args(  # noqa: PLR0912, PLR0915, C901
     assert '--trace-expand' not in cmake.cmake_args
     assert '--trace-format=json-v1' not in cmake.cmake_args
 
-    for define in args.defines:
-        assert any(define in arg for arg in cmake.cmake_args)
-    for undefine in args.undefines:
-        assert any(undefine in arg for arg in cmake.cmake_args)
-    for error in args.errors:
-        assert any(f'-Werror={error}' in arg for arg in cmake.cmake_args)
-    for no_error in args.no_errors:
-        assert any(f'-Wno-error={no_error}' in arg for arg in cmake.cmake_args)
-
-    if platform.system() == 'Linux':
-        for linux in args.linux:
-            assert any(linux in arg for arg in cmake.cmake_args)
-    elif platform.system() == 'Darwin':
-        for mac in args.mac:
-            assert any(mac in arg for arg in cmake.cmake_args)
-    elif platform.system() == 'Windows':
-        for win in args.win:
-            assert any(win in arg for arg in cmake.cmake_args)
+    _assert_args_in_cmake_args(cmake.cmake_args, args.defines)
+    _assert_args_in_cmake_args(cmake.cmake_args, args.undefines)
+    _assert_args_in_cmake_args(cmake.cmake_args, args.errors, '-Werror={}')
+    _assert_args_in_cmake_args(cmake.cmake_args, args.no_errors, '-Wno-error={}')
+    _assert_platform_args(cmake.cmake_args, args)
 
 
 @pytest.mark.parametrize('detect_configured_files', [False, True], ids=['no_trace', 'w_trace'])
@@ -261,12 +265,10 @@ def test_configure_cmake(  # noqa: PLR0917
     detect_configured_files,
 ):
     sys_exit = mocker.patch('sys.exit')
-    FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
-    mocker.patch(filelock_module_name, FileLock)
-    InterProcessReaderWriterLock = mocker.MagicMock(  # noqa: N806
-        fasteners.InterProcessReaderWriterLock
-    )
-    mocker.patch(interprocess_rw_lock_module_name, InterProcessReaderWriterLock)
+    mock_file_lock = mocker.MagicMock(filelock.FileLock)
+    mocker.patch(filelock_module_name, mock_file_lock)
+    mock_rw_lock = mocker.MagicMock(fasteners.InterProcessReaderWriterLock)
+    mocker.patch(interprocess_rw_lock_module_name, mock_rw_lock)
     configure = mocker.Mock(return_value=returncode)
     mocker.patch(internal_cmake_configure_name, configure)
     parse_log = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._parse_cmake_trace_log')
@@ -289,17 +291,17 @@ def test_configure_cmake(  # noqa: PLR0917
     # ----------------------------------
 
     if no_cmake_configure:
-        FileLock.assert_not_called()
-        InterProcessReaderWriterLock.assert_not_called()
+        mock_file_lock.assert_not_called()
+        mock_rw_lock.assert_not_called()
         configure.assert_not_called()
         return
 
-    FileLock.assert_called_once_with(build_dir / '_cmake_configure_try_lock')
-    InterProcessReaderWriterLock.assert_called_once_with(build_dir / '_cmake_configure_lock')
+    mock_file_lock.assert_called_once_with(build_dir / '_cmake_configure_try_lock')
+    mock_rw_lock.assert_called_once_with(build_dir / '_cmake_configure_lock')
     configure.assert_called_once_with(
         lock_files=(
-            InterProcessReaderWriterLock.call_args[0][0],
-            FileLock.call_args[0][0],
+            mock_rw_lock.call_args[0][0],
+            mock_file_lock.call_args[0][0],
         ),
         clean_build=clean_build,
     )
@@ -324,14 +326,12 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
 
     args = {'acquire.side_effect': timeout}
     file_lock = mocker.MagicMock(filelock.FileLock, **args)
-    FileLock = mocker.MagicMock(filelock.FileLock, return_value=file_lock)  # noqa: N806
-    mocker.patch(filelock_module_name, FileLock)
+    mock_file_lock = mocker.MagicMock(filelock.FileLock, return_value=file_lock)
+    mocker.patch(filelock_module_name, mock_file_lock)
 
     interprocess_lock = mocker.MagicMock()
-    InterProcessReaderWriterLock = mocker.MagicMock(  # noqa: N806
-        return_value=interprocess_lock
-    )
-    mocker.patch(interprocess_rw_lock_module_name, InterProcessReaderWriterLock)
+    mock_rw_lock = mocker.MagicMock(return_value=interprocess_lock)
+    mocker.patch(interprocess_rw_lock_module_name, mock_rw_lock)
     configure = mocker.Mock(return_value=0)
     mocker.patch(internal_cmake_configure_name, configure)
 
@@ -349,8 +349,8 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
 
     # ----------------------------------
 
-    FileLock.assert_called_once()
-    InterProcessReaderWriterLock.assert_called_once()
+    mock_file_lock.assert_called_once()
+    mock_rw_lock.assert_called_once()
     interprocess_lock.read_lock.assert_called_once()
     configure.assert_not_called()
 
@@ -358,12 +358,10 @@ def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
 def test_configure_invalid(mocker):
     mocker.patch('sys.exit', side_effect=ExitError)
 
-    FileLock = mocker.MagicMock(filelock.FileLock)  # noqa: N806
-    mocker.patch(filelock_module_name, FileLock)
-    InterProcessReaderWriterLock = mocker.MagicMock(  # noqa: N806
-        fasteners.InterProcessReaderWriterLock
-    )
-    mocker.patch(interprocess_rw_lock_module_name, InterProcessReaderWriterLock)
+    mock_file_lock = mocker.MagicMock(filelock.FileLock)
+    mocker.patch(filelock_module_name, mock_file_lock)
+    mock_rw_lock = mocker.MagicMock(fasteners.InterProcessReaderWriterLock)
+    mocker.patch(interprocess_rw_lock_module_name, mock_rw_lock)
     configure = mocker.Mock(return_value=1)
     mocker.patch(internal_cmake_configure_name, configure)
 

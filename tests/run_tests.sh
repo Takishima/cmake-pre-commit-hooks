@@ -15,31 +15,27 @@ function run_hook()
     mkdir -p "$build_dir"
     rm -rf "${build_dir:?}"/*
 
-    if [ "$gen_compiledb" -eq 1 ]; then
+    if [[ "$gen_compiledb" -eq 1 ]]; then
         $hook -S "$src_dir" -B "$build_dir" "$@"
     else
         $hook "$@"
     fi
     ret=$?
 
-    if [ "$expect_success" -eq 1 ]; then
-        if [ $ret -ne 0 ]; then
-            echo "Hook $hook failed on source directory $src_dir with exit code $ret!"
-            exit 1
-        fi
-    else
-        if [ "$ret" -eq 0 ]; then
-            echo "Hook $hook unexpectedly succeeded on source directory $src_dir with exit code $ret!"
-            exit 1
-        fi
+    if [[ "$expect_success" -eq 1 && $ret -ne 0 ]]; then
+        echo "Hook $hook failed on source directory $src_dir with exit code $ret!"
+        exit 1
+    elif [[ "$expect_success" -ne 1 && "$ret" -eq 0 ]]; then
+        echo "Hook $hook unexpectedly succeeded on source directory $src_dir with exit code $ret!"
+        exit 1
     fi
 
-    if [ "$gen_compiledb" -eq 1 ]; then
-        if [ ! -f $build_dir/compile_commands.json ]; then
-            echo "Hook $hook failed to generate the compile database for $src_dir!"
-            exit 1
-        fi
+    if [[ "$gen_compiledb" -eq 1 && ! -f $build_dir/compile_commands.json ]]; then
+        echo "Hook $hook failed to generate the compile database for $src_dir!"
+        exit 1
     fi
+
+    return 0
 }
 
 # ==============================================================================
@@ -56,7 +52,7 @@ mkdir -p "$build_dir"
 rm -rf "${build_dir:?}"/*
 cmake -B other_build -S tests/cmake_good
 cmake-pc-cppcheck-hook -S tests/cmake_good -B build -B other_build tests/cmake_good/good.cpp
-if [ ! -f other_build/compile_commands.json ]; then
+if [[ ! -f other_build/compile_commands.json ]]; then
     echo "Failed to generate compile database in other_build"
     exit 1
 fi
@@ -74,7 +70,7 @@ run_hook cmake-pc-lizard-hook tests/cmake_bad 0 0 -C4 tests/cmake_bad/bad.cpp
 
 export CC=clang CXX=clang++
 
-if [ -z "$GITHUB_SHA" ]; then
+if [[ -z "$GITHUB_SHA" ]]; then
     LATEST_SHA=$(git rev-parse HEAD)
 else
     LATEST_SHA=$GITHUB_SHA
@@ -87,6 +83,7 @@ call_sed()
     else
         sed "$@"
     fi
+    return $?
 }
 
 
@@ -100,7 +97,7 @@ git init \
     && pre-commit run --all-files && success=1 || success=0
 rm -rf .git
 
-if [ "$success" -eq 0 ]; then
+if [[ "$success" -eq 0 ]]; then
     exit 1
 fi
 popd || exit
@@ -115,7 +112,7 @@ git init \
     && pre-commit run --all-files && success=0 || success=1
 rm -rf .git
 
-if [ "$success" -eq 0 ]; then
+if [[ "$success" -eq 0 ]]; then
     exit 1
 fi
 popd || exit

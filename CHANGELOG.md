@@ -19,6 +19,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Repository
 
+- Fix SonarCloud violations:
+  - Fix return type annotation for `_load_from_toml` method in `_argparse.py`
+  - Reduce cognitive complexity in `_cmake.py` by extracting helper methods
+  - Reduce cognitive complexity in `_cmake_test.py` by extracting test helpers
+  - Fix variable naming conventions in test files
+  - Fix GitHub Actions security issues by using environment variables for user-controlled data
+  - Add input validation for workflow_dispatch parameters
+  - Fix shell script issues in `run_tests.sh` (use `[[` instead of `[`, add return statements)
 - Fixed Windows CI by using pip to install cppcheck (Chocolatey package is broken)
 - Modernize ruff configuration to follow latest guidelines
   - Remove deprecated settings (`target-version`, `ANN101`, `ASYNC1`, etc.)

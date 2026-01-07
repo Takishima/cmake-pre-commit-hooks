@@ -31,8 +31,10 @@ jobs:
           python3 -m pip install 'git+https://github.com/Takishima/pre-commit-changelog-auto-update@v1.0.0'
 
       - name: Run Python script
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
         run: |
-          python3 -m update_changelog --pr-body "${{ github.event.pull_request.body }}"
+          python3 -m update_changelog --pr-body "$PR_BODY"
 
       - name: Commit changes
         id: commit
