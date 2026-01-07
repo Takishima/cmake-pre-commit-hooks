@@ -125,6 +125,9 @@ select = ['F',      # pyflakes
 ignore = ['D203',    # one-blank-line-before-class
           'D212',    # multi-line-summary-first-line
           'S603',    # subprocess-without-shell-equals-true
+          'ANN204',  # missing-return-type-special-method (__init__, __new__, etc.)
+          'DOC201',  # return-not-documented (too strict for existing codebase)
+          'DOC501',  # raised-exception-not-documented (too strict for existing codebase)
           # Ignore rules below to prevent conflicts between formatting and linting (with fixing)
           # cf. https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
           'D206',    # indent-with-spaces
@@ -144,7 +147,7 @@ skip-magic-trailing-comma = false
 
 [tool.ruff.lint.per-file-ignores]
 
-'tests/python/*.py' = ['S101', 'SLF001', 'PLR0913', 'PLR2004', 'D', 'DOC']
+'tests/python/*.py' = ['S101', 'SLF001', 'PLR0913', 'PLR2004', 'D', 'DOC', 'PYI024']
 
 [tool.ruff.lint.flake8-annotations]
 allow-star-arg-any = true
