@@ -21,6 +21,10 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
+        exclude:
+          # Python 3.10 has issues on macOS M1 runners (missing gettext/libintl)
+          - runs-on: macos-latest
+            python: '3.10'
 
     name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
@@ -76,6 +80,10 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
+        exclude:
+          # Python 3.10 has issues on macOS M1 runners (missing gettext/libintl)
+          - runs-on: macos-latest
+            python: '3.10'
 
     name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
     runs-on: ${{ matrix.runs-on }}
