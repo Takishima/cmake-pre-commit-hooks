@@ -173,7 +173,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         for build_dir in build_dir_list:
             path = Path(build_dir, 'compile_commands.json')
             if build_dir.exists() and path.exists():
-                log.debug('Located valid compilation database at: %s', str(path))
+                log.debug('Located valid compilation database at: %s', path)
                 return path
         log.debug('No valid compilation database located')
         return None
