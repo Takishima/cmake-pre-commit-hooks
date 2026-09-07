@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import logging
-import subprocess as sp  # noqa: S404
+import subprocess as sp  # ruff: ignore[suspicious-subprocess-import]
 import sys
 
 import attrs
