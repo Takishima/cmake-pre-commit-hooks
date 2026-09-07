@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import subprocess as sp  # noqa: S404
+import subprocess as sp  # ruff: ignore[suspicious-subprocess-import]
 
-from cmake_pc_hooks._call_process import History, call_process  # noqa: PLC2701
+from cmake_pc_hooks._call_process import History, call_process  # ruff: ignore[import-private-name]
 
 import pytest
 

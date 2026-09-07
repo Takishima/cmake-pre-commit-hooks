@@ -15,7 +15,7 @@
 from cmake_pc_hooks import clang_format
 
 import pytest
-from _test_utils import command_main_asserts  # noqa: PLC2701
+from _test_utils import command_main_asserts  # ruff: ignore[import-private-name]
 
 # ==============================================================================
 
@@ -26,12 +26,12 @@ def test_clang_format_command(mocker, tmp_path, format_success):
 
     return_values = [f'{char * 3}'.encode() for char in (chr(n) for n in range(ord('a'), ord('z') + 1))]
 
-    def _get_filelines(filename_str):  # noqa: ARG001
+    def _get_filelines(filename_str):  # ruff: ignore[unused-function-argument]
         if format_success:
             return [return_values[-1]]
         return [return_values.pop()]
 
-    def _get_formatted_lines(filename_str):  # noqa: ARG001
+    def _get_formatted_lines(filename_str):  # ruff: ignore[unused-function-argument]
         if format_success:
             return [return_values[-1]]
         return [return_values.pop()]
