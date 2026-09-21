@@ -13,11 +13,11 @@
 #   limitations under the License.
 
 
-from cmake_pc_hooks import _utils  # noqa: PLC2701
-from cmake_pc_hooks._cmake import CMakeCommand  # noqa: PLC2701
+from cmake_pc_hooks import _utils  # ruff: ignore[import-private-name]
+from cmake_pc_hooks._cmake import CMakeCommand  # ruff: ignore[import-private-name]
 
 import pytest
-from _test_utils import run_command_default_assertions  # noqa: PLC2701
+from _test_utils import run_command_default_assertions  # ruff: ignore[import-private-name]
 
 # ==============================================================================
 
