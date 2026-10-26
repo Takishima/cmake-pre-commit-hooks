@@ -24,7 +24,7 @@ class ExitError(Exception):
 # ==============================================================================
 
 
-def run_command_default_assertions(  # noqa: C901
+def run_command_default_assertions(  # ruff: ignore[complex-structure]
     *,
     read_json_db,
     json_db_file_list,
@@ -40,7 +40,7 @@ def run_command_default_assertions(  # noqa: C901
     exit_success=None,
     do_configure_test=True,
     detect_configured_files=False,
-    **kwargs,  # noqa: ARG001
+    **kwargs,  # ruff: ignore[unused-function-argument]
 ):
     assert set(command.files) == {str(fname) for fname in file_list}
 
