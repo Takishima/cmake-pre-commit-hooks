@@ -160,7 +160,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.stderr = self.history[-1].stderr.encode()
         self.returncode = self.history[-1].returncode
 
-    def _parse_output(self, result):  # noqa: ARG002, PLR6301
+    def _parse_output(self, result):  # ruff: ignore[unused-method-argument, no-self-use]
         return NotImplemented
 
     @staticmethod

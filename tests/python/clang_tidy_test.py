@@ -16,7 +16,7 @@
 from cmake_pc_hooks import clang_tidy
 
 import pytest
-from _test_utils import command_main_asserts, run_command_default_assertions  # noqa: PLC2701
+from _test_utils import command_main_asserts, run_command_default_assertions  # ruff: ignore[import-private-name]
 
 # ==============================================================================
 
@@ -32,7 +32,7 @@ def test_clang_tidy_command(mocker, setup_command, stdout, error_msg):
 
     # ----------------------------------
 
-    def _call_process(*args, **kwargs):  # noqa: ARG001
+    def _call_process(*args, **kwargs):  # ruff: ignore[unused-function-argument]
         return mocker.Mock(
             stdout=stdout, stderr=f'{error_msg if error_msg is not None else ""} aaa\nbbb', returncode=returncode
         )
