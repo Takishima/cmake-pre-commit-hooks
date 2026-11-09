@@ -16,7 +16,7 @@
 from cmake_pc_hooks import include_what_you_use
 
 import pytest
-from _test_utils import command_main_asserts, run_command_default_assertions  # noqa: PLC2701
+from _test_utils import command_main_asserts, run_command_default_assertions  # ruff: ignore[import-private-name]
 
 # ==============================================================================
 
