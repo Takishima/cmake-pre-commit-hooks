@@ -79,7 +79,7 @@ def _append_in_namespace(namespace, key, values):
 class OSSpecificAction(argparse.Action):
     """Custom action to support platform-specific arguments."""
 
-    def __call__(self, parser, namespace, values, options_string=None):  # noqa: ARG002
+    def __call__(self, parser, namespace, values, options_string=None):  # ruff: ignore[unused-method-argument]
         if self.dest == 'unix':
             _append_in_namespace(namespace, 'linux', values)
             _append_in_namespace(namespace, 'mac', values)
@@ -284,7 +284,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         return namespace, args
 
-    def _load_from_toml(  # noqa: PLR0913
+    def _load_from_toml(  # ruff: ignore[too-many-arguments]
         self,
         namespace: argparse.Namespace,
         path: Path,

@@ -17,10 +17,10 @@ import contextlib
 import platform
 from textwrap import dedent
 
-from cmake_pc_hooks import _argparse  # noqa: PLC2701
+from cmake_pc_hooks import _argparse  # ruff: ignore[import-private-name]
 
 import pytest
-from _test_utils import ExitError  # noqa: PLC2701
+from _test_utils import ExitError  # ruff: ignore[import-private-name]
 
 # ==============================================================================
 
