@@ -482,8 +482,7 @@ class CMakeCommand:
         """
         Run a CMake configure step followed by a build of the requested targets (if any).
 
-        Returns:
-            Tuple with the name of the last step that was run and its return code
+        The return value is a tuple with the name of the last step that was run and its return code.
         """
         returncode = self._configure(lock_files=lock_files, clean_build=clean_build)
         if returncode == 0 and self.build_targets:
@@ -494,8 +493,7 @@ class CMakeCommand:
         """
         Retrieve the version of the CMake executable.
 
-        Returns:
-            Tuple of integers (major, minor, patch) or None if the version could not be determined
+        The version is a tuple of integers (major, minor, patch) or None if the version could not be determined.
         """
         if not self.command:
             return None
