@@ -10,6 +10,13 @@ on:  # yamllint disable-line rule:truthy
       - develop
       - v*
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   unit-tests:
     strategy:
@@ -21,27 +28,26 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
+          - '3.14'
+          - '3.15'
         exclude:
           # Python 3.10 has issues on macOS M1 runners (missing gettext/libintl)
           - runs-on: macos-latest
             python: '3.10'
 
-    name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
+    name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
     runs-on: ${{ matrix.runs-on }}
     if: >-
       (github.event_name != 'pull_request'
         || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # full history and tags for SCM versioning to work
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
@@ -58,13 +64,13 @@ jobs:
         run: python -m pytest -v --cov=cmake_pc_hooks --cov-report=xml --cov-report=term-missing --cov-branch
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Save coverage report
         if: matrix.python == '3.11' && runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage.xml
@@ -80,12 +86,14 @@ jobs:
           - '3.11'
           - '3.12'
           - '3.13'
+          - '3.14'
+          - '3.15'
         exclude:
           # Python 3.10 has issues on macOS M1 runners (missing gettext/libintl)
           - runs-on: macos-latest
             python: '3.10'
 
-    name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
+    name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
     runs-on: ${{ matrix.runs-on }}
     needs: unit-tests
     if: >-
@@ -93,15 +101,12 @@ jobs:
         || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # full history and tags for SCM versioning to work
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
@@ -144,7 +149,7 @@ jobs:
       # Update-SessionEnvironment overwriting MSVC environment variables
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1.13.0
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756  # v1.13.0
 
       # Restore Python to front of PATH after MSVC setup
       # (MSVC's vcvarsall.bat prepends paths including VS's bundled Python 3.9,
@@ -178,46 +183,80 @@ jobs:
           PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit-cache
         run: ./tests/run_tests.ps1
 
+  # NB: secrets are not available for pull requests coming from Dependabot or from forks. In those cases the
+  #     coverage upload jobs below skip their steps instead of failing.
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
     needs: unit-tests
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check for SonarCloud token
+        if: env.SONAR_TOKEN == ''
+        run: echo "::notice::SONAR_TOKEN is not available (Dependabot or fork pull request); skipping SonarCloud scan"
+
+      - uses: actions/checkout@v7
+        if: env.SONAR_TOKEN != ''
         with:
           fetch-depth: 0
 
       - name: Fetch coverage report
-        uses: actions/download-artifact@v4
+        if: env.SONAR_TOKEN != ''
+        uses: actions/download-artifact@v8
         with:
           name: coverage
 
       - name: SonarQube Scan
-        uses: SonarSource/sonarqube-scan-action@v7
+        if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4  # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   codacy:
     name: Codacy coverage
     runs-on: ubuntu-latest
     needs: unit-tests
+    env:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
+      - name: Check for Codacy token
+        if: env.CODACY_PROJECT_TOKEN == ''
+        run: echo "::notice::CODACY_PROJECT_TOKEN is not available (Dependabot or fork pull request); skipping upload"
+
       - name: Fetch coverage report
-        uses: actions/download-artifact@v4
+        if: env.CODACY_PROJECT_TOKEN != ''
+        uses: actions/download-artifact@v8
         with:
           name: coverage
 
       - name: Run codacy-coverage-reporter
-        uses: codacy/codacy-coverage-reporter-action@v1
+        if: env.CODACY_PROJECT_TOKEN != ''
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699  # v1.3.0
         with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          project-token: ${{ env.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
 
   finish:
     needs: [unit-tests, system-tests, sonarcloud, codacy]
     runs-on: ubuntu-latest
     name: Finish CI checks
+    # Run even if a dependency failed so that this job fails instead of being skipped (a skipped required check counts
+    # as passing), but not when the run was cancelled, e.g. when superseded by a newer commit
+    if: ${{ !cancelled() }}
     steps:
       - name: All tests pass
-        run: echo 'OK'
+        env:
+          NEEDS_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: ${NEEDS_RESULTS}"
+          for result in ${NEEDS_RESULTS}; do
+            if [[ "${result}" != "success" ]]; then
+              echo "::error::At least one required job did not succeed"
+              exit 1
+            fi
+          done
+          echo 'OK'

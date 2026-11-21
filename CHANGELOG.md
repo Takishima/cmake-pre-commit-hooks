@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Drop support for Python 3.8 and 3.9 (end-of-life)
-- Add support for Python 3.13
+- Add support for Python 3.13, 3.14 and 3.15
 - Minimum required Python version is now 3.10
 
 ### Fixed
@@ -35,9 +35,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Configure `blacken-docs` to use ruff instead of black
 
 - Clarify where to put the settings in `pyproject.toml`
-- Update GitHub Action `actions/download-artifact` to v4
-- Update GitHub Action `actions/upload-artifact` to v4
-- Update GitHub Action `codecov/codecov-action` from v4 to v5
+- Update GitHub Action `codecov/codecov-action` from v4 to v7
+- Update GitHub Action `SonarSource/sonarqube-scan-action` from v7 to v8
+- Update GitHub Action `EndBug/add-and-commit` from v9 to v11
+- Update GitHub Action `actions/checkout` from v4 to v7
+- Update GitHub Action `actions/setup-python` from v5 to v7
+- Update GitHub Action `actions/upload-artifact` from v4 to v7
+- Update GitHub Action `actions/download-artifact` from v4 to v8
+- Overhaul of the CI configuration:
+  - Skip the SonarCloud and Codacy coverage uploads when secrets are not available (Dependabot and fork pull requests)
+    instead of failing
+  - Make the `Finish CI checks` job fail instead of being skipped when one of its dependencies fails
+  - Do not enforce CHANGELOG updates on Dependabot pull requests
+  - Cancel superseded workflow runs on pull requests and restrict default workflow token permissions
+  - Group all Dependabot GitHub Actions updates (now including `actions/*`) into a single pull request
+  - Pin third-party GitHub Actions to full commit SHAs
+  - Enforce HTTPS when downloading `parse-changelog`
+  - Ignore SonarCloud rules about missing lock files and unpinned `pip install` in CI (not applicable to a library)
 - Use GitHub Action `SonarSource/sonarqube-scan-action` v7
 - Update GitHub Action `github/codeql-action` from v3 to v4
 - Update GitHub Action `stefanzweifel/git-auto-commit-action` from v5 to v7

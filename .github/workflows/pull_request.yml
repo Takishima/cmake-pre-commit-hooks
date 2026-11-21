@@ -5,6 +5,15 @@ on:  # yamllint disable-line rule:truthy
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review, labeled, unlabeled]
 
+permissions:
+  contents: read
+
+# Bots add several labels right after opening a pull request, each of which triggers this workflow: only keep the
+# latest of those runs. The run for the 'opened' event has its own group since it may push a CHANGELOG update.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.action == 'opened' }}
+  cancel-in-progress: true
+
 jobs:
   update-changelog:
     runs-on: ubuntu-latest
@@ -13,14 +22,14 @@ jobs:
       (github.event.pull_request.title == '[pre-commit.ci] pre-commit autoupdate') &&
       (github.event.action == 'opened')
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
           token: ${{ secrets.PRE_COMMIT_CI_CHANGELOG }}
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.11'
           cache: 'pip'
@@ -38,7 +47,7 @@ jobs:
 
       - name: Commit changes
         id: commit
-        uses: EndBug/add-and-commit@v9
+        uses: EndBug/add-and-commit@cc9c08ba6c8df3b93a8f2db63e89b98368ae2ae8  # v11.1.1
         with:
           author_name: github-actions[bot]
           author_email: noreply@github.com
@@ -48,14 +57,18 @@ jobs:
     needs: update-changelog
     runs-on: ubuntu-latest
     name: CHANGELOG enforcer
-    if: '!cancelled()'
+    permissions:
+      contents: read
+      pull-requests: read
+    # Dependabot pull requests cannot update the CHANGELOG themselves; these get documented when merging them
+    if: "!cancelled() && github.event.pull_request.user.login != 'dependabot[bot]'"
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
           fetch-depth: 0
 
-      - uses: dangoslen/changelog-enforcer@v3
+      - uses: dangoslen/changelog-enforcer@8b5e9dc3121363bb7c0115f8533404d92af382de  # v3.7.0
         with:
           changeLogPath: 'CHANGELOG.md'
           skipLabels: 'Skip-Changelog'

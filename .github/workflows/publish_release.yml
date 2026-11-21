@@ -23,7 +23,7 @@ jobs:
               || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Get history and tags for SCM versioning to work
         run: |
@@ -94,7 +94,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # https://github.com/taiki-e/parse-changelog
-          curl -LsSf "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" \
+            | tar xzf -
           notes=$(./parse-changelog "${changelog}" "${RELEASE_VERSION}")
           rm -f ./parse-changelog
           if [[ "${tag}" =~ ^v?[0-9\.]+-[a-zA-Z_0-9\.-]+(\+[a-zA-Z_0-9\.-]+)?$ ]]; then
@@ -106,11 +108,11 @@ jobs:
           dist/*
 
       - name: Setup Python for Pypi upload
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
 
       - name: Publish standard package
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
         with:
           user: __token__
           password: ${{ secrets.pypi_password }}
-          packages_dir: dist/
+          packages-dir: dist/
