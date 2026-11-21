@@ -24,13 +24,6 @@ repos:
     hooks:
       - id: remove-tabs
 
-  - repo: https://github.com/PyCQA/doc8/
-    rev: v2.0.0
-    hooks:
-      - id: doc8
-        require_serial: false
-        additional_dependencies: [tomli]
-
   - repo: https://github.com/codespell-project/codespell
     rev: v2.4.3
     hooks:
@@ -55,14 +48,11 @@ repos:
     hooks:
       - id: blacken-docs
         args: [--line-length=120]
-        additional_dependencies: [ruff>=0.14.0]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
     rev: v0.17.5
     hooks:
-      - id: ruff-format
-        name: ruff (format)
-
+      # NB: lint (with fixes) before formatting, since fixes may produce code that needs re-formatting
       - id: ruff-check
         name: ruff (fix)
         alias: ruff-fix
@@ -72,3 +62,6 @@ repos:
           - --output-format=full
           - --show-fixes
           - --preview
+
+      - id: ruff-format
+        name: ruff (format)
