@@ -244,8 +244,9 @@ jobs:
     needs: [unit-tests, system-tests, sonarcloud, codacy]
     runs-on: ubuntu-latest
     name: Finish CI checks
-    # Always run so that this job fails (instead of being skipped) whenever one of its dependencies fails
-    if: always()
+    # Run even if a dependency failed so that this job fails instead of being skipped (a skipped required check counts
+    # as passing), but not when the run was cancelled, e.g. when superseded by a newer commit
+    if: ${{ !cancelled() }}
     steps:
       - name: All tests pass
         env:
