@@ -73,6 +73,11 @@ def test_cmake_command_init():
         ([], 'automatic_discovery', True),
         (['--no-automatic-discovery'], 'automatic_discovery', False),
         (['--detect-configured-files'], 'detect_configured_files', True),
+        ([], 'build_targets', []),
+        (['--cmake-build-target=one'], 'build_targets', ['one']),
+        (['--cmake-build-target=one', '--cmake-build-target', 'two'], 'build_targets', ['one', 'two']),
+        ([], 'codegen', False),
+        (['--codegen'], 'codegen', True),
         (
             ['--linux="-DCMAKE_CXX_COMPILER=g++"'],
             'linux',
@@ -535,3 +540,208 @@ FETCHCONTENT_BASE_DIR:PATH={tmp_path.as_posix()}/build/_deps
         else:
             # NB: the remaining file is the one configured within FETCHCONTENT_BASE_DIR
             assert len(set(cmake.cmake_configured_files) ^ configured_files) == 1
+
+
+# ==============================================================================
+
+
+@pytest.mark.parametrize(
+    ('build_targets', 'codegen', 'expected'),
+    [
+        (None, False, []),
+        (['one', 'two'], False, ['one', 'two']),
+        (None, True, ['codegen']),
+        (['one'], True, ['one', 'codegen']),
+        (['codegen'], True, ['codegen']),
+    ],
+)
+def test_setup_cmake_args_build_targets(mocker, build_targets, codegen, expected):
+    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value=['cmake'])
+    args = _create_test_args(platform.system(), no_cmake_configure=False)
+    if build_targets is not None:
+        args.build_targets = build_targets
+    args.codegen = codegen
+
+    cmake = CMakeCommand()
+    cmake.setup_cmake_args(args)
+
+    assert cmake.codegen == codegen
+    assert cmake.build_targets == expected
+
+
+@pytest.mark.parametrize(
+    ('stdout', 'returncode', 'expected'),
+    [
+        ('cmake version 3.28.3\n\nCMake suite maintained and supported by Kitware', 0, (3, 28, 3)),
+        ('cmake version 3.31.0-rc1\n', 0, (3, 31, 0)),
+        ('cmake3 version 4.1\n', 0, (4, 1, 0)),
+        ('cmake version 3.31.0\n', 1, None),
+        ('garbage', 0, None),
+    ],
+)
+def test_get_version(mocker, stdout, returncode, expected):
+    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value=['cmake'])
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout=stdout, stderr='', returncode=returncode),
+    )
+
+    assert CMakeCommand().get_version() == expected
+    call_process.assert_called_once_with(['cmake', '--version'])
+
+
+def test_get_version_no_cmake(mocker):
+    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value=None)
+    call_process = mocker.patch('cmake_pc_hooks._call_process.call_process')
+    assert CMakeCommand().get_version() is None
+    call_process.assert_not_called()
+
+    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value=['cmake'])
+    call_process.side_effect = OSError
+    assert CMakeCommand().get_version() is None
+
+
+@pytest.mark.parametrize(
+    ('version', 'is_valid'),
+    [
+        (None, True),
+        ((3, 30, 9), False),
+        ((3, 31, 0), True),
+        ((4, 0, 0), True),
+    ],
+)
+def test_configure_codegen_version_check(mocker, tmp_path, version, is_valid):
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+    mocker.patch(filelock_module_name, mocker.MagicMock(filelock.FileLock))
+    mocker.patch(interprocess_rw_lock_module_name, mocker.MagicMock(fasteners.InterProcessReaderWriterLock))
+    configure = mocker.patch(internal_cmake_configure_name, return_value=0)
+    build = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._build', return_value=0)
+    mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.get_version', return_value=version)
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = tmp_path / 'build'
+    cmake.codegen = True
+    cmake.build_targets = ['codegen']
+
+    if is_valid:
+        cmake.configure(command='test')
+        configure.assert_called_once()
+        build.assert_called_once_with()
+        sys_exit.assert_not_called()
+    else:
+        with pytest.raises(ExitError):
+            cmake.configure(command='test')
+        sys_exit.assert_called_once_with(1)
+        configure.assert_not_called()
+        build.assert_not_called()
+
+
+@pytest.mark.parametrize('build_targets', [[], ['one', 'two']])
+@pytest.mark.parametrize('configure_returncode', [0, 1])
+@pytest.mark.parametrize('build_returncode', [0, 2])
+def test_configure_cmake_build(mocker, tmp_path, build_targets, configure_returncode, build_returncode):
+    sys_exit = mocker.patch('sys.exit')
+    mocker.patch(filelock_module_name, mocker.MagicMock(filelock.FileLock))
+    mocker.patch(interprocess_rw_lock_module_name, mocker.MagicMock(fasteners.InterProcessReaderWriterLock))
+    mocker.patch(internal_cmake_configure_name, return_value=configure_returncode)
+    build = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._build', return_value=build_returncode)
+    get_version = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.get_version')
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = tmp_path / 'build'
+    cmake.build_targets = build_targets
+
+    cmake.configure(command='test')
+
+    # No version check unless --codegen is specified
+    get_version.assert_not_called()
+
+    if configure_returncode != 0:
+        build.assert_not_called()
+        sys_exit.assert_called_once_with(configure_returncode)
+    elif not build_targets:
+        build.assert_not_called()
+        sys_exit.assert_not_called()
+    else:
+        build.assert_called_once_with()
+        if build_returncode != 0:
+            sys_exit.assert_called_once_with(build_returncode)
+        else:
+            sys_exit.assert_not_called()
+
+
+def test_configure_no_cmake_configure_skips_build(mocker, tmp_path):
+    build = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand._build')
+    get_version = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.get_version')
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = tmp_path / 'build'
+    cmake.no_cmake_configure = True
+    cmake.codegen = True
+    cmake.build_targets = ['codegen']
+
+    cmake.configure(command='test')
+
+    build.assert_not_called()
+    get_version.assert_not_called()
+
+
+@pytest.mark.parametrize('returncode', [0, 1])
+@pytest.mark.parametrize('build_targets', [['one'], ['one', 'codegen']])
+def test_build_internal(mocker, tmp_path, build_targets, returncode):
+    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value=['cmake'])
+    result = mocker.Mock(stdout='out', stderr='err', returncode=returncode)
+    call_process = mocker.patch('cmake_pc_hooks._call_process.call_process', return_value=result)
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = tmp_path / 'build'
+    cmake.build_targets = build_targets
+
+    assert cmake._build() == returncode
+
+    call_process.assert_called_once_with(['cmake', '--build', str(cmake.build_dir), '--target', *build_targets])
+    if returncode == 0:
+        result.to_stdout_and_stderr.assert_not_called()
+    else:
+        result.to_stdout_and_stderr.assert_called_once_with()
+        assert ('CMP0171' in result.stderr) == ('codegen' in build_targets)
+
+
+@pytest.mark.parametrize(
+    ('cache_content', 'is_supported'),
+    [
+        (None, True),
+        ('FOO:STRING=bar\n', True),
+        ('CMAKE_GENERATOR:INTERNAL=Ninja\n', True),
+        ('CMAKE_GENERATOR:INTERNAL=Ninja Multi-Config\n', True),
+        ('FOO:STRING=bar\nCMAKE_GENERATOR:INTERNAL=Unix Makefiles\nBAR:BOOL=ON\n', True),
+        ('CMAKE_GENERATOR:INTERNAL=Xcode\n', False),
+        ('CMAKE_GENERATOR:INTERNAL=Visual Studio 17 2022\n', False),
+    ],
+)
+def test_build_codegen_generator_check(mocker, tmp_path, cache_content, is_supported):
+    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value=['cmake'])
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout='', stderr='', returncode=0),
+    )
+
+    cmake = CMakeCommand()
+    cmake.source_dir = tmp_path
+    cmake.build_dir = tmp_path / 'build'
+    cmake.build_dir.mkdir()
+    cmake.codegen = True
+    cmake.build_targets = ['codegen']
+    if cache_content is not None:
+        (cmake.build_dir / 'CMakeCache.txt').write_text(cache_content)
+
+    if is_supported:
+        assert cmake._build() == 0
+        call_process.assert_called_once()
+    else:
+        assert cmake._build() == 1
+        call_process.assert_not_called()

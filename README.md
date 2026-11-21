@@ -191,6 +191,8 @@ In addition to the above CMake options, the hooks also accept the following:
 | `--all-at-once`              | Pass all filenames to the command at once              | Since v1.4.0 |
 | `--clean`                    | Perform a clean CMake build                            | Since v1.4.0 |
 | `--cmake`                    | Specify path to CMake executable                       | Since v1.4.0 |
+| `--cmake-build-target`       | Build a CMake target after the configure step          | Unreleased   |
+| `--codegen`                  | Build the CMake `codegen` target (CMake >= 3.31)       | Unreleased   |
 | `--detect-configured-files`  | Enable cmake tracing and detection of configured files | Since v1.9.0 |
 | `--dump-toml`                | Dump the current configuration as TOML on stdout       | Since v1.9.0 |
 | `--no-automatic-discovery`   | Disable automatic build directory discovery            | Since v1.9.0 |
@@ -213,6 +215,17 @@ the command line.
 
 NB: by specifying `--no-cmake-configure` the hook will not attempt to create a compilation database by using
 CMake. However, if one is present, then it will be used by the relevant hooks.
+
+NB: by specifying `--cmake-build-target <name>` (may be repeated) the hook will build the given CMake target(s) right
+after the CMake configure step and before running the actual command. This is useful if some of your source files are
+generated at build time (e.g. using `add_custom_command(...)`) and need to exist for the hooks to work properly.
+
+NB: `--codegen` is a shorthand for `--cmake-build-target codegen`, which builds the `codegen` target provided by CMake
+in order to run all the custom commands marked with the `CODEGEN` keyword. This requires CMake 3.31 or newer, a Ninja or
+Makefile generator and the policy `CMP0171` set to `NEW` in your project (e.g. using
+`cmake_minimum_required(VERSION 3.31)`). The hooks will check the CMake version and the generator and exit with an error
+if they do not support the `codegen` target. With older versions of CMake, use `--cmake-build-target` with one of your
+own targets instead.
 
 Usage example:
 

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- Added `--cmake-build-target` option to build some CMake targets after the CMake configure step (e.g. to generate
+  source files before running the hooks)
+- Added `--codegen` option to build the `codegen` target provided by CMake 3.31+ (#105). The hooks check that the CMake
+  version and generator support that target before attempting to build it.
+
 ### Changed
 
 - Drop support for Python 3.8 and 3.9 (end-of-life)
