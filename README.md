@@ -227,6 +227,10 @@ Makefile generator and the policy `CMP0171` set to `NEW` in your project (e.g. u
 if they do not support the `codegen` target. With older versions of CMake, use `--cmake-build-target` with one of your
 own targets instead.
 
+NB: the hooks will use the CMake found on your system if there is one. If no CMake executable can be found when the
+hooks are installed, CMake (>= 3.31) will be installed automatically from [PyPI](https://pypi.org/project/cmake/)
+inside the environment of the hooks.
+
 Usage example:
 
 ```yaml
