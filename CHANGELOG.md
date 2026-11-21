@@ -66,6 +66,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Remove the `doc8` hook (there are no reStructuredText files in the repository)
   - Remove unused `ruff` dependency of the `blacken-docs` hook (it only supports black)
   - Run the `ruff` linter (with fixes) before the `ruff` formatter
+- Cleanup of the linter pragmas in the code:
+  - Remove obsolete `# pylint: disable` comments (pylint is not used anymore)
+  - Replace repeated inline `ruff` suppressions with entries in the `ruff` configuration in `pyproject.toml`
+  - Merge nested `with` statements in `_cmake.py`
 
 ## [v1.9.6] - 2024-06-02
 

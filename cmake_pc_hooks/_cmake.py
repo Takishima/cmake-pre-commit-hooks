@@ -23,7 +23,7 @@ import os
 import platform
 import re
 import shutil
-import subprocess as sp  # ruff: ignore[suspicious-subprocess-import]
+import subprocess as sp
 import sys
 from pathlib import Path
 
@@ -406,25 +406,24 @@ class CMakeCommand:
         cmake_configure_try_lock = filelock.FileLock(cmake_configure_try_lock_file)
         cmake_configure_lock = fasteners.InterProcessReaderWriterLock(cmake_configure_lock_file)
         try:
-            with cmake_configure_try_lock.acquire(blocking=False):  # ruff: ignore[multiple-with-statements]
-                with cmake_configure_lock.write_lock():
-                    log.debug(
-                        'Command %s with id %s is running CMake configure',
-                        command,
-                        os.getpid(),
-                    )
-                    returncode = self._configure(
-                        lock_files=(
-                            cmake_configure_lock_file,
-                            cmake_configure_try_lock_file,
-                        ),
-                        clean_build=clean_build,
-                    )
-                    log.debug(
-                        'Command %s with id %s is done running CMake configure',
-                        command,
-                        os.getpid(),
-                    )
+            with cmake_configure_try_lock.acquire(blocking=False), cmake_configure_lock.write_lock():
+                log.debug(
+                    'Command %s with id %s is running CMake configure',
+                    command,
+                    os.getpid(),
+                )
+                returncode = self._configure(
+                    lock_files=(
+                        cmake_configure_lock_file,
+                        cmake_configure_try_lock_file,
+                    ),
+                    clean_build=clean_build,
+                )
+                log.debug(
+                    'Command %s with id %s is done running CMake configure',
+                    command,
+                    os.getpid(),
+                )
         except filelock.Timeout:
             log.debug(
                 'Command %s with id %s is not running CMake configure and waiting',

@@ -18,12 +18,12 @@ import sys
 from pathlib import Path
 from textwrap import dedent
 
-from cmake_pc_hooks._cmake import CMakeCommand, _try_calling_cmake, get_cmake_command  # ruff: ignore[import-private-name]
+from cmake_pc_hooks._cmake import CMakeCommand, _try_calling_cmake, get_cmake_command
 
 import fasteners
 import filelock
 import pytest
-from _test_utils import ExitError  # ruff: ignore[import-private-name]
+from _test_utils import ExitError
 
 # ==============================================================================
 
@@ -256,7 +256,7 @@ def test_setup_cmake_args(mocker, system, no_cmake_configure):
 @pytest.mark.parametrize('returncode', [0, 1])
 @pytest.mark.parametrize('clean_build', [False, True])
 @pytest.mark.parametrize('no_cmake_configure', [False, True])
-def test_configure_cmake(  # ruff: ignore[too-many-positional-arguments]
+def test_configure_cmake(
     mocker,
     tmp_path,
     clean_build,
@@ -321,7 +321,7 @@ def test_configure_cmake(  # ruff: ignore[too-many-positional-arguments]
 def test_configure_cmake_timeout(mocker, tmp_path, clean_build):
     mocker.patch('filelock.Timeout', RuntimeError)
 
-    def timeout(blocking):  # ruff: ignore[unused-function-argument]
+    def timeout(blocking):
         raise RuntimeError
 
     args = {'acquire.side_effect': timeout}

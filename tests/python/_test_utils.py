@@ -40,7 +40,7 @@ def run_command_default_assertions(  # ruff: ignore[complex-structure]
     exit_success=None,
     do_configure_test=True,
     detect_configured_files=False,
-    **kwargs,  # ruff: ignore[unused-function-argument]
+    **kwargs,
 ):
     assert set(command.files) == {str(fname) for fname in file_list}
 

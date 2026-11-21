@@ -13,11 +13,11 @@
 #   limitations under the License.
 
 
-from cmake_pc_hooks import _utils  # ruff: ignore[import-private-name]
-from cmake_pc_hooks._cmake import CMakeCommand  # ruff: ignore[import-private-name]
+from cmake_pc_hooks import _utils
+from cmake_pc_hooks._cmake import CMakeCommand
 
 import pytest
-from _test_utils import run_command_default_assertions  # ruff: ignore[import-private-name]
+from _test_utils import run_command_default_assertions
 
 # ==============================================================================
 
