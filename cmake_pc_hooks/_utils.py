@@ -125,7 +125,7 @@ class Command(hooks.utils.Command):
 
     def run(self):
         """Run the command."""
-        self.cmake.configure(self.command)
+        self.cmake.configure(self.command, clean_build=self.clean_build)
         self.files.extend(self.cmake.cmake_configured_files)
 
         compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)

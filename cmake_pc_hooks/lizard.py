@@ -35,7 +35,7 @@ class LizardCmd(StaticAnalyzerCmd):
         """Run lizard."""
         if self.read_json_db:
             if not self.cmake.no_cmake_configure:
-                self.cmake.configure(self.command)
+                self.cmake.configure(self.command, clean_build=self.clean_build)
 
             compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
             if compile_db:
@@ -43,11 +43,16 @@ class LizardCmd(StaticAnalyzerCmd):
 
         if self.all_at_once:
             self.run_command(self.files)
-            self.exit_on_error()
         else:
             for filename in self.files:
                 self.run_command([filename])
-            self.exit_on_error()
+
+        # NB: do not rely on exit_on_error() since it only considers the outcome of the very last call to lizard
+        failures = [result for result in self.history if result.returncode != 0]
+        if failures:
+            for result in failures:
+                sys.stderr.write(result.stdout + result.stderr)
+            sys.exit(failures[0].returncode)
 
 
 def main(argv=None):

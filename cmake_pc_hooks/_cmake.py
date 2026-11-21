@@ -348,7 +348,7 @@ class CMakeCommand:
         """Process flag-style CMake arguments."""
         flag_args = {
             'dev_warnings': (False, '-Wdev'),
-            'no_dev_warnings': (False, '-Wno_dev'),
+            'no_dev_warnings': (False, '-Wno-dev'),
         }
         for key, (default, flag_str) in flag_args.items():
             if getattr(cmake_args, key, default):

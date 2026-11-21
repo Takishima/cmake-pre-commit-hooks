@@ -324,3 +324,30 @@ the `--` argument in the hook's args list.
 If you want to have predictable return codes for your C linters outside of pre-commit, these hooks are available via
 [PyPI](https://pypi.org/project/cmake-pre-commit-hooks/).  Install it with `pip install cmake-pre-commit-hooks`.  They
 are named as `cmake-pc-$cmd-hook`, so `clang-format` becomes `cmake-pc-clang-format-hook`.
+
+## Running the tests
+
+The unit tests only require the Python test dependencies:
+
+```bash
+python -m pip install -e .[test]
+python -m pytest
+```
+
+The integration tests run the hooks for real, on copies of the projects found in `tests/cmake_good` and
+`tests/cmake_bad`. They require CMake as well as the linters (and `pre-commit` for the end-to-end tests):
+
+```bash
+python -m pytest tests/integration
+```
+
+Each test works on its own temporary copy of the projects, so they can safely be run in parallel using
+[pytest-xdist](https://pytest-xdist.readthedocs.io) (installed as part of the `test` extra), which is about 2.5 times
+faster on a 4-core machine:
+
+```bash
+python -m pytest tests/integration -n auto
+```
+
+Tests that require a tool that is not installed are skipped. Use `--required-tools` to make them fail instead, e.g.
+`--required-tools=all` or `--required-tools=cmake,clang-format,clang-tidy`.

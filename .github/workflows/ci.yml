@@ -167,21 +167,22 @@ jobs:
       - name: Build and install package
         run: python -m pip install -e .[test]
 
-      - name: Run test (Unix)
+      # NB: tests requiring a tool that is not listed in --required-tools are skipped if that tool cannot be found
+      - name: Run integration tests (Unix)
         if: runner.os != 'Windows'
         env:
           LOGLEVEL: DEBUG
-        run: ./tests/run_tests.sh
+        run: python -m pytest tests/integration -v -ra -n auto --required-tools=all
 
-      - name: Run test (Windows)
+      - name: Run integration tests (Windows)
         if: runner.os == 'Windows'
         env:
           CC: cl
           CXX: cl
           LOGLEVEL: DEBUG
-          # Use a fresh pre-commit cache to avoid Python version mismatch
-          PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit-cache
-        run: ./tests/run_tests.ps1
+        run: >-
+          python -m pytest tests/integration -v -ra -n auto
+          --required-tools=clang-format,clang-tidy,cppcheck,cpplint,lizard,cmake,git,pre-commit
 
   # NB: secrets are not available for pull requests coming from Dependabot or from forks. In those cases the
   #     coverage upload jobs below skip their steps instead of failing.

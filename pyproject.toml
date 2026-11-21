@@ -46,7 +46,7 @@ Changelog = 'https://github.com/Takishima/cmake-pre-commit-hooks/blob/main/CHANG
 clang-format = ['clang-format']
 clang-tidy = ['clang-tidy']
 lizard = ['lizard']
-test = ['pytest', 'pytest-cov', 'pytest-mock', 'mock']
+test = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-xdist', 'mock']
 
 [project.scripts]
 cmake-pc-clang-format-hook = 'cmake_pc_hooks.clang_format:main'
@@ -160,6 +160,18 @@ skip-magic-trailing-comma = false
                       'D',
                       'DOC',
                       'PYI024',   # collections-named-tuple
+]
+'tests/integration/*.py' = ['S101',     # assert
+                           'S404',     # suspicious-subprocess-import
+                           'S607',     # start-process-with-partial-path
+                           'PLC2701',  # import-private-name
+                           'PLR0913',  # too-many-arguments
+                           'PLR0917',  # too-many-positional-arguments
+                           'PLR2004',  # magic-value-comparison
+                           'ANN',
+                           'TC003',    # typing-only-standard-library-import
+                           'D',
+                           'DOC',
 ]
 
 [tool.ruff.lint.flake8-annotations]
