@@ -90,7 +90,8 @@ class EggInfo(egg_info):
     """
     Custom egg_info command.
 
-    Makes sure that clang-format is added to the list of requirements if the command cannot be found on the path.
+    Makes sure that clang-format, lizard and CMake are added to the list of requirements if the corresponding command
+    cannot be found on the path.
     """
 
     def run(self):
@@ -98,6 +99,11 @@ class EggInfo(egg_info):
         for exec_name, pkg in ({'clang-format': 'clang-format', 'lizard': 'lizard'}).items():
             if get_executable(exec_name) is None:
                 self.distribution.install_requires.append(pkg)
+
+        # Prefer a system CMake if there is one, otherwise install one that is recent enough to support all the
+        # features of the hooks (e.g. the `codegen` target)
+        if all(get_executable(exec_name) is None for exec_name in ('cmake', 'cmake3')):
+            self.distribution.install_requires.append('cmake>=3.31')
 
         egg_info.run(self)
 

@@ -105,6 +105,9 @@ class CMakeCommand:
 
     DEFAULT_BUILD_DIR = '.cmake_build'
     DEFAULT_TRACE_LOG = 'trace_log.json'
+    CODEGEN_TARGET = 'codegen'
+    CODEGEN_MIN_VERSION = (3, 31)
+    CODEGEN_GENERATORS = ('Ninja', 'Makefiles')
 
     def __init__(self, cmake_names=None):
         """
@@ -120,6 +123,8 @@ class CMakeCommand:
         self.cmake_trace_log = None
         self.cmake_configured_files = []
         self.no_cmake_configure = False
+        self.build_targets = []
+        self.codegen = False
 
     @staticmethod
     def add_cmake_arguments_to_parser(parser):
@@ -148,6 +153,25 @@ class CMakeCommand:
             '--cmake',
             type=_argparse.executable_path,
             help='Specify path to CMake executable.',
+        )
+        options.add_argument(
+            '--cmake-build-target',
+            action='append',
+            dest='build_targets',
+            type=str,
+            help=(
+                'Build a CMake target after the configure step and before running the hook, e.g. to generate source '
+                'files (may be specified multiple times)'
+            ),
+            default=[],
+        )
+        options.add_argument(
+            '--codegen',
+            action='store_true',
+            help=(
+                'Build the `codegen` CMake target after the configure step in order to generate source files '
+                '(requires CMake >= 3.31 and a Ninja or Makefile generator)'
+            ),
         )
         options.add_argument(
             '--detect-configured-files',
@@ -369,6 +393,10 @@ class CMakeCommand:
         if cmake_args.cmake:
             self.command = [Path(cmake_args.cmake).resolve()]
         self.no_cmake_configure = cmake_args.no_cmake_configure
+        self.codegen = bool(getattr(cmake_args, 'codegen', False))
+        self.build_targets = list(getattr(cmake_args, 'build_targets', None) or [])
+        if self.codegen and self.CODEGEN_TARGET not in self.build_targets:
+            self.build_targets.append(self.CODEGEN_TARGET)
 
         self.resolve_build_directory(
             build_dir_list=cmake_args.build_dir,
@@ -392,11 +420,19 @@ class CMakeCommand:
         """
         if self.no_cmake_configure:
             log.debug('Not calling CMake configure')
+            if self.build_targets:
+                log.warning(
+                    'Not building CMake target(s) %s since --no-cmake-configure was specified',
+                    ', '.join(self.build_targets),
+                )
             return
 
         if self.source_dir is None:
             log.error('No source dir was for CMake! Did you call `setup_cmake_args()`?')
             sys.exit(1)
+
+        if self.codegen:
+            self._check_codegen_cmake_version()
 
         cmake_configure_lock_file = Path(self.build_dir, '_cmake_configure_lock')
         cmake_configure_try_lock_file = Path(self.build_dir, '_cmake_configure_try_lock')
@@ -405,6 +441,7 @@ class CMakeCommand:
 
         cmake_configure_try_lock = filelock.FileLock(cmake_configure_try_lock_file)
         cmake_configure_lock = fasteners.InterProcessReaderWriterLock(cmake_configure_lock_file)
+        step = 'configure'
         try:
             with cmake_configure_try_lock.acquire(blocking=False), cmake_configure_lock.write_lock():
                 log.debug(
@@ -412,7 +449,7 @@ class CMakeCommand:
                     command,
                     os.getpid(),
                 )
-                returncode = self._configure(
+                step, returncode = self._configure_and_build(
                     lock_files=(
                         cmake_configure_lock_file,
                         cmake_configure_try_lock_file,
@@ -435,11 +472,97 @@ class CMakeCommand:
                 returncode = 0
 
         if returncode != 0:
-            log.error('CMake configure step failed. See output for more information.')
+            log.error('CMake %s step failed. See output for more information.', step)
             sys.exit(returncode)
 
         if self.cmake_trace_log is not None:
             self._parse_cmake_trace_log()
+
+    def _configure_and_build(self, lock_files, clean_build):
+        """
+        Run a CMake configure step followed by a build of the requested targets (if any).
+
+        The return value is a tuple with the name of the last step that was run and its return code.
+        """
+        returncode = self._configure(lock_files=lock_files, clean_build=clean_build)
+        if returncode == 0 and self.build_targets:
+            return 'build', self._build()
+        return 'configure', returncode
+
+    def get_version(self):
+        """
+        Retrieve the version of the CMake executable.
+
+        The version is a tuple of integers (major, minor, patch) or None if the version could not be determined.
+        """
+        if not self.command:
+            return None
+
+        try:
+            result = _call_process.call_process([*(str(cmd) for cmd in self.command), '--version'])
+        except OSError:
+            return None
+
+        version = re.search(r'version\s+(\d+)\.(\d+)(?:\.(\d+))?', result.stdout)
+        if result.returncode != 0 or not version:
+            return None
+        return tuple(int(part or 0) for part in version.groups())
+
+    def _check_codegen_cmake_version(self):
+        """Make sure that the CMake executable is recent enough to provide the `codegen` target."""
+        version = self.get_version()
+        min_version_str = '.'.join(str(part) for part in self.CODEGEN_MIN_VERSION)
+        if version is None:
+            log.warning(
+                'Unable to determine the CMake version: --codegen requires CMake >= %s',
+                min_version_str,
+            )
+            return
+
+        if version[: len(self.CODEGEN_MIN_VERSION)] < self.CODEGEN_MIN_VERSION:
+            log.error(
+                '--codegen requires CMake >= %s, but found CMake %s. Either upgrade CMake (or use --cmake to point to '
+                'a newer one) or use --cmake-build-target to build a target of your project that generates the files.',
+                min_version_str,
+                '.'.join(str(part) for part in version),
+            )
+            sys.exit(1)
+
+    def _get_generator(self):
+        """Read the name of the CMake generator from the CMake cache (None if not found)."""
+        try:
+            cache = Path(self.build_dir, 'CMakeCache.txt').read_text(encoding='utf-8', errors='replace')
+        except OSError:
+            return None
+        generator = re.search(r'^CMAKE_GENERATOR:\w+=(.*)$', cache, flags=re.MULTILINE)
+        return generator.group(1).strip() if generator else None
+
+    def _build(self):
+        """Build some CMake targets (must be called after a successful CMake configure step)."""
+        if self.codegen:
+            generator = self._get_generator()
+            if generator is not None and not any(name in generator for name in self.CODEGEN_GENERATORS):
+                log.error(
+                    '--codegen is only supported with the Ninja and Makefile generators, but %s is using "%s"',
+                    self.build_dir,
+                    generator,
+                )
+                return 1
+
+        command = [*(str(cmd) for cmd in self.command), '--build', str(self.build_dir), '--target', *self.build_targets]
+        log.debug('Building CMake target(s): %s', ', '.join(self.build_targets))
+        result = _call_process.call_process(command)
+
+        if result.returncode != 0:
+            result.stdout = f'Running CMake with: {command}\n{result.stdout}\n'
+            if self.CODEGEN_TARGET in self.build_targets:
+                result.stderr += (
+                    f'\nNB: the `{self.CODEGEN_TARGET}` target is only generated by CMake if policy CMP0171 is set to '
+                    'NEW in your project, e.g. by using cmake_minimum_required(VERSION 3.31) or newer.\n\n'
+                )
+            result.to_stdout_and_stderr()
+
+        return result.returncode
 
     def _call_cmake(self, extra_args=None):
         command = [str(cmd) for cmd in self.command]
