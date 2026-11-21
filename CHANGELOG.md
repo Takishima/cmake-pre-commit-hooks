@@ -49,6 +49,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Do not enforce CHANGELOG updates on Dependabot pull requests
   - Cancel superseded workflow runs on pull requests and restrict default workflow token permissions
   - Group all Dependabot GitHub Actions updates (now including `actions/*`) into a single pull request
+  - Pin third-party GitHub Actions to full commit SHAs
+  - Enforce HTTPS when downloading `parse-changelog`
+  - Ignore SonarCloud rules about missing lock files and unpinned `pip install` in CI (not applicable to a library)
 - Use GitHub Action `SonarSource/sonarqube-scan-action` v7
 - Update GitHub Action `github/codeql-action` from v3 to v4
 - Update GitHub Action `stefanzweifel/git-auto-commit-action` from v5 to v7

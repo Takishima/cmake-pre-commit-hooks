@@ -25,7 +25,9 @@ jobs:
           parse_changelog_tag: v0.5.4
           source_url: https://github.com/taiki-e/parse-changelog/releases/download
         run: |
-          curl -LsSf "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" | tar xzf -
+          curl --proto '=https' --tlsv1.2 -LsSf \
+            "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" \
+            | tar xzf -
       - name: Extract version from branch name (for release branches)
         if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
         env:

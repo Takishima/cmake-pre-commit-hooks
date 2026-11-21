@@ -64,7 +64,7 @@ jobs:
         run: python -m pytest -v --cov=cmake_pc_hooks --cov-report=xml --cov-report=term-missing --cov-branch
 
       - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v7
+        uses: codecov/codecov-action@303a32d7a59b442fa8d48b6a1cc6825c09c847a5  # v7.1.1
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
 
@@ -149,7 +149,7 @@ jobs:
       # Update-SessionEnvironment overwriting MSVC environment variables
       - name: Enable Developer Command Prompt
         if: runner.os == 'Windows'
-        uses: ilammy/msvc-dev-cmd@v1.13.0
+        uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756  # v1.13.0
 
       # Restore Python to front of PATH after MSVC setup
       # (MSVC's vcvarsall.bat prepends paths including VS's bundled Python 3.9,
@@ -212,7 +212,7 @@ jobs:
 
       - name: SonarQube Scan
         if: env.SONAR_TOKEN != ''
-        uses: SonarSource/sonarqube-scan-action@v8
+        uses: SonarSource/sonarqube-scan-action@59202af334b4ba7b5db01b701b8e79f8b3bef0f4  # v8.5.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
 
@@ -235,7 +235,7 @@ jobs:
 
       - name: Run codacy-coverage-reporter
         if: env.CODACY_PROJECT_TOKEN != ''
-        uses: codacy/codacy-coverage-reporter-action@v1
+        uses: codacy/codacy-coverage-reporter-action@89d6c85cfafaec52c72b6c5e8b2878d33104c699  # v1.3.0
         with:
           project-token: ${{ env.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
