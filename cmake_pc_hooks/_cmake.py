@@ -449,16 +449,13 @@ class CMakeCommand:
                     command,
                     os.getpid(),
                 )
-                returncode = self._configure(
+                step, returncode = self._configure_and_build(
                     lock_files=(
                         cmake_configure_lock_file,
                         cmake_configure_try_lock_file,
                     ),
                     clean_build=clean_build,
                 )
-                if returncode == 0 and self.build_targets:
-                    step = 'build'
-                    returncode = self._build()
                 log.debug(
                     'Command %s with id %s is done running CMake configure',
                     command,
@@ -480,6 +477,18 @@ class CMakeCommand:
 
         if self.cmake_trace_log is not None:
             self._parse_cmake_trace_log()
+
+    def _configure_and_build(self, lock_files, clean_build):
+        """
+        Run a CMake configure step followed by a build of the requested targets (if any).
+
+        Returns:
+            Tuple with the name of the last step that was run and its return code
+        """
+        returncode = self._configure(lock_files=lock_files, clean_build=clean_build)
+        if returncode == 0 and self.build_targets:
+            return 'build', self._build()
+        return 'configure', returncode
 
     def get_version(self):
         """
