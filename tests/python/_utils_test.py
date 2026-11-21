@@ -153,7 +153,7 @@ def test_command_run_invalid(mocker, tmp_path):
     command.parse_args(args)
     command.run()
 
-    configure.assert_called_once_with(command.command)
+    configure.assert_called_once_with(command.command, clean_build=False)
     sys_exit.assert_called_once_with(1)
 
 
@@ -184,6 +184,20 @@ def test_clang_analyzer_command(tmp_path):
     command.handle_ddash_args()
     assert set(command.files) == set(file_list)
     assert command.ddash_args == ['--', rest_args[0]]
+
+
+def test_command_run_clean_build(mocker, tmp_path):
+    mocker.patch('sys.exit')
+    configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)
+
+    command_name = 'test-exec'
+    args = [f'{command_name}', f'-B{tmp_path}', '--clean']
+
+    command = _utils.Command(command_name, look_behind=False, args=args)
+    command.parse_args(args)
+    command.run()
+
+    configure.assert_called_once_with(command.command, clean_build=True)
 
 
 # ==============================================================================

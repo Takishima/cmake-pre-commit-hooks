@@ -48,7 +48,7 @@ def run_command_default_assertions(  # ruff: ignore[complex-structure]
         command.run()
 
     if do_configure_test and not no_cmake_configure:
-        configure.assert_called_once_with(command.command)
+        configure.assert_called_once_with(command.command, clean_build=False)
 
     if exit_success is None:
         exit_success = returncode == 0

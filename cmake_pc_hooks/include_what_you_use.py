@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Wrapper script for cppcheck."""
+"""Wrapper script for include-what-you-use."""
 
 import logging
 import shutil
@@ -95,6 +95,14 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         if compile_db:
             self.add_if_missing([f'-p={compile_db}'])
 
+    def get_version_str(self):
+        """Get the version string of include-what-you-use (iwyu-tool itself does not have any)."""
+        command, self.command = self.command, self.command_for_version
+        try:
+            return super().get_version_str()
+        finally:
+            self.command = command
+
     def _parse_output(self, result):
         """
         Parse output and check whether some errors occurred.
@@ -110,8 +118,10 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         """
         self.log.debug('parsing output from %s', result.stdout)
         is_correct = 'has correct #includes/fwd-decls' in result.stdout
+        # NB: when several files are processed at once, the output may contain a mix of correct and incorrect files
+        has_suggestions = any(msg in result.stdout for msg in ('should add these lines:', 'should remove these lines:'))
 
-        return bool(result.stdout) and not is_correct
+        return has_suggestions or (bool(result.stdout) and not is_correct)
 
 
 def main(argv=None):
