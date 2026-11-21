@@ -15,7 +15,7 @@
 
 from cmake_pc_hooks import cppcheck
 
-from _test_utils import command_main_asserts, run_command_default_assertions  # noqa: PLC2701
+from _test_utils import command_main_asserts, run_command_default_assertions
 
 # ==============================================================================
 
@@ -27,7 +27,7 @@ def test_cppcheck_command(mocker, setup_command):
 
     cppcheck_useless_error_msg = 'Cppcheck cannot find all the include files'
 
-    def _call_process(*args, **kwargs):  # noqa: ARG001
+    def _call_process(*args, **kwargs):
         return mocker.Mock(stdout='aaa\nbbb', stderr=f'{cppcheck_useless_error_msg} aaa\nbbb', returncode=returncode)
 
     call_process.reset_mock(return_value=True, side_effect=True)

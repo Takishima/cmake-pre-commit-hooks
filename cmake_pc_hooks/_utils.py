@@ -50,7 +50,7 @@ def _read_compile_commands_json(compile_db: Path) -> list[str]:
     return []
 
 
-class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attributes
+class Command(hooks.utils.Command):
     """Super class that all commands inherit."""
 
     setup_cmake = True
@@ -149,7 +149,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         if has_errors:
             sys.exit(1)
 
-    def run_command(self, filenames):  # pylint: disable=arguments-differ,arguments-renamed
+    def run_command(self, filenames):
         """Run the command and check for errors."""
         self.history.append(_call_process.call_process([self.command, *filenames, *self.args, *self.ddash_args]))
         self._clinters_compat()
@@ -160,7 +160,7 @@ class Command(hooks.utils.Command):  # pylint: disable=too-many-instance-attribu
         self.stderr = self.history[-1].stderr.encode()
         self.returncode = self.history[-1].returncode
 
-    def _parse_output(self, result):  # noqa: ARG002, PLR6301
+    def _parse_output(self, result):  # ruff: ignore[unused-method-argument, no-self-use]
         return NotImplemented
 
     @staticmethod

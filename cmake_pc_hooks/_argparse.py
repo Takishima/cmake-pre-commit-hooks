@@ -79,7 +79,7 @@ def _append_in_namespace(namespace, key, values):
 class OSSpecificAction(argparse.Action):
     """Custom action to support platform-specific arguments."""
 
-    def __call__(self, parser, namespace, values, options_string=None):  # noqa: ARG002
+    def __call__(self, parser, namespace, values, options_string=None):  # ruff: ignore[unused-method-argument]
         if self.dest == 'unix':
             _append_in_namespace(namespace, 'linux', values)
             _append_in_namespace(namespace, 'mac', values)
@@ -134,24 +134,27 @@ def _load_data_from_toml(
     try:
         with path.open(mode='r', encoding='utf-8') as fd:
             config = toml.load(fd)
-        if section:
-            for sub_section in section.split('.'):
-                config = config[sub_section]
-            log.debug('Loading data from %s table of %s', section, path)
-        else:
-            config = {key: value for key, value in config.items() if not isinstance(value, dict)}
-            log.debug('Loading data from root table of %s', path)
     except FileNotFoundError as err:
         if path_must_exist:
             raise TOMLFileNotFoundError(path) from err
         log.debug('TOML file %s does not exist (not an error)', path)
+        return {}
+
+    if not section:
+        log.debug('Loading data from root table of %s', path)
+        return {key: value for key, value in config.items() if not isinstance(value, dict)}
+
+    try:
+        for sub_section in section.split('.'):
+            config = config[sub_section]
     except KeyError as err:
         if section_must_exist:
             raise TOMLSectionKeyError(section, path) from err
         log.debug('TOML file %s does not have a %s section (not an error)', path, section)
-    else:
-        return config
-    return {}
+        return {}
+
+    log.debug('Loading data from %s table of %s', section, path)
+    return config
 
 
 # ==============================================================================
@@ -284,7 +287,7 @@ class ArgumentParser(argparse.ArgumentParser):
 
         return namespace, args
 
-    def _load_from_toml(  # noqa: PLR0913
+    def _load_from_toml(  # ruff: ignore[too-many-arguments]
         self,
         namespace: argparse.Namespace,
         path: Path,

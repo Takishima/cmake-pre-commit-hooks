@@ -17,7 +17,7 @@
 from __future__ import annotations
 
 import logging
-import subprocess as sp  # noqa: S404
+import subprocess as sp
 import sys
 
 import attrs
@@ -26,7 +26,7 @@ log = logging.getLogger(__name__)
 
 
 @attrs.define(slots=True)
-class History:  # pylint: disable=too-few-public-methods
+class History:
     """Process execution data."""
 
     stdout: str
