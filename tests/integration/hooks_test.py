@@ -156,12 +156,17 @@ def test_clang_tidy_compiler_args_after_double_dash(run_hook, bad_project):
     assert HOOKS['clang-tidy'].diagnostic in result.output, result
 
 
-def test_clang_tidy_warnings_are_not_errors(run_hook, bad_project):
-    result = run_hook(
-        'clang-tidy', bad_project, '-B', BUILD_DIR, *WIN_CMAKE_ARGS, '--checks=-*,readability-*', 'bad.cpp'
-    )
+def test_clang_tidy_warnings_are_not_errors(run_hook, good_project):
+    # NB: no #include here, so that the outcome does not depend on clang-tidy being able to parse the system headers
+    (good_project / 'good.cpp').write_text('int main() { return 10; }\n', encoding='utf-8')
+    args = ['-B', BUILD_DIR, *WIN_CMAKE_ARGS, '--checks=-*,readability-magic-numbers']
 
+    result = run_hook('clang-tidy', good_project, *args, 'good.cpp')
     assert result.returncode == 0, result
+    assert HOOKS['clang-tidy'].diagnostic in result.output, result
+
+    result = run_hook('clang-tidy', good_project, *args, '--warnings-as-errors=*', 'good.cpp')
+    assert result.returncode == 1, result
     assert HOOKS['clang-tidy'].diagnostic in result.output, result
 
 
