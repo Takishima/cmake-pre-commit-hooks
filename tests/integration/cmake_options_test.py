@@ -164,7 +164,6 @@ def test_cmake_options_are_forwarded(run_tidy, good_project):
         'build',
         '-DFIRST_OPTION=one',
         '-DSECOND_OPTION:STRING=two',
-        '-Wno-dev',
         'good.cpp',
     )
 
@@ -173,8 +172,28 @@ def test_cmake_options_are_forwarded(run_tidy, good_project):
     assert cache['FIRST_OPTION'] == 'one'
     assert cache['SECOND_OPTION'] == 'two'
     assert cache['CMAKE_EXPORT_COMPILE_COMMANDS'] == 'ON'
-    # Set by -Wno-dev (NB: older versions of CMake silently ignore unknown warning categories)
-    assert cache['CMAKE_SUPPRESS_DEVELOPER_WARNINGS'] == 'TRUE'
+
+
+def test_developer_warnings_can_be_suppressed(run_tidy, good_project):
+    (good_project / 'CMakeLists.txt').write_text(
+        'cmake_minimum_required(VERSION 3.15)\n'
+        'project(cmake_dev_warning LANGUAGES CXX)\n'
+        'message(AUTHOR_WARNING "This is a developer warning")\n'
+        'add_library(mylib STATIC good.cpp)\n',
+        encoding='utf-8',
+    )
+    # The output of CMake is only shown if the configure step fails or when debugging
+    env = {'LOGLEVEL': 'DEBUG'}
+
+    result = run_tidy(good_project, '-B', 'build_with_warnings', 'good.cpp', env=env)
+    assert result.returncode == 0, result
+    assert 'This is a developer warning' in result.output, result
+
+    # NB: recent versions of CMake reject unknown warning categories while older ones silently ignore them, hence
+    #     the need to look at the output
+    result = run_tidy(good_project, '-B', 'build_without_warnings', '-Wno-dev', 'good.cpp', env=env)
+    assert result.returncode == 0, result
+    assert 'This is a developer warning' not in result.output, result
 
 
 def test_cmake_defines_reach_the_linter(run_tidy, good_project):
