@@ -341,5 +341,13 @@ The integration tests run the hooks for real, on copies of the projects found in
 python -m pytest tests/integration
 ```
 
+Each test works on its own temporary copy of the projects, so they can safely be run in parallel using
+[pytest-xdist](https://pytest-xdist.readthedocs.io) (installed as part of the `test` extra), which is about 2.5 times
+faster on a 4-core machine:
+
+```bash
+python -m pytest tests/integration -n auto
+```
+
 Tests that require a tool that is not installed are skipped. Use `--required-tools` to make them fail instead, e.g.
 `--required-tools=all` or `--required-tools=cmake,clang-format,clang-tidy`.

@@ -46,7 +46,7 @@ Changelog = 'https://github.com/Takishima/cmake-pre-commit-hooks/blob/main/CHANG
 clang-format = ['clang-format']
 clang-tidy = ['clang-tidy']
 lizard = ['lizard']
-test = ['pytest', 'pytest-cov', 'pytest-mock', 'mock']
+test = ['pytest', 'pytest-cov', 'pytest-mock', 'pytest-xdist', 'mock']
 
 [project.scripts]
 cmake-pc-clang-format-hook = 'cmake_pc_hooks.clang_format:main'

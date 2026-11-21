@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Tests check the output of the hooks and not only their exit code
   - Add tests for most of the CMake related options, TOML configuration files and concurrent execution of the hooks
   - The pre-commit end-to-end test now also covers changes that are not yet committed
+  - Tests are run in parallel using `pytest-xdist`
 - Fix SonarCloud violations:
   - Fix return type annotation for `_load_from_toml` method in `_argparse.py`
   - Reduce cognitive complexity in `_cmake.py` by extracting helper methods
