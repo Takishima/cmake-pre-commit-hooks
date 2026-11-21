@@ -10,6 +10,13 @@ on:  # yamllint disable-line rule:truthy
       - develop
       - v*
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   unit-tests:
     strategy:
@@ -26,22 +33,19 @@ jobs:
           - runs-on: macos-latest
             python: '3.10'
 
-    name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
+    name: "Unit tests • ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
     runs-on: ${{ matrix.runs-on }}
     if: >-
       (github.event_name != 'pull_request'
         || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # full history and tags for SCM versioning to work
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
@@ -64,7 +68,7 @@ jobs:
 
       - name: Save coverage report
         if: matrix.python == '3.11' && runner.os == 'Linux'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage
           path: coverage.xml
@@ -85,7 +89,7 @@ jobs:
           - runs-on: macos-latest
             python: '3.10'
 
-    name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64 ${{ matrix.args }}"
+    name: "System tests ${{ matrix.python }} • ${{ matrix.runs-on }} • x64"
     runs-on: ${{ matrix.runs-on }}
     needs: unit-tests
     if: >-
@@ -93,15 +97,12 @@ jobs:
         || (github.event_name == 'pull_request' && github.event.pull_request.merged != true))
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # full history and tags for SCM versioning to work
 
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: ${{ matrix.python }}
           architecture: 'x64'
@@ -178,46 +179,79 @@ jobs:
           PRE_COMMIT_HOME: ${{ runner.temp }}/pre-commit-cache
         run: ./tests/run_tests.ps1
 
+  # NB: secrets are not available for pull requests coming from Dependabot or from forks. In those cases the
+  #     coverage upload jobs below skip their steps instead of failing.
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
     needs: unit-tests
+    permissions:
+      contents: read
+      pull-requests: read
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Check for SonarCloud token
+        if: env.SONAR_TOKEN == ''
+        run: echo "::notice::SONAR_TOKEN is not available (Dependabot or fork pull request); skipping SonarCloud scan"
+
+      - uses: actions/checkout@v7
+        if: env.SONAR_TOKEN != ''
         with:
           fetch-depth: 0
 
       - name: Fetch coverage report
-        uses: actions/download-artifact@v4
+        if: env.SONAR_TOKEN != ''
+        uses: actions/download-artifact@v8
         with:
           name: coverage
 
       - name: SonarQube Scan
+        if: env.SONAR_TOKEN != ''
         uses: SonarSource/sonarqube-scan-action@v8
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}  # Needed to get PR information, if any
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
 
   codacy:
     name: Codacy coverage
     runs-on: ubuntu-latest
     needs: unit-tests
+    env:
+      CODACY_PROJECT_TOKEN: ${{ secrets.CODACY_PROJECT_TOKEN }}
     steps:
+      - name: Check for Codacy token
+        if: env.CODACY_PROJECT_TOKEN == ''
+        run: echo "::notice::CODACY_PROJECT_TOKEN is not available (Dependabot or fork pull request); skipping upload"
+
       - name: Fetch coverage report
-        uses: actions/download-artifact@v4
+        if: env.CODACY_PROJECT_TOKEN != ''
+        uses: actions/download-artifact@v8
         with:
           name: coverage
 
       - name: Run codacy-coverage-reporter
+        if: env.CODACY_PROJECT_TOKEN != ''
         uses: codacy/codacy-coverage-reporter-action@v1
         with:
-          project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
+          project-token: ${{ env.CODACY_PROJECT_TOKEN }}
           coverage-reports: coverage.xml
 
   finish:
     needs: [unit-tests, system-tests, sonarcloud, codacy]
     runs-on: ubuntu-latest
     name: Finish CI checks
+    # Always run so that this job fails (instead of being skipped) whenever one of its dependencies fails
+    if: always()
     steps:
       - name: All tests pass
-        run: echo 'OK'
+        env:
+          NEEDS_RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Job results: ${NEEDS_RESULTS}"
+          for result in ${NEEDS_RESULTS}; do
+            if [[ "${result}" != "success" ]]; then
+              echo "::error::At least one required job did not succeed"
+              exit 1
+            fi
+          done
+          echo 'OK'
