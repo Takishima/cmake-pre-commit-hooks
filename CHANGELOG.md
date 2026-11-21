@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Drop support for Python 3.8 and 3.9 (end-of-life)
-- Add support for Python 3.13
+- Add support for Python 3.13, 3.14 and 3.15
 - Minimum required Python version is now 3.10
 
 ### Fixed
