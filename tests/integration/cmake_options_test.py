@@ -173,6 +173,8 @@ def test_cmake_options_are_forwarded(run_tidy, good_project):
     assert cache['FIRST_OPTION'] == 'one'
     assert cache['SECOND_OPTION'] == 'two'
     assert cache['CMAKE_EXPORT_COMPILE_COMMANDS'] == 'ON'
+    # Set by -Wno-dev (NB: older versions of CMake silently ignore unknown warning categories)
+    assert cache['CMAKE_SUPPRESS_DEVELOPER_WARNINGS'] == 'TRUE'
 
 
 def test_cmake_defines_reach_the_linter(run_tidy, good_project):

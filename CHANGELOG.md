@@ -29,6 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed include-what-you-use hook passing when the output for a correct file is mixed with the output for an incorrect
   one (e.g. when using `--all-at-once`)
 - Fixed `--version` always failing for the include-what-you-use hook
+- Fixed `-Wno-dev` being passed to CMake as `-Wno_dev`, which is rejected by recent versions of CMake
 - Fixed PowerShell system test script using `$?` instead of `$LASTEXITCODE` for exit code handling
 
 ### Repository

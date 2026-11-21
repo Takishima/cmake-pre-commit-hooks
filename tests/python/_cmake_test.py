@@ -244,7 +244,7 @@ def test_setup_cmake_args(mocker, system, no_cmake_configure):
     assert '-A64' in cmake.cmake_args
     assert '-Tclang-toolset' in cmake.cmake_args
     assert '-Wdev' in cmake.cmake_args
-    assert '-Wno_dev' in cmake.cmake_args
+    assert '-Wno-dev' in cmake.cmake_args
 
     # The arguments are not added to cmake.cmake_args since we only want to add them during a CMake configure call
     assert '--trace-expand' not in cmake.cmake_args
