@@ -92,7 +92,9 @@ def parse_pre_commit_output(output: str) -> dict[str, str]:
 
 
 @pytest.mark.parametrize(('project_name', 'expected'), [('good', 'Passed'), ('bad', 'Failed')])
-def test_pre_commit_run(require_tools, hooks_repository, pre_commit_env, tmp_path, project_name, expected):
+def test_pre_commit_run(
+    require_tools, required_tools, hooks_repository, pre_commit_env, tmp_path, project_name, expected
+):
     require_tools('cmake')
     repo_path, revision = hooks_repository
 
@@ -109,8 +111,9 @@ def test_pre_commit_run(require_tools, hooks_repository, pre_commit_env, tmp_pat
     for hook_id in hook_names:
         if is_installed(hook_id):
             hook_ids.append(hook_id)
-        else:
-            require_tools(hook_id)  # fail if the tool is required, simply ignore the hook otherwise
+        elif hook_id in required_tools:
+            require_tools(hook_id)  # fails the test
+        # else: simply leave that hook out, the other ones are still worth testing
     assert hook_ids
 
     project = copy_project(project_name, tmp_path / project_name)

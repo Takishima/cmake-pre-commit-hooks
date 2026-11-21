@@ -66,7 +66,13 @@ def pytest_configure(config):
 
 
 @pytest.fixture(scope='session')
-def require_tools(pytestconfig):
+def required_tools(pytestconfig) -> set[str]:
+    """Tools listed in --required-tools."""
+    return pytestconfig.stash[_required_tools_key]
+
+
+@pytest.fixture(scope='session')
+def require_tools(required_tools):
     """Return a function that skips (or fails, see --required-tools) the calling test if some tools are missing."""
 
     def _require_tools(*tools: str) -> None:
@@ -74,7 +80,7 @@ def require_tools(pytestconfig):
             if is_installed(tool):
                 continue
             msg = f'{tool} is not installed'
-            if tool in pytestconfig.stash[_required_tools_key]:
+            if tool in required_tools:
                 pytest.fail(f'{msg} but is listed in --required-tools', pytrace=False)
             pytest.skip(msg)
 
