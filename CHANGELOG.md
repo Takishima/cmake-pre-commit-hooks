@@ -24,10 +24,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed `--clean` being silently ignored by all the hooks
+- Fixed lizard hook only considering the exit code of the last file when processing more than one file
+- Fixed include-what-you-use hook passing when the output for a correct file is mixed with the output for an incorrect
+  one (e.g. when using `--all-at-once`)
+- Fixed `--version` always failing for the include-what-you-use hook
 - Fixed PowerShell system test script using `$?` instead of `$LASTEXITCODE` for exit code handling
 
 ### Repository
 
+- Rewrite the system tests (`tests/run_tests.sh` and `tests/run_tests.ps1`) as a cross-platform pytest test suite
+  (`tests/integration`)
+  - Tests run on temporary copies of the test projects instead of modifying the repository
+  - Tests check the output of the hooks and not only their exit code
+  - Add tests for most of the CMake related options, TOML configuration files and concurrent execution of the hooks
+  - The pre-commit end-to-end test now also covers changes that are not yet committed
 - Fix SonarCloud violations:
   - Fix return type annotation for `_load_from_toml` method in `_argparse.py`
   - Reduce cognitive complexity in `_cmake.py` by extracting helper methods
