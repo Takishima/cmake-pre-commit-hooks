@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""Determine the version of the next release from the changelog fragments.
+"""
+Determine the version of the next release from the changelog fragments.
 
 Usage: release_version.py [auto|scheduled|patch|minor|major|<version>]
 
@@ -64,12 +65,12 @@ def latest_version(changelog: str) -> tuple[int, int, int]:
 
 
 def next_version(request: str, types: set[str], latest: tuple[int, int, int]) -> str | None:
-    """Return the version to release, or None if a scheduled run has nothing worth releasing.
+    """
+    Return the version to release, or None if a scheduled run has nothing worth releasing.
 
-    Args:
-        request: `auto`, `scheduled`, `patch`, `minor`, `major` or an explicit version
-        types: Types of the changelog fragments waiting to be released
-        latest: Latest released version
+    The request is `auto`, `scheduled`, `patch`, `minor`, `major` or an explicit version. The bump for `auto` and
+    `scheduled` is deduced from the types of the changelog fragments waiting to be released, starting from the latest
+    released version.
     """
     request = request.strip().lower()
     scheduled = request == 'scheduled'
