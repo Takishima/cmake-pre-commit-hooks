@@ -175,13 +175,26 @@ jobs:
         run: python -m pytest tests/integration -v -ra -n auto --required-tools=all
 
       - name: Run integration tests (Windows)
+        id: windows-tests
         if: runner.os == 'Windows'
+        continue-on-error: ${{ matrix.python == '3.10' }}
         env:
           CC: cl
           CXX: cl
           LOGLEVEL: DEBUG
         run: >-
           python -m pytest tests/integration -v -ra -n auto
+          --required-tools=clang-format,clang-tidy,cppcheck,cpplint,lizard,cmake,git,pre-commit
+
+      # Python 3.10 sometimes crashes at exit on Windows (issue #156)
+      - name: Retry failed integration tests (Windows, Python 3.10)
+        if: runner.os == 'Windows' && matrix.python == '3.10' && steps.windows-tests.outcome == 'failure'
+        env:
+          CC: cl
+          CXX: cl
+          LOGLEVEL: DEBUG
+        run: >-
+          python -m pytest tests/integration -v -ra -n auto --last-failed
           --required-tools=clang-format,clang-tidy,cppcheck,cpplint,lizard,cmake,git,pre-commit
 
   # NB: secrets are not available for pull requests coming from Dependabot or from forks. In those cases the
