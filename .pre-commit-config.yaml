@@ -1,8 +1,17 @@
 ---
 
+minimum_pre_commit_version: 3.2.0
+
+# Settings for https://pre-commit.ci
+ci:
+  autoupdate_schedule: weekly
+  # NB: .github/workflows/pull_request.yml relies on this title to create the changelog fragments
+  autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
+
 repos:
   - repo: meta
     hooks:
+      - id: check-hooks-apply
       - id: check-useless-excludes
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
@@ -11,7 +20,6 @@ repos:
       - id: check-added-large-files
       - id: check-case-conflict
       - id: check-merge-conflict
-      - id: check-symlinks
       - id: check-yaml
       - id: check-toml
       - id: debug-statements
@@ -28,15 +36,8 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
-        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        types_or: [python, plain-text, cmake, markdown, rst, shell, powershell, c++]
         args: [-I, .codespell.allow]
-
-  - repo: https://github.com/shellcheck-py/shellcheck-py
-    rev: v0.11.0.1-1
-    hooks:
-      - id: shellcheck
-        require_serial: false
-        args: [-x, --severity=info]
 
   - repo: https://github.com/adrienverge/yamllint.git
     rev: v1.38.0
