@@ -50,15 +50,12 @@ def _load_settings(ctx: click.Context, _param: click.Parameter, value: str | Non
     return value
 
 
-def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:  # ruff: ignore[boolean-type-hint-positional-argument]
-    """Print the version of this package and exit (callback of `--version`)."""
-    if value:
-        try:
-            version = importlib.metadata.version(PACKAGE_NAME)
-        except importlib.metadata.PackageNotFoundError:
-            version = 'unknown'
-        click.echo(f'cmake-pre-commit-hooks {version}')
-        ctx.exit(0)
+def _package_version() -> str:
+    """Return the version of this package."""
+    try:
+        return importlib.metadata.version(PACKAGE_NAME)
+    except importlib.metadata.PackageNotFoundError:
+        return 'unknown'
 
 
 HOOK_OPTIONS = [
@@ -87,14 +84,7 @@ HOOK_OPTIONS = [
         is_flag=True,
         help='Dump the current set of CLI arguments as TOML-formatted output',
     ),
-    click.Option(
-        ['--version'],
-        is_flag=True,
-        is_eager=True,
-        expose_value=False,
-        callback=_print_version,
-        help='Show the version of cmake-pre-commit-hooks and exit.',
-    ),
+    click.Option(['--version'], is_flag=True, help='Show the version of cmake-pre-commit-hooks and exit.'),
     click.Argument(['files'], nargs=-1, type=click.UNPROCESSED),
 ]
 
@@ -119,6 +109,10 @@ def parse_args(hook_name: str, args: list[str]) -> tuple[SimpleNamespace, list[s
 
     ctx = COMMAND.make_context(f'cmake-pc-{hook_name}-hook', list(args), obj=hook_name)
     options = SimpleNamespace(**ctx.params)
+
+    if options.version:
+        click.echo(f'cmake-pre-commit-hooks {_package_version()}')
+        ctx.exit(0)
 
     if options.dump_toml:
         click.echo(
