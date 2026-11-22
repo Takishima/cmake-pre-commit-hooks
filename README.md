@@ -117,8 +117,7 @@ Note that your mileage may vary depending on the version of the tools. The examp
 
 ## Using the Hooks
 
-Python 3.8+ is required to use these hooks as all 3 invoking scripts are written in it. As this is also the minimum
-version of pre-commit, this should not be an issue.
+Python 3.10+ is required to use these hooks, as all of them are written in Python.
 
 Running multiple hooks in parallel is currently supported by using the `fastener` Python package. If the hooks are run
 in parallel, only one of the hooks will run the CMake configure step while the others will simply wait until the call to
