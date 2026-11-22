@@ -12,107 +12,127 @@ on:  # yamllint disable-line rule:truthy
     types:
       - closed
 
+permissions:
+  contents: read
+
 jobs:
-  release:
-    name: Build wheels and release on Pypi
+  build:
+    name: Build and check package
     runs-on: ubuntu-latest
     if: >-
       startsWith(github.ref, 'refs/tags/')
       || (github.event_name == 'pull_request' && github.event.pull_request.merged == true
           && (startsWith(github.event.pull_request.head.ref, 'release/')
               || startsWith(github.event.pull_request.head.ref, 'hotfix/')))
+    outputs:
+      version: ${{ steps.version.outputs.version }}
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Build exactly what was merged (or tagged), even if `main` has moved on since
+          ref: ${{ github.event.pull_request.merge_commit_sha || github.ref }}
 
-      - name: Get history and tags for SCM versioning to work
-        run: |
-          git fetch --prune --unshallow
-          git fetch --depth=1 origin +refs/tags/*:refs/tags/*
-
-      - name: Extract version from tag name
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/')
-        run: |
-          TAG_NAME="${GITHUB_REF/refs\/tags\//}"
-          VERSION=${TAG_NAME#v}
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Extract version from branch name (for release branches)
-        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
+      - name: Extract version from tag or branch name
+        id: version
         env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+          # Either "vX.Y.Z" (tag) or "release/vX.Y.Z" or "hotfix/vX.Y.Z" (merged pull request)
+          REF_NAME: ${{ github.event.pull_request.head.ref || github.ref_name }}
         run: |
-          VERSION=${BRANCH_NAME#release/}
-          VERSION=${VERSION#v}
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Extract version from branch name (for hotfix branches)
-        if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        run: |
-          VERSION=${BRANCH_NAME#hotfix/}
-          VERSION=${VERSION#v}
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-
-      - name: Show short log (debug)
-        run: git --no-pager log --oneline -n40
-
-      - name: Build wheel
-        run: |
-          if ! git rev-parse v${RELEASE_VERSION} > /dev/null 2>&1; then
-              _added_tag=1
-              git tag v${RELEASE_VERSION}
+          VERSION="${REF_NAME##*/}"
+          VERSION="${VERSION#v}"
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]]; then
+              echo "::error::Unable to extract a valid version from '${REF_NAME}'"
+              exit 1
           fi
+          echo "version=${VERSION}" >> "${GITHUB_OUTPUT}"
 
-          python -m pip install build wheel
+      - name: Setup Python
+        uses: actions/setup-python@v7
+        with:
+          python-version: '3.x'
+
+      - name: Build wheel and source distribution
+        env:
+          # The tag does not exist yet when releasing from a pull request
+          SETUPTOOLS_SCM_PRETEND_VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          python -m pip install build
           python -m build --wheel --sdist
-
-          if [ ${_added_tag:-0} -eq 1 ]; then
-              git tag -d v${RELEASE_VERSION}
-          fi
 
       - name: Check metadata
         run: |
-          python3 -m pip install twine --prefer-binary
-          python3 -m twine check dist/*
+          python -m pip install twine --prefer-binary
+          python -m twine check --strict dist/*
 
-      # Code below inspired from this action:
-      # - uses: taiki-e/create-gh-release-action@v1
-      #   with:
-      #     title: cmake-pre-commit-hooks $tag
-      #     changelog: CHANGELOG.md
-      #   env:
-      #     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c  # v2.90.8
+        with:
+          tool: parse-changelog
 
-      - name: Create release
+      - name: Extract release notes from CHANGELOG
         env:
-          target: x86_64-unknown-linux-musl
-          source_url: https://github.com/taiki-e/parse-changelog/releases/download
-          parse_changelog_tag: v0.5.1
-          changelog: CHANGELOG.md
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_VERSION: ${{ steps.version.outputs.version }}
         run: |
-          # https://github.com/taiki-e/parse-changelog
-          curl --proto '=https' --tlsv1.2 -LsSf \
-            "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" \
-            | tar xzf -
-          notes=$(./parse-changelog "${changelog}" "${RELEASE_VERSION}")
-          rm -f ./parse-changelog
-          if [[ "${tag}" =~ ^v?[0-9\.]+-[a-zA-Z_0-9\.-]+(\+[a-zA-Z_0-9\.-]+)?$ ]]; then
-            prerelease="--prerelease"
-          fi
-          gh release create "v${RELEASE_VERSION}" ${prerelease:-} \
-          --title "cmake-pre-commit-hooks v${RELEASE_VERSION}" \
-          --notes "${notes:-}" \
-          dist/*
+          parse-changelog CHANGELOG.md "${RELEASE_VERSION}" > release_notes.md
+          cat release_notes.md
 
-      - name: Setup Python for Pypi upload
-        uses: actions/setup-python@v7
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release
+          if-no-files-found: error
+          path: |
+            dist/
+            release_notes.md
 
-      - name: Publish standard package
+  pypi:
+    name: Upload to PyPI
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/cmake-pre-commit-hooks/${{ needs.build.outputs.version }}
+    permissions:
+      id-token: write  # for PyPI trusted publishing (used when no API token is configured)
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+
+      - name: Publish package
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
         with:
-          user: __token__
           password: ${{ secrets.pypi_password }}
           packages-dir: dist/
+
+  github-release:
+    name: Create GitHub release
+    # Only once the package is on PyPI: unlike a PyPI upload, a GitHub release can be fixed afterwards
+    needs: [build, pypi]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # required to create the tag and the GitHub release
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+
+      - name: Create release
+        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
+        with:
+          tag_name: v${{ needs.build.outputs.version }}
+          # Commit to tag when the tag does not exist yet
+          target_commitish: ${{ github.event.pull_request.merge_commit_sha || github.sha }}
+          name: cmake-pre-commit-hooks v${{ needs.build.outputs.version }}
+          body_path: release_notes.md
+          prerelease: ${{ contains(needs.build.outputs.version, '-') }}
+          files: dist/*
+          fail_on_unmatched_files: true
+
+      - name: Delete release branch
+        if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
+        run: |
+          gh api -X DELETE "repos/${GITHUB_REPOSITORY}/git/refs/heads/${BRANCH_NAME}" \
+            || echo "::notice::Branch ${BRANCH_NAME} was already deleted"

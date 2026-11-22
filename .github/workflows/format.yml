@@ -19,32 +19,14 @@ jobs:
           || startsWith(github.event.pull_request.head.ref, 'hotfix/'))
     steps:
       - uses: actions/checkout@v7
-      - name: Installing parse-changelog
-        env:
-          target: x86_64-unknown-linux-musl
-          parse_changelog_tag: v0.5.4
-          source_url: https://github.com/taiki-e/parse-changelog/releases/download
-        run: |
-          curl --proto '=https' --tlsv1.2 -LsSf \
-            "${source_url}/${parse_changelog_tag}/parse-changelog-${target}.tar.gz" \
-            | tar xzf -
-      - name: Extract version from branch name (for release branches)
-        if: github.event_name == 'pull_request' && startsWith(github.event.pull_request.head.ref, 'release/')
+      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c  # v2.90.8
+        with:
+          tool: parse-changelog
+
+      - name: Check that the release notes can be extracted from the CHANGELOG
         env:
           BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
         run: |
-          VERSION=${BRANCH_NAME#release/v}
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          git tag v${RELEASE_VERSION}
-
-      - name: Extract version from branch name (for hotfix branches)
-        if: github.event_name == 'pull_request'  && startsWith(github.event.pull_request.head.ref, 'hotfix/')
-        env:
-          BRANCH_NAME: ${{ github.event.pull_request.head.ref }}
-        run: |
-          VERSION=${BRANCH_NAME#hotfix/v}
-          echo "RELEASE_VERSION=$VERSION" >> $GITHUB_ENV
-          git tag v${RELEASE_VERSION}
-
-      - name: Calling parse-changelog
-        run: ./parse-changelog CHANGELOG.md "${RELEASE_VERSION}"
+          # CHANGELOG headings are parsed without the leading "v"
+          VERSION="${BRANCH_NAME##*/}"
+          parse-changelog CHANGELOG.md "${VERSION#v}"

@@ -1,0 +1,1 @@
+Modernize ruff configuration to follow latest guidelines: remove deprecated settings (`target-version`, `ANN101`, `ASYNC1`, etc.), replace `TCH` with `TC` (renamed rule set) and add the `DOC`, `PYI` and `PD` rule sets

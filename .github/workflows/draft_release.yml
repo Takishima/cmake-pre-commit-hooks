@@ -6,60 +6,62 @@ on:  # yamllint disable-line rule:truthy
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Version to release (format: vXX.YY.ZZ)'
+        description: >-
+          Version to release: "auto" (deduced from the changelog fragments), "patch", "minor", "major"
+          or an explicit version such as v1.2.3
         required: true
+        default: auto
+  schedule:
+    # Every Monday: open a release pull request if user-facing changes are waiting to be released
+    - cron: '23 5 * * 1'
+
+permissions:
+  contents: write  # required to push the release branch
+  pull-requests: write  # required to open the release pull request
 
 jobs:
   new-release:
     name: "Draft a new release"
     runs-on: ubuntu-latest
-    env:
-      RELEASE_TAG: ${{ github.event.inputs.tag }}
     steps:
-      - name: Validate release tag format
-        run: |
-          if ! echo "$RELEASE_TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "Error: Tag must be in format vXX.YY.ZZ" >&2
-            exit 1
-          fi
-
       - uses: actions/checkout@v7
 
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: '**/pyproject.toml'
+          python-version: '3.x'
 
-      - name: Update CHANGELOG
+      # NB: sets no version if a scheduled run finds nothing worth releasing, which skips the next steps
+      - name: Determine release version
+        id: version
+        env:
+          REQUEST: ${{ github.event.inputs.tag || 'scheduled' }}
+        run: python3 .github/scripts/release_version.py "${REQUEST}"
+
+      - name: Collect the changelog fragments into CHANGELOG.md
+        if: steps.version.outputs.version
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
         run: |
-          python3 -m pip install mdformat-gfm 'git+https://github.com/Takishima/keepachangelog@v1.0.1'
-          python3 -m keepachangelog release "$RELEASE_TAG"
+          python3 -m pip install towncrier mdformat-gfm
+          python3 -m towncrier build --yes --version "${VERSION}"
           python3 -m mdformat CHANGELOG.md
-
-      - name: Commit changes
-        uses: stefanzweifel/git-auto-commit-action@d0b01107b5db882071f96de5dd4b54961ea93f4c  # v7.2.1
-        id: make-commit
-        with:
-          branch: release/${{ github.event.inputs.tag }}
-          create_branch: true
-          file_pattern: 'CHANGELOG.md'
-          commit_message: Preparing release ${{ github.event.inputs.tag }}
-          commit_author: github-actions[bot] <noreply@github.com>
 
       # yamllint disable rule:line-length
       - name: Create pull request
-        uses: thomaseizinger/create-pull-request@955adb4634198898bc24dca0468514c63a8fc98d  # 1.4.0
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if: steps.version.outputs.version
+        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1  # v8.1.3
         with:
-          head: release/${{ github.event.inputs.tag }}
+          branch: release/v${{ steps.version.outputs.version }}
           base: main
-          title: Release version ${{ github.event.inputs.tag }}
-          reviewers: ${{ github.actor }}
+          commit-message: Preparing release v${{ steps.version.outputs.version }}
+          title: Release version v${{ steps.version.outputs.version }}
+          reviewers: ${{ github.event_name == 'schedule' && github.repository_owner || github.actor }}
           body: |
-            Hi @${{ github.actor }}!
-            This PR was created in response to a manual trigger of the release workflow here: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}.
-            I've updated the changelog and bumped the versions in the manifest files in this commit: ${{ steps.make-commit.outputs.commit_hash }}.
-            Merging this PR will create a GitHub release and upload any assets that are created as part of the release build.
+            This PR was created by the release workflow here: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}.
+
+            The changelog fragments of `changelog.d/` were collected into a new `v${{ steps.version.outputs.version }}` section of the CHANGELOG.
+            The package version itself is derived from the Git tag, so there is nothing else to update.
+
+            Merging this PR will build the package, upload it to PyPI and then create the `v${{ steps.version.outputs.version }}` tag and GitHub release.
+            Not the right time or the right version number? Close this PR and delete its branch.

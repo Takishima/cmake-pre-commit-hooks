@@ -1,0 +1,1 @@
+Manage the CHANGELOG with [towncrier](https://towncrier.readthedocs.io): each pull request adds a fragment to `changelog.d/` and the fragments are collected into `CHANGELOG.md` when a release is drafted
