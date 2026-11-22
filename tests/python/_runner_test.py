@@ -70,7 +70,7 @@ def test_has_failed_quiet_on_success(mocker, returncode):
 
 
 def test_runner_init_without_cmake(mocker, tool):
-    get_cmake_command = mocker.patch('cmake_pc_hooks._cmake.get_cmake_command')
+    get_cmake_command = mocker.patch('cmake_pc_hooks._cmake.locate.get_cmake_command')
     file_list = ['/path/to/one.cpp', '/path/to/two.cpp']
 
     runner = _runner.HookRunner(
@@ -89,7 +89,7 @@ def test_runner_init_without_cmake(mocker, tool):
 
 @pytest.mark.parametrize('compile_db_arg', [None, '-p={}'])
 def test_runner_init_with_cmake(mocker, tool, tmp_path, compile_db_arg):
-    mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value='cmake')
+    mocker.patch('cmake_pc_hooks._cmake.locate.get_cmake_command', return_value='cmake')
     build_dir = tmp_path / 'build'
     build_dir.mkdir()
 
