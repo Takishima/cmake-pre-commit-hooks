@@ -28,7 +28,6 @@ import sys
 from pathlib import Path
 
 import fasteners
-import filelock
 
 from . import _argparse, _call_process
 
@@ -435,38 +434,25 @@ class CMakeCommand:
             self._check_codegen_cmake_version()
 
         cmake_configure_lock_file = Path(self.build_dir, '_cmake_configure_lock')
-        cmake_configure_try_lock_file = Path(self.build_dir, '_cmake_configure_try_lock')
 
         self.build_dir.mkdir(exist_ok=True)
 
-        cmake_configure_try_lock = filelock.FileLock(cmake_configure_try_lock_file)
+        # NB: whether a process runs the CMake configure step or waits for another process to do so must be decided
+        #     by a single atomic operation. Otherwise a process may be done waiting before the configure step of
+        #     another process even started.
         cmake_configure_lock = fasteners.InterProcessReaderWriterLock(cmake_configure_lock_file)
         step = 'configure'
-        try:
-            with cmake_configure_try_lock.acquire(blocking=False), cmake_configure_lock.write_lock():
-                log.debug(
-                    'Command %s with id %s is running CMake configure',
-                    command,
-                    os.getpid(),
-                )
+        if cmake_configure_lock.acquire_write_lock(blocking=False):
+            try:
+                log.debug('Command %s with id %s is running CMake configure', command, os.getpid())
                 step, returncode = self._configure_and_build(
-                    lock_files=(
-                        cmake_configure_lock_file,
-                        cmake_configure_try_lock_file,
-                    ),
-                    clean_build=clean_build,
+                    lock_files=(cmake_configure_lock_file,), clean_build=clean_build
                 )
-                log.debug(
-                    'Command %s with id %s is done running CMake configure',
-                    command,
-                    os.getpid(),
-                )
-        except filelock.Timeout:
-            log.debug(
-                'Command %s with id %s is not running CMake configure and waiting',
-                command,
-                os.getpid(),
-            )
+                log.debug('Command %s with id %s is done running CMake configure', command, os.getpid())
+            finally:
+                cmake_configure_lock.release_write_lock()
+        else:
+            log.debug('Command %s with id %s is not running CMake configure and waiting', command, os.getpid())
             with cmake_configure_lock.read_lock():
                 log.debug('Command %s with id %s is done waiting', command, os.getpid())
                 returncode = 0

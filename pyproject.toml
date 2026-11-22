@@ -30,7 +30,6 @@ dependencies = [
     'toml',
     'CLinters>=1.3.0',
     'fasteners',
-    'filelock',
     'attrs>=23'
 ]
 dynamic = ['version']
