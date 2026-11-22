@@ -55,7 +55,7 @@ cmake-pc-include-what-you-use-hook = 'cmake_pc_hooks.include_what_you_use:main'
 cmake-pc-lizard-hook = 'cmake_pc_hooks.lizard:main'
 
 [tool.setuptools.packages.find]
-include = ['cmake_pc_hooks']
+include = ['cmake_pc_hooks', 'cmake_pc_hooks.*']
 namespaces = false
 
 # ==============================================================================

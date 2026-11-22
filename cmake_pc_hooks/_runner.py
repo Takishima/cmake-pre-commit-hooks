@@ -27,7 +27,7 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from . import _argparse, _call_process
-from ._cmake import CMakeCommand
+from ._cmake import CMakeCommand, CMakeOptions, add_cmake_arguments_to_parser
 
 if TYPE_CHECKING:
     import argparse
@@ -91,7 +91,7 @@ def _parse_args(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
         pyproject_section_name='tool.cmake_pc_hooks',
         args_groups=[{'title': 'Hook options'}],
     )
-    CMakeCommand.add_cmake_arguments_to_parser(parser)
+    add_cmake_arguments_to_parser(parser)
     hook_options = parser.groups[0]
     hook_options.add_argument(
         '--all-at-once',
@@ -160,8 +160,7 @@ class HookRunner:
 
     def _setup_cmake(self, options: argparse.Namespace) -> None:
         """Set up CMake and tell the tool where the compilation database is."""
-        self.cmake = CMakeCommand()
-        self.cmake.setup_cmake_args(options)
+        self.cmake = CMakeCommand(CMakeOptions.from_namespace(options))
         if not self.cmake.source_dir.exists() and not self.cmake.source_dir.is_dir():
             sys.stderr.write(f'{self.cmake.source_dir} is not a valid source directory\n')
             sys.exit(1)
