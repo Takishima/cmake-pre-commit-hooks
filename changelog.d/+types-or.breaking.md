@@ -1,1 +1,0 @@
-Select the files of the `clang-format`, `clang-tidy`, `cpplint` and `include-what-you-use` hooks with `types_or` instead of a list of extensions: more C/C++ extensions are now matched (e.g. `.hh`, `.inl`, `.ipp`, `.tpp`, `.mm`) but `.mxx` files no longer are, unless `types_or` and `files` are overridden in the configuration of the hook

@@ -9,6 +9,48 @@ Changes that are not released yet are stored as fragments in the [changelog.d](c
 
 <!-- towncrier release notes start -->
 
+## [v2.0.0](https://github.com/Takishima/cmake-pre-commit-hooks/releases/tag/v2.0.0) - 2026-11-22
+
+### Breaking changes
+
+- Rename the version check from `--version` to `--require-version`; the hook now runs the tool after a successful check, and `--version` shows the version of the hooks ([#163](https://github.com/Takishima/cmake-pre-commit-hooks/issues/163))
+- Make all hooks fail when there is no file to process (unless `--all-at-once` is used), as the hooks using CMake already did
+- Rename the option to specify a TOML file from `--config` to `--hooks-config`; `--config` is now passed on to the underlying tool
+- Select the files of the `clang-format`, `clang-tidy`, `cpplint` and `include-what-you-use` hooks with `types_or` instead of a list of extensions: more C/C++ extensions are now matched (e.g. `.hh`, `.inl`, `.ipp`, `.tpp`, `.mm`) but `.mxx` files no longer are, unless `types_or` and `files` are overridden in the configuration of the hook
+
+### Added
+
+- Support settings for a single hook in TOML files, in a table named after the hook (e.g. `[tool.cmake_pc_hooks.clang-tidy]`)
+- Support the common hook options and the TOML configuration in the `cpplint` hook, which now also reports the errors of all the files instead of stopping at the first failing one
+
+### Changed
+
+- Parse the command line with `click` and read TOML files with the standard library, removing the `toml` dependency ([#160](https://github.com/Takishima/cmake-pre-commit-hooks/issues/160))
+- Declare `minimum_pre_commit_version: 3.2.0` for all the hooks, so that older versions of pre-commit fail with a clear message
+- Only look for and set up CMake when a hook needs it, which also makes `--read-json-db` work with the `clang-format` hook
+- Print the output of a tool as soon as each file is processed instead of at the end, and always exit with code 1 on failure
+- Remove the dependency on the `CLinters` package by implementing the base classes of the hooks in this package
+- Report a clear error instead of a traceback when the tool of a hook is not installed
+
+### Fixed
+
+- Fix the hooks passing a compilation database that does not exist to the tool when `--no-cmake-configure` is used, and look for one in the other build directories ([#154](https://github.com/Takishima/cmake-pre-commit-hooks/issues/154))
+- Fix `-S` accepting a path that is not a directory, and check it for all hooks
+- Fix a TOML file passed on the command line not overriding the settings of `pyproject.toml` and `cmake_pc_hooks.toml`
+- Fix clang-format hook failing on empty files
+- Fix the `unix` setting having no effect when set in a TOML file
+
+### Repository
+
+- Split the CMake code into a package of focused modules with a typed options object ([#150](https://github.com/Takishima/cmake-pre-commit-hooks/issues/150))
+- Retry failed integration tests once on Windows with Python 3.10, which sometimes crashes at exit ([#156](https://github.com/Takishima/cmake-pre-commit-hooks/issues/156))
+- Fix the name of the package directory in `MANIFEST.in` ([#157](https://github.com/Takishima/cmake-pre-commit-hooks/issues/157))
+- Add a `breaking` changelog fragment type, which makes the release workflow propose a major version
+- Exclude the changelog fragments from the Codacy analysis
+- Fix the minimum Python version stated in the README (3.10, not 3.8)
+- Make the pre-commit.ci settings explicit, add the `check-hooks-apply` meta hook and remove the `check-symlinks` and `shellcheck` hooks that it reports as not matching any file
+- Run all hooks through one shared runner, with each hook reduced to a short description of its tool
+
 ## [v1.10.0](https://github.com/Takishima/cmake-pre-commit-hooks/releases/tag/v1.10.0) - 2026-11-22
 
 ### Added
