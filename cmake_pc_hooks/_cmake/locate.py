@@ -20,7 +20,6 @@ import logging
 import os
 import re
 import shutil
-import subprocess as sp
 import sys
 from pathlib import Path
 
@@ -41,13 +40,10 @@ def _try_calling_cmake(cmake_cmd: list[str | Path]) -> bool:
     Return:
         True if command line is valid, False otherwise
     """
-    with Path(os.devnull).open(mode='w', encoding='utf-8') as devnull:
-        try:
-            sp.check_call([*cmake_cmd, '--version'], stdout=devnull, stderr=devnull)
-        except (OSError, sp.CalledProcessError):
-            return False
-        else:
-            return True
+    try:
+        return _call_process.call_process([*(str(cmd) for cmd in cmake_cmd), '--version']).returncode == 0
+    except OSError:
+        return False
 
 
 def get_cmake_command(cmake_names=None):  # pragma: nocover

@@ -93,6 +93,7 @@ SetupCommandData = namedtuple(
 def setup_command(mocker, tool, tmp_path, compile_commands, request):
     all_at_once, read_json_db, no_cmake_configure, create_compilation_db, returncode = request.param
 
+    mocker.patch('cmake_pc_hooks._cmake.locate.get_cmake_command', return_value=['cmake'])
     configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)
     sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
     call_process = mocker.patch(
