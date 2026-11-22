@@ -289,8 +289,9 @@ def test_detect_configured_files(run_tidy, good_project):
 def test_invalid_source_dir(run_tidy, good_project):
     result = run_tidy(good_project, '-S', 'does_not_exist', 'good.cpp')
 
-    assert result.returncode == 1, result
-    assert 'is not a valid source directory' in result.output, result
+    assert result.returncode == 2, result
+    assert "Directory 'does_not_exist' does not exist" in result.output, result
+    assert 'Traceback (most recent call last)' not in result.output, result
     assert not (good_project / 'does_not_exist').exists()
 
 
@@ -318,8 +319,8 @@ def test_dump_toml(run_tidy, good_project):
     result = run_tidy(good_project, '-B', 'build', '-DOPTION=1', '--all-at-once', '--dump-toml', 'good.cpp')
 
     assert result.returncode == 0, result
-    assert 'build_dir = [ "build",]' in result.stdout
-    assert 'defines = [ "OPTION=1",]' in result.stdout
+    assert 'build_dir = ["build"]' in result.stdout
+    assert 'defines = ["OPTION=1"]' in result.stdout
     assert 'all_at_once = true' in result.stdout
     # Dumping the configuration must not run anything
     assert not (good_project / 'build').exists()
@@ -330,7 +331,7 @@ def test_dump_toml(run_tidy, good_project):
     [
         ('pyproject.toml', '[tool.cmake_pc_hooks]\n', []),
         ('cmake_pc_hooks.toml', '', []),
-        ('custom.toml', '', ['--config=custom.toml']),
+        ('custom.toml', '', ['--hooks-config=custom.toml']),
     ],
     ids=['pyproject', 'default_config', 'explicit_config'],
 )
@@ -350,7 +351,7 @@ def test_toml_config(run_tidy, good_project, filename, header, extra_args):
 def test_cli_overrides_explicit_toml_config(run_tidy, good_project):
     (good_project / 'custom.toml').write_text('build_dir = ["from_toml"]\n', encoding='utf-8')
 
-    result = run_tidy(good_project, '--config=custom.toml', '-B', 'from_cli', 'good.cpp')
+    result = run_tidy(good_project, '--hooks-config=custom.toml', '-B', 'from_cli', 'good.cpp')
 
     assert result.returncode == 0, result
     assert has_compile_db(good_project / 'from_cli')
@@ -363,7 +364,31 @@ def test_invalid_toml_config(run_tidy, good_project):
     result = run_tidy(good_project, 'good.cpp')
 
     assert result.returncode != 0, result
-    assert 'unrecognized arguments: "not_an_option"' in result.output, result
+    assert 'unknown option "not_an_option" in cmake_pc_hooks.toml' in result.output, result
+    assert 'Traceback (most recent call last)' not in result.output, result
+
+
+def test_toml_config_for_one_hook(run_tidy, good_project):
+    (good_project / 'cmake_pc_hooks.toml').write_text(
+        'build_dir = ["common"]\n[clang-tidy]\nbuild_dir = ["tidy"]\n[cppcheck]\nbuild_dir = ["cppcheck"]\n',
+        encoding='utf-8',
+    )
+
+    result = run_tidy(good_project, 'good.cpp')
+
+    assert result.returncode == 0, result
+    assert has_compile_db(good_project / 'tidy')
+    assert not (good_project / 'common').exists()
+    assert not (good_project / 'cppcheck').exists()
+
+
+def test_config_option_is_passed_to_the_tool(run_hook, bad_project):
+    config = '{Checks: "-*,readability-magic-numbers", WarningsAsErrors: "*"}'
+
+    result = run_hook('clang-tidy', bad_project, *WIN_CMAKE_ARGS, '-B', 'build', f'--config={config}', 'bad.cpp')
+
+    assert result.returncode == 1, result
+    assert '10 is a magic number' in result.output, result
 
 
 # ==============================================================================

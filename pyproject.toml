@@ -27,7 +27,8 @@ classifiers = [
      'Programming Language :: Python :: 3.15',
 ]
 dependencies = [
-    'toml',
+    'click>=8.1',
+    'tomli; python_version < "3.11"',
     'fasteners',
     'attrs>=23'
 ]
