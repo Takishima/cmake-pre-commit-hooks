@@ -50,7 +50,7 @@ jobs:
       # yamllint disable rule:line-length
       - name: Create pull request
         if: steps.version.outputs.version
-        uses: peter-evans/create-pull-request@3ffccacd46053766916f087ce41d627c0b8cf2d1  # v8.1.3
+        uses: peter-evans/create-pull-request@v8
         with:
           branch: release/v${{ steps.version.outputs.version }}
           base: main

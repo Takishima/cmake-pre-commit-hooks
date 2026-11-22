@@ -19,7 +19,7 @@ jobs:
           || startsWith(github.event.pull_request.head.ref, 'hotfix/'))
     steps:
       - uses: actions/checkout@v7
-      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c  # v2.90.8
+      - uses: taiki-e/install-action@v2
         with:
           tool: parse-changelog
 

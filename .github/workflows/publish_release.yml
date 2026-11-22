@@ -65,7 +65,7 @@ jobs:
           python -m pip install twine --prefer-binary
           python -m twine check --strict dist/*
 
-      - uses: taiki-e/install-action@fe3acb53a98b62c772db35de75ce0e4595e7ca8c  # v2.90.8
+      - uses: taiki-e/install-action@v2
         with:
           tool: parse-changelog
 
@@ -99,7 +99,7 @@ jobs:
           name: release
 
       - name: Publish package
-        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086  # v1.14.3
+        uses: pypa/gh-action-pypi-publish@release/v1
         with:
           password: ${{ secrets.pypi_password }}
           packages-dir: dist/
@@ -117,7 +117,7 @@ jobs:
           name: release
 
       - name: Create release
-        uses: softprops/action-gh-release@8a0cd651e5b2365bd640854a3fa5dfc70e4875f3  # v3.0.4
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.build.outputs.version }}
           # Commit to tag when the tag does not exist yet

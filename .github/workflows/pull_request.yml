@@ -43,7 +43,7 @@ jobs:
 
       # NB: nothing is committed (and no new workflow run triggered) if the fragments are already up to date
       - name: Commit changes
-        uses: EndBug/add-and-commit@cc9c08ba6c8df3b93a8f2db63e89b98368ae2ae8  # v11.1.1
+        uses: EndBug/add-and-commit@v11
         with:
           add: changelog.d
           author_name: github-actions[bot]
