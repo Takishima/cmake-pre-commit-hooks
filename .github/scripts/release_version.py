@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-"""
-Determine the version of the next release from the changelog fragments.
+"""Determine the version of the next release from the changelog fragments."""
 
-Usage: release_version.py [auto|scheduled|patch|minor|major|<version>]
-
-The version (without leading "v") is printed and written to the `version` output of the GitHub Actions step. Nothing
-is written if a scheduled run finds nothing worth releasing.
-"""
+# Usage: release_version.py [auto|scheduled|patch|minor|major|<version>]
+#
+# The version (without leading "v") is printed and written to the `version` output of the GitHub Actions step. Nothing
+# is written if a scheduled run finds nothing worth releasing.
 
 from __future__ import annotations
 
@@ -65,13 +63,10 @@ def latest_version(changelog: str) -> tuple[int, int, int]:
 
 
 def next_version(request: str, types: set[str], latest: tuple[int, int, int]) -> str | None:
-    """
-    Return the version to release, or None if a scheduled run has nothing worth releasing.
-
-    The request is `auto`, `scheduled`, `patch`, `minor`, `major` or an explicit version. The bump for `auto` and
-    `scheduled` is deduced from the types of the changelog fragments waiting to be released, starting from the latest
-    released version.
-    """
+    """Return the version to release, or None if a scheduled run has nothing worth releasing."""
+    # The request is `auto`, `scheduled`, `patch`, `minor`, `major` or an explicit version. The bump for `auto` and
+    # `scheduled` is deduced from the types of the changelog fragments waiting to be released, starting from the
+    # latest released version.
     request = request.strip().lower()
     scheduled = request == 'scheduled'
 
