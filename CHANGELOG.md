@@ -9,6 +9,12 @@ Changes that are not released yet are stored as fragments in the [changelog.d](c
 
 <!-- towncrier release notes start -->
 
+## [v2.0.1](https://github.com/Takishima/cmake-pre-commit-hooks/releases/tag/v2.0.1) - 2026-11-22
+
+### Repository
+
+- Publish releases to PyPI with trusted publishing so that the uploaded files carry provenance attestations
+
 ## [v2.0.0](https://github.com/Takishima/cmake-pre-commit-hooks/releases/tag/v2.0.0) - 2026-11-22
 
 ### Breaking changes
