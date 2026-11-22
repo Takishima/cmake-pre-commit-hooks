@@ -36,7 +36,7 @@ repos:
     rev: v2.4.3
     hooks:
       - id: codespell
-        files: .*\.(py|txt|cmake|md|rst|sh|ps1|hpp|tpp|cpp|cc)$
+        types_or: [python, plain-text, cmake, markdown, rst, shell, powershell, c++]
         args: [-I, .codespell.allow]
 
   - repo: https://github.com/adrienverge/yamllint.git
