@@ -110,7 +110,7 @@ def test_iwyu_command(mocker, setup_command):
 def test_iwyu_parse_output(mocker, tmp_path, stdout, has_errors):
     mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value='iwyu-tool')
     mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value='iwyu')
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
 
     command = include_what_you_use.IWYUToolCmd(args=['iwyu-tool', f'-B{tmp_path}', '--no-cmake-configure'])
 
@@ -120,14 +120,15 @@ def test_iwyu_parse_output(mocker, tmp_path, stdout, has_errors):
 def test_iwyu_version_is_read_from_iwyu(mocker, tmp_path):
     mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value='iwyu-tool')
     mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value='iwyu')
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
     command = include_what_you_use.IWYUToolCmd(args=['iwyu-tool', f'-B{tmp_path}', '--no-cmake-configure'])
-    sp_run = mocker.patch(
-        'hooks.utils.sp.run', return_value=mocker.Mock(stdout=b'include-what-you-use 0.21 based on clang', stderr=b'')
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout='include-what-you-use 0.21 based on clang', stderr='', returncode=0),
     )
 
     assert command.get_version_str() == '0.21'
-    assert sp_run.call_args.args[0] == ['iwyu', '--version']
+    call_process.assert_called_once_with(['iwyu', '--version'])
     assert command.command == 'iwyu-tool'
 
 

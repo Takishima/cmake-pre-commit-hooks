@@ -17,7 +17,7 @@
 
 import sys
 
-from ._utils import StaticAnalyzerCmd, _read_compile_commands_json
+from ._utils import StaticAnalyzerCmd
 
 
 class LizardCmd(StaticAnalyzerCmd):
@@ -30,29 +30,6 @@ class LizardCmd(StaticAnalyzerCmd):
         """Initialize a LizardCmd object."""
         super().__init__(self.command, self.lookbehind, args)
         self.parse_args(args)
-
-    def run(self):
-        """Run lizard."""
-        if self.read_json_db:
-            if not self.cmake.no_cmake_configure:
-                self.cmake.configure(self.command, clean_build=self.clean_build)
-
-            compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
-            if compile_db:
-                self.files.extend(set(_read_compile_commands_json(compile_db)) - set(self.files))
-
-        if self.all_at_once:
-            self.run_command(self.files)
-        else:
-            for filename in self.files:
-                self.run_command([filename])
-
-        # NB: do not rely on exit_on_error() since it only considers the outcome of the very last call to lizard
-        failures = [result for result in self.history if result.returncode != 0]
-        if failures:
-            for result in failures:
-                sys.stderr.write(result.stdout + result.stderr)
-            sys.exit(failures[0].returncode)
 
 
 def main(argv=None):

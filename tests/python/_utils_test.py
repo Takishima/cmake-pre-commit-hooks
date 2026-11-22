@@ -17,7 +17,7 @@ from cmake_pc_hooks import _utils
 from cmake_pc_hooks._cmake import CMakeCommand
 
 import pytest
-from _test_utils import run_command_default_assertions
+from _test_utils import ExitError, run_command_default_assertions
 
 # ==============================================================================
 
@@ -71,7 +71,7 @@ def test_command_init_parse(mocker, look_behind, tmp_path):
 def test_command_parse_args_invalid(mocker, tmp_path, look_behind):
     version_str = '0.1'
     mocker.patch('cmake_pc_hooks._cmake.get_cmake_command', return_value='cmake')
-    mocker.patch('hooks.utils.Command.get_version_str', return_value=version_str)
+    mocker.patch('cmake_pc_hooks._utils.Command.get_version_str', return_value=version_str)
     sys_exit = mocker.patch('sys.exit')
 
     # ----------------------------------
@@ -134,9 +134,87 @@ def test_command_run(mocker, parsing_failed, setup_command, detect_configured_fi
     else:
         assert parse_output.call_count == len(command.files)
 
-    assert command.stdout.decode() == command.history[-1].stdout
-    assert command.stderr.decode() == command.history[-1].stderr
-    assert command.returncode == command.history[-1].returncode
+
+def test_command_check_installed(mocker, capsys):
+    sys_exit = mocker.patch('sys.exit')
+    which = mocker.patch('shutil.which', return_value='/usr/bin/test-exec')
+
+    command = _utils.Command('test-exec', look_behind='', args=[])
+    command.check_installed()
+    sys_exit.assert_not_called()
+
+    which.configure_mock(return_value=None)
+    command.check_installed()
+    sys_exit.assert_called_once_with(1)
+    stderr = capsys.readouterr().err
+    assert 'Problem with test-exec: test-exec not found' in stderr
+    assert 'cmake-pre-commit-hooks' in stderr
+
+
+def test_command_add_if_missing():
+    command = _utils.Command('test-exec', look_behind='', args=['--key=1', '-q'])
+
+    command.add_if_missing(['--key=2'])
+    command.add_if_missing(['-q'])
+    assert command.args == ['--key=1', '-q']
+
+    command.add_if_missing(['--other=3'])
+    assert command.args == ['--key=1', '-q', '--other=3']
+
+
+@pytest.mark.parametrize(
+    ('look_behind', 'stdout', 'version'),
+    [
+        ('clang-format version ', 'Ubuntu clang-format version 18.1.3 (1ubuntu1)', '18.1.3'),
+        ('LLVM version ', 'LLVM (http://llvm.org/):\n  LLVM version 14.0.0\n', '14.0.0'),
+        ('Cppcheck ', 'Cppcheck 2.13.0', '2.13.0'),
+        ('cpplint ', 'Cpplint fork (https://github.com/cpplint/cpplint)\ncpplint 2.0.0\nPython 3.12', '2.0.0'),
+        ('', '1.17.10', '1.17.10'),
+    ],
+    ids=['clang-format', 'clang-tidy', 'cppcheck', 'cpplint', 'lizard'],
+)
+def test_command_get_version_str(mocker, look_behind, stdout, version):
+    call_process = mocker.patch(
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout=stdout, stderr='', returncode=0),
+    )
+
+    command = _utils.Command('test-exec', look_behind=look_behind, args=[])
+    assert command.get_version_str() == version
+    call_process.assert_called_once_with(['test-exec', '--version'])
+
+
+def test_command_get_version_str_invalid(mocker, capsys):
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+    mocker.patch(
+        'cmake_pc_hooks._call_process.call_process',
+        return_value=mocker.Mock(stdout='no version here', stderr='', returncode=0),
+    )
+
+    command = _utils.Command('test-exec', look_behind='test-exec ', args=[])
+    with pytest.raises(ExitError):
+        command.get_version_str()
+    sys_exit.assert_called_once_with(1)
+    assert 'Problem with test-exec: getting version' in capsys.readouterr().err
+
+
+@pytest.mark.parametrize(
+    ('actual', 'expected', 'returncode'),
+    [('18.1.3', '18.1.3', 0), ('18.1.3', '18', 0), ('18.1.3', '17', 1), ('18.1.3', '8.1', 1)],
+)
+def test_command_assert_version(mocker, capsys, actual, expected, returncode):
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+
+    command = _utils.Command('test-exec', look_behind='', args=[])
+    with pytest.raises(ExitError):
+        command.assert_version(actual, expected)
+    sys_exit.assert_called_once_with(returncode)
+
+    stderr = capsys.readouterr().err
+    if returncode:
+        assert f'Expected version: {expected}\nFound version: {actual}' in stderr
+    else:
+        assert not stderr
 
 
 def test_command_run_invalid(mocker, tmp_path):

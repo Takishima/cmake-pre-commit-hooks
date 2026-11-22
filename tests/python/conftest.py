@@ -81,7 +81,7 @@ SetupCommandData = namedtuple(
 
 @pytest.fixture(params=_setup_commands_args, ids=_setup_command_ids)
 def setup_command(mocker, tmp_path, compile_commands, request):
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
     all_at_once, read_json_db, no_cmake_configure, create_compilation_db, returncode = request.param
 
     configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)

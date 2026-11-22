@@ -48,7 +48,6 @@ class CppcheckCmd(Command):
         """Run the command and check for errors."""
         filter_args = [f'--file-filter=*{Path(filename).parent.name}/{Path(filename).name}' for filename in filenames]
         self.history.append(_call_process.call_process([self.command, *filter_args, *self.args, *self.ddash_args]))
-        self._clinters_compat()
 
     def _parse_output(self, result):
         """
@@ -66,7 +65,6 @@ class CppcheckCmd(Command):
         result.stderr = ''.join(
             [line for line in result.stderr.splitlines(keepends=True) if useless_error_part not in line]
         )
-        self._clinters_compat()
         return result.returncode != 0
 
 

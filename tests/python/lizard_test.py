@@ -46,7 +46,7 @@ def test_lizard_command(tmp_path, setup_command):
 
 @pytest.mark.parametrize('returncodes', [(1, 0), (0, 1), (1, 1)], ids=['first_fails', 'last_fails', 'all_fail'])
 def test_lizard_any_failing_file_is_an_error(mocker, tmp_path, returncodes):
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
     sys_exit = mocker.patch('sys.exit')
     mocker.patch(
         'cmake_pc_hooks._call_process.call_process',
@@ -64,7 +64,7 @@ def test_lizard_any_failing_file_is_an_error(mocker, tmp_path, returncodes):
 
 
 def test_lizard_clean_build(mocker, tmp_path):
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
     configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)
     mocker.patch(
         'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)

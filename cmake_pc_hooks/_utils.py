@@ -16,13 +16,14 @@
 
 from __future__ import annotations
 
+import difflib
 import json
 import logging
 import os
+import re
+import shutil
 import sys
 from pathlib import Path
-
-import hooks.utils
 
 from . import _argparse, _call_process
 from ._cmake import CMakeCommand
@@ -49,14 +50,27 @@ def _read_compile_commands_json(compile_db: Path) -> list[str]:
     return []
 
 
-class Command(hooks.utils.Command):
+class Command:
     """Super class that all commands inherit."""
 
     setup_cmake = True
+    website = 'https://github.com/Takishima/cmake-pre-commit-hooks#using-the-hooks'
 
     def __init__(self, command, look_behind, args):
-        """Initialize a Command object."""
-        super().__init__(command, look_behind, args)
+        """
+        Initialize a Command object.
+
+        Args:
+            command (str): Name of (or path to) the executable to run
+            look_behind (str): Text that immediately precedes the version number in the output of `command --version`
+            args (:obj:`list` of :obj:`str`): list of arguments
+        """
+        self.command = command
+        self.version_command = command
+        self.look_behind = look_behind
+        self.args = args
+        self.files = []
+        self.edit_in_place = False
         self.ddash_args = []
         self.cmake = CMakeCommand()
         self.clean_build = False
@@ -122,6 +136,55 @@ class Command(hooks.utils.Command):
         #     handle_ddash_args() in order to properly handle the filenames in those cases.
         self.files = known_args.positionals
 
+    def check_installed(self):
+        """Make sure that the command is installed and exit with an error if not."""
+        if shutil.which(self.command) is None:
+            self.raise_error(
+                f'{self.command} not found',
+                f'Make sure {self.command} is installed and on your PATH.\nFor more info: {self.website}',
+            )
+
+    def add_if_missing(self, new_args):
+        """
+        Add a default argument unless the user already passed that option (with any value).
+
+        Args:
+            new_args (:obj:`list` of :obj:`str`): option to add, e.g. ['--key=value']
+        """
+        new_arg_key = new_args[0].split('=')[0]
+        if all(arg.split('=')[0] != new_arg_key for arg in self.args):
+            self.args += new_args
+
+    def get_version_str(self):
+        """Get the version string (e.g. 8.0.0) of the command."""
+        result = _call_process.call_process([self.version_command, '--version'])
+        version = re.search(self.look_behind + r'((?:\d+\.)+[\d+_\+\-a-z]+)', result.stdout)
+        if not version:
+            self.raise_error(
+                'getting version',
+                f'Unable to find a version number in the output of `{self.version_command} --version`.',
+            )
+        return version.group(1)
+
+    def assert_version(self, actual_ver, expected_ver):
+        """
+        Check the version of the command and exit.
+
+        The exit code is 0 if the actual version starts with the expected one, 1 otherwise.
+        """
+        if expected_ver not in actual_ver[: len(expected_ver)]:
+            self.raise_error(
+                f'Version of {self.command} is wrong',
+                f'Expected version: {expected_ver}\nFound version: {actual_ver}\n'
+                f'Edit your pre-commit config or use a different version of {self.command}.',
+            )
+        sys.exit(0)
+
+    def raise_error(self, problem, details):
+        """Write a formatted error message to the standard error stream and exit."""
+        sys.stderr.write(f'Problem with {self.command}: {problem}\n{details}\n')
+        sys.exit(1)
+
     def run(self):
         """Run the command."""
         self.cmake.configure(self.command, clean_build=self.clean_build)
@@ -151,13 +214,6 @@ class Command(hooks.utils.Command):
     def run_command(self, filenames):
         """Run the command and check for errors."""
         self.history.append(_call_process.call_process([self.command, *filenames, *self.args, *self.ddash_args]))
-        self._clinters_compat()
-
-    def _clinters_compat(self):
-        """Compatibility with CLinters."""
-        self.stdout = self.history[-1].stdout.encode()
-        self.stderr = self.history[-1].stderr.encode()
-        self.returncode = self.history[-1].returncode
 
     def _parse_output(self, result):  # ruff: ignore[unused-method-argument, no-self-use]
         return NotImplemented
@@ -209,7 +265,7 @@ class ClangAnalyzerCmd(Command):
         self.files = list(reversed(files))
 
 
-class FormatterCmd(Command, hooks.utils.FormatterCmd):
+class FormatterCmd(Command):
     """Commands that format code: clang-format, uncrustify."""
 
     setup_cmake = False
@@ -217,26 +273,76 @@ class FormatterCmd(Command, hooks.utils.FormatterCmd):
     def __init__(self, command: str, look_behind: str, args: list[str]):
         super().__init__(command, look_behind, args)
         self.dry_run = '-n' in self.args or '--dry-run' in self.args
+        self.no_diff_flag = False
+        self.diff = ''
+        self.returncode = 0
 
-    def get_formatted_lines(self, filename: bytes) -> list:  # pragma: nocover
+    def set_diff_flag(self) -> None:
+        """Handle the --no-diff option (which is not an option of the underlying command)."""
+        self.no_diff_flag = '--no-diff' in self.args
+        if self.no_diff_flag:
+            self.args.remove('--no-diff')
+
+    def compare_to_formatted(self, filename: str) -> None:
+        """
+        Compare the content of a file to the output of the formatter.
+
+        When editing in place, the formatter has no output: the file is compared before and after instead.
+        """
+        actual = self.get_filelines(filename)
+        expected = self.get_formatted_lines(filename)
+        if self.edit_in_place:
+            expected = self.get_filelines(filename)
+        diff = list(difflib.unified_diff(actual, expected, fromfile='original', tofile='formatted', lineterm=''))
+        if diff:
+            if not self.no_diff_flag:
+                self.diff += '\n'.join([filename, 20 * '=', *diff, ''])
+            self.returncode = 1
+
+    def get_formatted_lines(self, filename: str) -> list[str]:
         """Get the expected output for a command applied to a file."""
-        filename_opts = self.get_filename_opts(filename)
-        args = [self.command, *self.args, *filename_opts]
-        # NB: only change w.r.t original method to handle both bytes and string argument types
-        child = _call_process.call_process([arg.decode() if isinstance(arg, bytes) else arg for arg in args])
-        if len(child.stderr) > 0 or child.returncode != 0:
+        args = [self.command, *self.args, filename]
+        child = _call_process.call_process(args)
+        if child.stderr or child.returncode != 0:
             problem = f'Unexpected Stderr/return code received when analyzing {filename}.\nArgs: {args}'
             self.raise_error(problem, child.stdout + child.stderr)
 
         if self.dry_run:
             # clang-format dry-run mode is '-n'
             # If dry-run mode then we only look at the return code -> read the lines
-            self.returncode = 0
             return self.get_filelines(filename)
         if not child.stdout:
             return []
-        return child.stdout.encode().split(b'\x0a')
+        return child.stdout.split('\n')
+
+    def get_filelines(self, filename: str) -> list[str]:
+        """Get the lines in a file."""
+        path = Path(filename)
+        if not path.exists():
+            self.raise_error(f'File {filename} not found', 'Check your path to the file.')
+        return path.read_bytes().decode().split('\n')
 
 
-class StaticAnalyzerCmd(Command, hooks.utils.StaticAnalyzerCmd):
-    """Commands that analyze code and are not formatters."""
+class StaticAnalyzerCmd(Command):
+    """Commands that analyze code without requiring a compilation database: cpplint, lizard."""
+
+    def run(self):
+        """Run the command on each file and fail if any of the calls failed."""
+        if self.read_json_db:
+            if not self.cmake.no_cmake_configure:
+                self.cmake.configure(self.command, clean_build=self.clean_build)
+            compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
+            if compile_db:
+                self.files.extend(set(_read_compile_commands_json(compile_db)) - set(self.files))
+
+        if self.all_at_once:
+            self.run_command(self.files)
+        else:
+            for filename in self.files:
+                self.run_command([filename])
+
+        failures = [result for result in self.history if result.returncode != 0]
+        if failures:
+            for result in failures:
+                sys.stderr.write(result.stdout + result.stderr)
+            sys.exit(failures[0].returncode)

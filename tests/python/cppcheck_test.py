@@ -50,9 +50,8 @@ def test_cppcheck_command(mocker, setup_command):
         **setup_command._asdict(),
     )
 
-    assert not any(
-        f'{cppcheck_useless_error_msg}'.encode() in line for line in command.stderr.splitlines(keepends=True)
-    )
+    assert command.history
+    assert not any(cppcheck_useless_error_msg in result.stderr for result in command.history)
 
 
 # ==============================================================================

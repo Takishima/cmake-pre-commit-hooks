@@ -90,7 +90,7 @@ def run_command_default_assertions(  # ruff: ignore[complex-structure]
 
 
 def command_main_asserts(mocker, submodule, main, argv):
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
     run = mocker.patch(f'cmake_pc_hooks.{submodule}.run')
 
     main(argv)
