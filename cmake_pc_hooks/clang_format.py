@@ -1,58 +1,25 @@
-# Copyright 2021 Damien Nguyen
+#   Copyright 2023 Damien Nguyen <ngn.damien@gmail.com>
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#       http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 
-"""Wrapper script for clang-format."""
+"""Hook for clang-format."""
 
-import sys
+from ._hook import Hook
+from ._runner import make_main
 
-from ._utils import FormatterCmd
+HOOK = Hook(name='clang-format', version_prefix='clang-format version ', formatter=True)
 
-
-class ClangFormatCmd(FormatterCmd):
-    """Class for the ClangFormat command."""
-
-    command = 'clang-format'
-    lookbehind = 'clang-format version '
-
-    def __init__(self, args):
-        """Initialize a ClangFormatCmd object."""
-        super().__init__(self.command, self.lookbehind, args)
-        self.check_installed()
-        self.parse_args(args)
-        self.set_diff_flag()
-        self.edit_in_place = '-i' in self.args
-
-    def run(self):
-        """Run clang-format. Error if diff is incorrect."""
-        for filename in self.files:
-            self.compare_to_formatted(filename)
-        if self.returncode != 0:
-            sys.stdout.write(self.diff)
-            sys.exit(self.returncode)
-
-
-def main(argv=None):
-    """
-    Run command.
-
-    Args:
-        argv (:obj:`list` of :obj:`str`): list of arguments
-    """
-    if argv is None:
-        argv = sys.argv
-    cmd = ClangFormatCmd(argv)
-    cmd.run()
+main = make_main(HOOK)
 
 
 if __name__ == '__main__':  # pragma: nocover

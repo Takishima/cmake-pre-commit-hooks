@@ -103,6 +103,7 @@ class CMakeCommand:
     """Class used to encapsulate all CMake related functionality."""
 
     DEFAULT_BUILD_DIR = '.cmake_build'
+    COMPILE_DB_NAME = 'compile_commands.json'
     DEFAULT_TRACE_LOG = 'trace_log.json'
     CODEGEN_TARGET = 'codegen'
     CODEGEN_MIN_VERSION = (3, 31)
@@ -593,7 +594,7 @@ class CMakeCommand:
 
         result = self._call_cmake(extra_args=extra_args)
 
-        compiledb = Path(self.build_dir, 'compile_commands.json')
+        compiledb = Path(self.build_dir, self.COMPILE_DB_NAME)
         if not compiledb.exists():
             result.returncode = 1
             result.stderr += f'\nUnable to locate {compiledb}\n\n'

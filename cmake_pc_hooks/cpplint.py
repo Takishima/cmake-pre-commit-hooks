@@ -1,50 +1,31 @@
-# Copyright 2021 Damien Nguyen
+#   Copyright 2023 Damien Nguyen <ngn.damien@gmail.com>
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#       http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 
-"""Wrapper script for cpplint."""
+"""Hook for cpplint."""
 
-import sys
+from ._hook import Hook, has_failed_quiet_on_success
+from ._runner import make_main
 
-from . import _call_process
-from ._utils import StaticAnalyzerCmd
+HOOK = Hook(
+    name='cpplint',
+    version_prefix='cpplint ',
+    default_args=('--verbose=0',),
+    options_first=True,
+    check=has_failed_quiet_on_success,
+)
 
-
-class CpplintCmd(StaticAnalyzerCmd):
-    """Class for the cpplint command."""
-
-    command = 'cpplint'
-    lookbehind = 'cpplint '
-
-    def __init__(self, args):
-        """Initialize a CpplintCmd object."""
-        super().__init__(self.command, self.lookbehind, args)
-        self.check_installed()
-        self.parse_args(args)
-        self.add_if_missing(['--verbose=0'])
-
-    def run_command(self, filenames):
-        """Run the command with the options before the filenames, as cpplint requires."""
-        self.history.append(_call_process.call_process([self.command, *self.args, *filenames]))
-
-
-def main(argv=None):
-    """Run the cpplint hook with the given list of arguments (sys.argv by default)."""
-    if argv is None:
-        argv = sys.argv
-
-    cmd = CpplintCmd(argv)
-    cmd.run()
+main = make_main(HOOK)
 
 
 if __name__ == '__main__':  # pragma: nocover

@@ -1,5 +1,6 @@
 import itertools
 import json
+import operator
 from collections import namedtuple
 
 import pytest
@@ -35,6 +36,15 @@ def compile_commands(tmp_path):
         json.dump(data, fd)
 
     return path, file_list
+
+
+# ==============================================================================
+
+
+@pytest.fixture
+def tool(mocker):
+    """Pretend that all tools are installed."""
+    return mocker.patch('cmake_pc_hooks._runner.find_executable', side_effect=operator.itemgetter(0))
 
 
 # ==============================================================================
@@ -80,8 +90,7 @@ SetupCommandData = namedtuple(
 
 
 @pytest.fixture(params=_setup_commands_args, ids=_setup_command_ids)
-def setup_command(mocker, tmp_path, compile_commands, request):
-    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
+def setup_command(mocker, tool, tmp_path, compile_commands, request):
     all_at_once, read_json_db, no_cmake_configure, create_compilation_db, returncode = request.param
 
     configure = mocker.patch('cmake_pc_hooks._cmake.CMakeCommand.configure', return_value=0)

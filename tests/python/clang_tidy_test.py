@@ -12,8 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
 from cmake_pc_hooks import clang_tidy
+from cmake_pc_hooks._runner import HookRunner
 
 import pytest
 from _test_utils import command_main_asserts, run_command_default_assertions
@@ -27,43 +27,40 @@ from _test_utils import command_main_asserts, run_command_default_assertions
 )
 def test_clang_tidy_command(mocker, setup_command, stdout, error_msg):
     path = setup_command.compile_db_path
-    call_process = setup_command.call_process
     returncode = setup_command.returncode
-
-    # ----------------------------------
-
-    def _call_process(*args, **kwargs):
-        return mocker.Mock(
-            stdout=stdout, stderr=f'{error_msg if error_msg is not None else ""} aaa\nbbb', returncode=returncode
-        )
-
-    call_process.reset_mock(return_value=True, side_effect=True)
-    call_process.configure_mock(
-        side_effect=_call_process,
+    setup_command.call_process.configure_mock(
+        return_value=mocker.Mock(stdout=stdout, stderr=f'{error_msg or ""} aaa\nbbb', returncode=returncode)
     )
 
-    # ----------------------------------
-
-    command_name = 'clang-tidy'
-    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
-    command = clang_tidy.ClangTidyCmd(args=args)
+    runner = HookRunner(clang_tidy.HOOK, ['clang-tidy', f'-B{path.parent}', *setup_command.cmd_args])
 
     if not setup_command.no_cmake_configure:
-        assert f'-p={path}' in command.args
+        assert f'-p={path}' in runner.args
 
     run_command_default_assertions(
-        command=command,
+        runner=runner,
         exit_success=returncode == 0 and (error_msg is None or not stdout),
         **setup_command._asdict(),
     )
 
 
-# ==============================================================================
+@pytest.mark.parametrize(
+    ('stdout', 'stderr', 'shown_stderr'),
+    [
+        ('', '10 warnings generated.', ''),
+        ('warning: foo', 'Suppressed 3 warnings (3 in non-user code).', ''),
+        ('warning: foo', '10 warnings generated.', '10 warnings generated.'),
+    ],
+    ids=['no_stdout', 'non_user_code', 'user_code'],
+)
+def test_clang_tidy_hides_stderr_about_system_files(mocker, stdout, stderr, shown_stderr):
+    result = mocker.Mock(stdout=stdout, stderr=stderr, returncode=0)
+    assert not clang_tidy.has_errors(result)
+    assert result.stderr == shown_stderr
 
 
 def test_clang_tidy_main(mocker):
-    argv = ['clang-tidy', 'file.txt']
-    command_main_asserts(mocker, 'clang_tidy.ClangTidyCmd', clang_tidy.main, argv)
+    command_main_asserts(mocker, clang_tidy, ['clang-tidy', 'file.txt'])
 
 
 # ==============================================================================

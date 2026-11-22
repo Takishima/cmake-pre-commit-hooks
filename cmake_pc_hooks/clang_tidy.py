@@ -1,81 +1,60 @@
-# Copyright 2021 Damien Nguyen
+#   Copyright 2023 Damien Nguyen <ngn.damien@gmail.com>
 #
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
+#   Licensed under the Apache License, Version 2.0 (the "License");
+#   you may not use this file except in compliance with the License.
+#   You may obtain a copy of the License at
 #
-#     http://www.apache.org/licenses/LICENSE-2.0
+#       http://www.apache.org/licenses/LICENSE-2.0
 #
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
+#   Unless required by applicable law or agreed to in writing, software
+#   distributed under the License is distributed on an "AS IS" BASIS,
+#   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+#   See the License for the specific language governing permissions and
+#   limitations under the License.
 
-"""Wrapper script for clang-tidy."""
+"""Hook for clang-tidy."""
+
+from __future__ import annotations
 
 import logging
-import sys
+from typing import TYPE_CHECKING
 
-from ._utils import ClangAnalyzerCmd
+from ._hook import Hook
+from ._runner import make_main
+
+if TYPE_CHECKING:
+    from ._call_process import History
+
+log = logging.getLogger(__name__)
 
 
-class ClangTidyCmd(ClangAnalyzerCmd):
-    """Class for the clang-tidy command."""
+def has_errors(result: History) -> bool:
+    """Tell whether clang-tidy reported errors, after hiding its complaints about system files."""
+    if not result.stdout or 'non-user code' in result.stderr:
+        result.stderr = ''
+    log.debug('returncode %d', result.returncode)
+    log.debug('parsing output from %s', result.stderr)
 
-    command = 'clang-tidy'
-    lookbehind = 'LLVM version '
-
-    def __init__(self, args):
-        """Initialize a ClangTidyCmd object."""
-        super().__init__(self.command, self.lookbehind, args)
-        self.parse_args(args)
-        self.edit_in_place = '-fix' in self.args or '--fix-errors' in self.args
-        self.handle_ddash_args()
-        self.log = logging.getLogger(__name__)
-
-        compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
-        if not self.cmake.no_cmake_configure or compile_db:
-            self.add_if_missing([f'-p={compile_db}'])
-
-    def _parse_output(self, result):
-        """
-        Parse output and check whether some errors occurred.
-
-        Args:
-            result (namedtuple): Result from calling a command
-
-        Returns:
-            False if no errors were detected, True in all other cases.
-        """
-        # Reset stderr if it's complaining about problems in system files
-        if not result.stdout or 'non-user code' in result.stderr:
-            result.stderr = ''
-
-        self.log.debug('returncode %d', result.returncode)
-        self.log.debug('parsing output from %s', result.stderr)
-        return result.returncode != 0 or any(
-            msg in result.stderr
-            for msg in (
-                'error generated.',
-                'errors generated.',
-                'warning treated as error',
-                'warnings treated as errors',
-            )
+    return result.returncode != 0 or any(
+        msg in result.stderr
+        for msg in (
+            'error generated.',
+            'errors generated.',
+            'warning treated as error',
+            'warnings treated as errors',
         )
+    )
 
 
-def main(argv=None):
-    """
-    Run command.
+HOOK = Hook(
+    name='clang-tidy',
+    version_prefix='LLVM version ',
+    compile_db_arg='-p={}',
+    double_dash=True,
+    check=has_errors,
+)
 
-    Args:
-        argv (:obj:`list` of :obj:`str`): list of arguments
-    """
-    if argv is None:
-        argv = sys.argv
-    cmd = ClangTidyCmd(argv)
-    cmd.run()
+main = make_main(HOOK)
 
 
 if __name__ == '__main__':  # pragma: nocover
