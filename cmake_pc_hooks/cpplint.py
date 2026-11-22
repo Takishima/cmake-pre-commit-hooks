@@ -39,12 +39,7 @@ class CpplintCmd(StaticAnalyzerCmd):
 
 
 def main(argv=None):
-    """
-    Run command.
-
-    Args:
-        argv (:obj:`list` of :obj:`str`): list of arguments
-    """
+    """Run the cpplint hook with the given list of arguments (sys.argv by default)."""
     if argv is None:
         argv = sys.argv
 
