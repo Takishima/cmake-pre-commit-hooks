@@ -1,1 +1,0 @@
-Cleanup of the pre-commit configuration: remove the `doc8` hook (there are no reStructuredText files in the repository), remove the unused `ruff` dependency of the `blacken-docs` hook and run the `ruff` linter (with fixes) before the `ruff` formatter

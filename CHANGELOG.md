@@ -9,6 +9,75 @@ Changes that are not released yet are stored as fragments in the [changelog.d](c
 
 <!-- towncrier release notes start -->
 
+## [v1.10.0](https://github.com/Takishima/cmake-pre-commit-hooks/releases/tag/v1.10.0) - 2026-11-22
+
+### Added
+
+- Added `--codegen` option to build the `codegen` target provided by CMake 3.31+. The hooks check that the CMake version and generator support that target before attempting to build it. ([#105](https://github.com/Takishima/cmake-pre-commit-hooks/issues/105))
+- Added `--cmake-build-target` option to build some CMake targets after the CMake configure step (e.g. to generate source files before running the hooks)
+- The hooks now install CMake (>= 3.31) from PyPI if no CMake executable can be found on the system at installation time. A system CMake is still preferred if present.
+
+### Changed
+
+- Add support for Python 3.13, 3.14 and 3.15
+- Drop support for Python 3.8 and 3.9 (end-of-life); the minimum required Python version is now 3.10
+- Remove the dependency on `filelock`
+
+### Fixed
+
+- Build Python 3 only wheels (`py3-none-any`) instead of universal `py2.py3` ones
+- Fixed PowerShell system test script using `$?` instead of `$LASTEXITCODE` for exit code handling
+- Fixed `--clean` being silently ignored by all the hooks
+- Fixed `--version` always failing for the include-what-you-use hook
+- Fixed `-Wno-dev` being passed to CMake as `-Wno_dev`, which is rejected by recent versions of CMake
+- Fixed hooks running concurrently on the same build directory sometimes not waiting for the CMake configure step of another hook to complete
+- Fixed include-what-you-use hook passing when the output for a correct file is mixed with the output for an incorrect one (e.g. when using `--all-at-once`)
+- Fixed lizard hook only considering the exit code of the last file when processing more than one file
+
+### Repository
+
+- Add `AGENTS.md` and `CLAUDE.md` with instructions for AI coding tools
+- Allow uploading to PyPI using trusted publishing
+- Build the release from the merged commit using `SETUPTOOLS_SCM_PRETEND_VERSION` instead of a temporary Git tag
+- Cancel superseded workflow runs on pull requests and restrict default workflow token permissions
+- Check that pull requests add a changelog fragment and do not edit `CHANGELOG.md` directly (replaces the `dangoslen/changelog-enforcer` GitHub Action)
+- Clarify where to put the settings in `pyproject.toml`
+- Cleanup of the linter pragmas in the code: remove obsolete `# pylint: disable` comments, replace repeated inline `ruff` suppressions with entries in the `ruff` configuration in `pyproject.toml` and merge nested `with` statements in `_cmake.py`
+- Cleanup of the pre-commit configuration: remove the `doc8` hook (there are no reStructuredText files in the repository), remove the unused `ruff` dependency of the `blacken-docs` hook and run the `ruff` linter (with fixes) before the `ruff` formatter
+- Deduce the next version from the changelog fragments when drafting a release (`auto`, `patch`, `minor`, `major` or an explicit, validated version), using a tested script in `.github/scripts/`
+- Delete the release branch once the release is published
+- Exclude the release automation scripts from the SonarCloud coverage and grant the `pull-requests: read` permission at job level
+- Fix SonarCloud violations (return type annotation of `_load_from_toml`, cognitive complexity of `_cmake.py` and `_cmake_test.py`, variable naming in the tests, user-controlled data and unvalidated `workflow_dispatch` inputs in the GitHub workflows, shell script issues in `run_tests.sh`)
+- Fix the pre-release detection when creating the GitHub release
+- Fixed Windows CI by using pip to install cppcheck (Chocolatey package is broken)
+- Generate the changelog fragments of pre-commit.ci pull requests with a script from this repository, also when pre-commit.ci updates its pull request
+- Group all Dependabot GitHub Actions updates (now including `actions/*`) into a single pull request; these pull requests do not need a changelog entry
+- Ignore SonarCloud rules about missing lock files and unpinned `pip install` in CI (not applicable to a library)
+- Make the `Finish CI checks` job fail instead of being skipped when one of its dependencies fails
+- Manage the CHANGELOG with [towncrier](https://towncrier.readthedocs.io): each pull request adds a fragment to `changelog.d/` and the fragments are collected into `CHANGELOG.md` when a release is drafted
+- Modernize ruff configuration to follow latest guidelines: remove deprecated settings (`target-version`, `ANN101`, `ASYNC1`, etc.), replace `TCH` with `TC` (renamed rule set) and add the `DOC`, `PYI` and `PD` rule sets
+- Open the release pull request automatically every Monday if user-facing changes are waiting to be released
+- Reference GitHub Actions by their major version tag instead of a full commit SHA and ignore the corresponding SonarCloud rule
+- Rewrite the system tests (`tests/run_tests.sh` and `tests/run_tests.ps1`) as a cross-platform pytest test suite (`tests/integration`) that runs in parallel on temporary copies of the test projects, checks the output of the hooks and not only their exit code, and also covers most of the CMake related options, TOML configuration files, concurrent execution of the hooks and changes that are not yet committed
+- Skip the SonarCloud and Codacy coverage uploads when secrets are not available (Dependabot and fork pull requests) instead of failing
+- Split the release publishing workflow into separate build, PyPI upload and GitHub release jobs with minimal permissions; the GitHub release is only created once the PyPI upload succeeded
+- Update GitHub Action `EndBug/add-and-commit` from v9 to v11
+- Update GitHub Action `SonarSource/sonarqube-scan-action` to v8
+- Update GitHub Action `actions/checkout` from v4 to v7
+- Update GitHub Action `actions/download-artifact` from v4 to v8
+- Update GitHub Action `actions/setup-python` from v5 to v7
+- Update GitHub Action `actions/upload-artifact` from v4 to v7
+- Update GitHub Action `codecov/codecov-action` from v4 to v7
+- Update GitHub Action `github/codeql-action` from v3 to v4
+- Update `Lucas-C/pre-commit-hooks` hook to v1.5.6
+- Update `adrienverge/yamllint` hook to v1.38.0
+- Update `asottile/blacken-docs` hook to v1.20.0
+- Update `astral-sh/ruff-pre-commit` hook to v0.17.5 and convert `# noqa` comments to the new `# ruff: ignore[...]` syntax
+- Update `codespell-project/codespell` hook to v2.4.3
+- Update `pre-commit/pre-commit-hooks` hook to v6.0.0
+- Update `shellcheck-py/shellcheck-py` hook to v0.11.0.1-1
+- Use the `peter-evans/create-pull-request`, `softprops/action-gh-release` and `taiki-e/install-action` GitHub Actions in the release workflows (replacing `stefanzweifel/git-auto-commit-action`, `thomaseizinger/create-pull-request` and hand-written shell code)
+
 ## [v1.9.6] - 2024-06-02
 
 ### Changed
@@ -269,7 +338,7 @@ Changes that are not released yet are stored as fragments in the [changelog.d](c
   and release/\_ branches
 - Update `isort` hook to v5.10.1
 - Update `black` hook to v21.12b0
-- Disable macOS CI for Python \< 3.11 (now runs on M1 macs on GitHub)
+- Disable macOS CI for Python < 3.11 (now runs on M1 macs on GitHub)
 
 ## [v1.5.0] - 2021-11-08
 

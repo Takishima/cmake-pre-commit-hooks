@@ -1,1 +1,0 @@
-Use the `peter-evans/create-pull-request`, `softprops/action-gh-release` and `taiki-e/install-action` GitHub Actions in the release workflows (replacing `stefanzweifel/git-auto-commit-action`, `thomaseizinger/create-pull-request` and hand-written shell code)

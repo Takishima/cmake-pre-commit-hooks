@@ -1,1 +1,0 @@
-Cleanup of the linter pragmas in the code: remove obsolete `# pylint: disable` comments, replace repeated inline `ruff` suppressions with entries in the `ruff` configuration in `pyproject.toml` and merge nested `with` statements in `_cmake.py`
