@@ -207,7 +207,7 @@ def test_lizard_threshold(run_hook, bad_project):
 
 @pytest.mark.parametrize('hook_name', ['clang-format', 'clang-tidy', 'cppcheck', 'include-what-you-use'])
 def test_version_mismatch(run_hook, good_project, hook_name):
-    result = run_hook(hook_name, good_project, *hook_args(hook_name), '--version=0.0.1', 'good.cpp')
+    result = run_hook(hook_name, good_project, *hook_args(hook_name), '--require-version=0.0.1', 'good.cpp')
 
     assert result.returncode == 1, result
     assert 'Expected version: 0.0.1' in result.output, result

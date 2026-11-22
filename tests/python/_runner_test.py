@@ -238,17 +238,34 @@ def test_runner_double_dash(tool, tmp_path):
 def test_runner_version_check(mocker, tool, capsys, version_prefix, stdout, expected, returncode):
     sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
     call_process = _call_process(mocker, stdout=stdout)
+    hook = Hook(TOOL, version_prefix=version_prefix)
+    argv = [TOOL, f'--require-version={expected}', 'one.cpp']
 
-    with pytest.raises(ExitError):
-        _runner.HookRunner(Hook(TOOL, version_prefix=version_prefix), [TOOL, f'--version={expected}', 'one.cpp'])
+    if returncode:
+        with pytest.raises(ExitError):
+            _runner.HookRunner(hook, argv)
+        sys_exit.assert_called_once_with(1)
+        assert (
+            f'Version of {TOOL} is wrong\nExpected version: {expected}\nFound version: 1.17.10'
+            in capsys.readouterr().err
+        )
+    else:
+        runner = _runner.HookRunner(hook, argv)
+        sys_exit.assert_not_called()
+        assert runner.files == ['one.cpp']
+        assert not capsys.readouterr().err
 
     call_process.assert_called_once_with([TOOL, '--version'])
-    sys_exit.assert_called_once_with(returncode)
-    stderr = capsys.readouterr().err
-    if returncode:
-        assert f'Version of {TOOL} is wrong\nExpected version: {expected}\nFound version: 1.17.10' in stderr
-    else:
-        assert not stderr
+
+
+def test_runner_runs_the_tool_after_version_check(mocker, tool):
+    sys_exit = mocker.patch('sys.exit')
+    call_process = _call_process(mocker, stdout='test-exec 1.2.3')
+
+    _runner.HookRunner(Hook(TOOL, version_prefix='test-exec '), [TOOL, '--require-version=1.2', 'one.cpp']).run()
+
+    assert call_process.call_args_list == [mocker.call([TOOL, '--version']), mocker.call([TOOL, 'one.cpp'])]
+    sys_exit.assert_not_called()
 
 
 def test_runner_version_check_no_version_found(mocker, tool, capsys):
@@ -256,7 +273,7 @@ def test_runner_version_check_no_version_found(mocker, tool, capsys):
     _call_process(mocker, stdout='no version here')
 
     with pytest.raises(ExitError):
-        _runner.HookRunner(Hook(TOOL, version_prefix='test-exec '), [TOOL, '--version=1', 'one.cpp'])
+        _runner.HookRunner(Hook(TOOL, version_prefix='test-exec '), [TOOL, '--require-version=1', 'one.cpp'])
 
     sys_exit.assert_called_once_with(1)
     assert f'Problem with {TOOL}: getting version' in capsys.readouterr().err
@@ -267,15 +284,13 @@ def test_runner_version_check_other_executable(mocker, tool, capsys):
     call_process = _call_process(mocker, stdout='other 0.21 based on clang')
     hook = Hook(TOOL, version_prefix='other ', version_executables=('other',))
 
-    with pytest.raises(ExitError):
-        _runner.HookRunner(hook, [TOOL, '--version=0.21', 'one.cpp'])
+    _runner.HookRunner(hook, [TOOL, '--require-version=0.21', 'one.cpp'])
     call_process.assert_called_once_with(['other', '--version'])
-    sys_exit.assert_called_once_with(0)
+    sys_exit.assert_not_called()
 
     tool.side_effect = lambda names: None if names == ('other',) else names[0]
-    sys_exit.reset_mock()
     with pytest.raises(ExitError):
-        _runner.HookRunner(hook, [TOOL, '--version=0.21', 'one.cpp'])
+        _runner.HookRunner(hook, [TOOL, '--require-version=0.21', 'one.cpp'])
     sys_exit.assert_called_once_with(1)
     assert 'Unable to locate any of: other' in capsys.readouterr().err
 
@@ -531,11 +546,12 @@ def test_make_main(mocker):
     ('args', 'returncode', 'stdout', 'stderr'),
     [
         (['--help'], 0, 'Usage: cmake-pc-test-exec-hook', ''),
+        (['--version'], 0, 'cmake-pre-commit-hooks ', ''),
         (['--dump-toml', '--all-at-once'], 0, 'all_at_once = true', ''),
         (['-S', 'missing'], 2, '', "Error: Invalid value for '-S' / '--source-dir'"),
         (['--preset=default'], 2, '', 'Error: You *must* specify -B|--build-dir'),
     ],
-    ids=['help', 'dump_toml', 'invalid_option', 'preset_without_build_dir'],
+    ids=['help', 'version', 'dump_toml', 'invalid_option', 'preset_without_build_dir'],
 )
 def test_make_main_command_line_errors(mocker, tool, capsys, monkeypatch, tmp_path, args, returncode, stdout, stderr):
     monkeypatch.chdir(tmp_path)

@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 from types import SimpleNamespace
 
 import click
@@ -24,7 +25,8 @@ from click.core import ParameterSource
 from . import _config
 from ._cmake import CMAKE_OPTIONS
 
-_NOT_SETTINGS = ('files', 'hooks_config', 'dump_toml')
+PACKAGE_NAME = 'cmake_pre_commit_hooks'
+_NOT_SETTINGS = ('files', 'hooks_config', 'dump_toml', 'version')
 
 
 def _toml_type(param: click.Parameter) -> type:
@@ -48,6 +50,17 @@ def _load_settings(ctx: click.Context, _param: click.Parameter, value: str | Non
     return value
 
 
+def _print_version(ctx: click.Context, _param: click.Parameter, value: bool) -> None:  # ruff: ignore[boolean-type-hint-positional-argument]
+    """Print the version of this package and exit (callback of `--version`)."""
+    if value:
+        try:
+            version = importlib.metadata.version(PACKAGE_NAME)
+        except importlib.metadata.PackageNotFoundError:
+            version = 'unknown'
+        click.echo(f'cmake-pre-commit-hooks {version}')
+        ctx.exit(0)
+
+
 HOOK_OPTIONS = [
     click.Option(
         ['--all-at-once'],
@@ -59,7 +72,10 @@ HOOK_OPTIONS = [
         is_flag=True,
         help='Run hooks on files found in compile_commands.json (if found and in addition to files specified on CLI)',
     ),
-    click.Option(['--version'], help='Perform a version check'),
+    click.Option(
+        ['--require-version'],
+        help='Fail unless the version of the tool starts with this value, e.g. 18 or 18.1',
+    ),
     click.Option(
         ['--hooks-config'],
         is_eager=True,
@@ -70,6 +86,14 @@ HOOK_OPTIONS = [
         ['--dump-toml'],
         is_flag=True,
         help='Dump the current set of CLI arguments as TOML-formatted output',
+    ),
+    click.Option(
+        ['--version'],
+        is_flag=True,
+        is_eager=True,
+        expose_value=False,
+        callback=_print_version,
+        help='Show the version of cmake-pre-commit-hooks and exit.',
     ),
     click.Argument(['files'], nargs=-1, type=click.UNPROCESSED),
 ]
