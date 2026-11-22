@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -85,15 +86,23 @@ def test_parser_source_dir_must_be_a_directory(tmp_path):
 def test_parser_cmake_must_be_an_executable_file(tmp_path):
     cmake = tmp_path / 'cmake'
     cmake.write_bytes(b'')
+    cmake.chmod(0o755)
 
-    cmake.chmod(0o644)
-    with pytest.raises(click.BadParameter):
-        parse([f'--cmake={cmake}'])
+    assert parse([f'--cmake={cmake}']).cmake == cmake
     with pytest.raises(click.BadParameter):
         parse([f'--cmake={tmp_path}'])
+    with pytest.raises(click.BadParameter):
+        parse([f'--cmake={tmp_path / "missing"}'])
 
-    cmake.chmod(0o755)
-    assert parse([f'--cmake={cmake}']).cmake == cmake
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='all files are executable on Windows')
+def test_parser_cmake_rejects_non_executable_file(tmp_path):
+    cmake = tmp_path / 'cmake'
+    cmake.write_bytes(b'')
+    cmake.chmod(0o644)
+
+    with pytest.raises(click.BadParameter):
+        parse([f'--cmake={cmake}'])
 
 
 @pytest.mark.parametrize('args', [['-Werror=other'], ['-Wno-error=other']])
