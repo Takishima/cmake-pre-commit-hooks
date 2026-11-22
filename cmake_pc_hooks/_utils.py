@@ -29,7 +29,6 @@ from ._cmake import CMakeCommand
 
 _LOGLEVEL = os.environ.get('LOGLEVEL', 'INFO').upper()
 logging.basicConfig(level=_LOGLEVEL, format='%(levelname)-5s:cmake-pc-hooks:%(message)s')
-logging.getLogger('filelock').setLevel(logging.WARNING)
 
 log = logging.getLogger(__name__)
 

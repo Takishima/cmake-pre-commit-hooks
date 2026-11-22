@@ -9,66 +9,98 @@ permissions:
   contents: read
 
 # Bots add several labels right after opening a pull request, each of which triggers this workflow: only keep the
-# latest of those runs. The run for the 'opened' event has its own group since it may push a CHANGELOG update.
+# latest of those runs. The runs for the 'opened' and 'synchronize' events have their own group since they may push
+# changelog fragments.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number }}-${{ github.event.action == 'opened' }}
+  group: >-
+    ${{ github.workflow }}-${{ github.event.pull_request.number }}-${{
+    github.event.action == 'opened' || github.event.action == 'synchronize' }}
   cancel-in-progress: true
 
 jobs:
   update-changelog:
     runs-on: ubuntu-latest
-    name: "Pre-commit CI CHANGELOG auto-update"
-    if: >
-      (github.event.pull_request.title == '[pre-commit.ci] pre-commit autoupdate') &&
-      (github.event.action == 'opened')
+    name: "Pre-commit CI changelog fragments"
+    if: >-
+      github.event.pull_request.title == '[pre-commit.ci] pre-commit autoupdate'
+      && (github.event.action == 'opened' || github.event.action == 'synchronize')
     steps:
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
           token: ${{ secrets.PRE_COMMIT_CI_CHANGELOG }}
 
       - name: Setup Python
         uses: actions/setup-python@v7
         with:
-          python-version: '3.11'
-          cache: 'pip'
-          cache-dependency-path: '**/pyproject.toml'
+          python-version: '3.x'
 
-      - name: Install dependencies
-        run: |
-          python3 -m pip install 'git+https://github.com/Takishima/pre-commit-changelog-auto-update@v1.0.0'
-
-      - name: Run Python script
+      - name: Create changelog fragments
         env:
           PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          python3 -m update_changelog --pr-body "$PR_BODY"
+        run: python3 .github/scripts/pre_commit_fragments.py
 
+      # NB: nothing is committed (and no new workflow run triggered) if the fragments are already up to date
       - name: Commit changes
-        id: commit
-        uses: EndBug/add-and-commit@cc9c08ba6c8df3b93a8f2db63e89b98368ae2ae8  # v11.1.1
+        uses: EndBug/add-and-commit@v11
         with:
+          add: changelog.d
           author_name: github-actions[bot]
           author_email: noreply@github.com
-          message: Update CHANGELOG
+          message: Add changelog fragments
 
   changelog:
     needs: update-changelog
     runs-on: ubuntu-latest
-    name: CHANGELOG enforcer
+    name: Changelog fragment
     permissions:
-      contents: read
-      pull-requests: read
-    # Dependabot pull requests cannot update the CHANGELOG themselves; these get documented when merging them
-    if: "!cancelled() && github.event.pull_request.user.login != 'dependabot[bot]'"
+      pull-requests: read  # required to list the files of the pull request
+    # Dependabot pull requests cannot add a fragment themselves; these get documented when merging them
+    if: >-
+      !cancelled()
+      && github.event.pull_request.user.login != 'dependabot[bot]'
+      && !contains(github.event.pull_request.labels.*.name, 'Skip-Changelog')
     steps:
-      - uses: actions/checkout@v7
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-          fetch-depth: 0
+      # yamllint disable rule:line-length
+      - name: Check for a changelog fragment
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          HEAD_REF: ${{ github.event.pull_request.head.ref }}
+          # Keep in sync with the types defined in the [tool.towncrier] section of pyproject.toml
+          FRAGMENT_TYPES: added|changed|deprecated|removed|fixed|security|repository
+        run: |
+          if [[ "${HEAD_REF}" == release/* || "${HEAD_REF}" == hotfix/* ]]; then
+              echo "Release pull request: the fragments are collected into CHANGELOG.md here"
+              exit 0
+          fi
 
-      - uses: dangoslen/changelog-enforcer@8b5e9dc3121363bb7c0115f8533404d92af382de  # v3.7.0
-        with:
-          changeLogPath: 'CHANGELOG.md'
-          skipLabels: 'Skip-Changelog'
+          # Files added or modified by the pull request
+          files=$(gh api --paginate "repos/${GITHUB_REPOSITORY}/pulls/${PR_NUMBER}/files" \
+                    --jq '.[] | select(.status != "removed") | .filename')
+          status=0
+
+          if grep -qx 'CHANGELOG.md' <<< "${files}"; then
+              echo "::error file=CHANGELOG.md::Do not edit CHANGELOG.md: add a fragment to changelog.d/ instead (see changelog.d/README.md)"
+              status=1
+          fi
+
+          fragments=$(grep -E '^changelog\.d/' <<< "${files}" | grep -vx 'changelog.d/README.md' || true)
+          valid="^changelog\.d/[^/]+\.(${FRAGMENT_TYPES})(\.[0-9]+)?\.md$"
+          while read -r fragment; do
+              if [[ -n "${fragment}" && ! "${fragment}" =~ ${valid} ]]; then
+                  echo "::error file=${fragment}::Invalid fragment name: expected changelog.d/<number or +description>.<type>.md with <type> one of ${FRAGMENT_TYPES//|/, }"
+                  status=1
+              fi
+          done <<< "${fragments}"
+
+          if [[ -z "${fragments}" ]]; then
+              echo "::error::No changelog fragment found: add a file such as changelog.d/+short-description.fixed.md (see changelog.d/README.md)"
+              status=1
+          fi
+
+          if [[ ${status} -eq 0 ]]; then
+              echo "Changelog fragments:"
+              echo "${fragments}"
+          fi
+          exit ${status}

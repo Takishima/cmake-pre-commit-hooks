@@ -5,93 +5,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+Changes that are not released yet are stored as fragments in the [changelog.d](changelog.d/README.md) directory.
 
-### Added
-
-- Added `--cmake-build-target` option to build some CMake targets after the CMake configure step (e.g. to generate
-  source files before running the hooks)
-- Added `--codegen` option to build the `codegen` target provided by CMake 3.31+ (#105). The hooks check that the CMake
-  version and generator support that target before attempting to build it.
-- The hooks now install CMake (>= 3.31) from PyPI if no CMake executable can be found on the system at installation
-  time. A system CMake is still preferred if present.
-
-### Changed
-
-- Drop support for Python 3.8 and 3.9 (end-of-life)
-- Add support for Python 3.13, 3.14 and 3.15
-- Minimum required Python version is now 3.10
-
-### Fixed
-
-- Fixed `--clean` being silently ignored by all the hooks
-- Fixed lizard hook only considering the exit code of the last file when processing more than one file
-- Fixed include-what-you-use hook passing when the output for a correct file is mixed with the output for an incorrect
-  one (e.g. when using `--all-at-once`)
-- Fixed `--version` always failing for the include-what-you-use hook
-- Fixed `-Wno-dev` being passed to CMake as `-Wno_dev`, which is rejected by recent versions of CMake
-- Fixed PowerShell system test script using `$?` instead of `$LASTEXITCODE` for exit code handling
-
-### Repository
-
-- Rewrite the system tests (`tests/run_tests.sh` and `tests/run_tests.ps1`) as a cross-platform pytest test suite
-  (`tests/integration`)
-  - Tests run on temporary copies of the test projects instead of modifying the repository
-  - Tests check the output of the hooks and not only their exit code
-  - Add tests for most of the CMake related options, TOML configuration files and concurrent execution of the hooks
-  - The pre-commit end-to-end test now also covers changes that are not yet committed
-  - Tests are run in parallel using `pytest-xdist`
-- Fix SonarCloud violations:
-  - Fix return type annotation for `_load_from_toml` method in `_argparse.py`
-  - Reduce cognitive complexity in `_cmake.py` by extracting helper methods
-  - Reduce cognitive complexity in `_cmake_test.py` by extracting test helpers
-  - Fix variable naming conventions in test files
-  - Fix GitHub Actions security issues by using environment variables for user-controlled data
-  - Add input validation for workflow_dispatch parameters
-  - Fix shell script issues in `run_tests.sh` (use `[[` instead of `[`, add return statements)
-- Fixed Windows CI by using pip to install cppcheck (Chocolatey package is broken)
-- Modernize ruff configuration to follow latest guidelines
-  - Remove deprecated settings (`target-version`, `ANN101`, `ASYNC1`, etc.)
-  - Replace `TCH` with `TC` (renamed rule set)
-  - Add new rule sets: `DOC`, `PYI`, `PD`
-
-- Clarify where to put the settings in `pyproject.toml`
-- Update GitHub Action `codecov/codecov-action` from v4 to v7
-- Update GitHub Action `SonarSource/sonarqube-scan-action` from v7 to v8
-- Update GitHub Action `EndBug/add-and-commit` from v9 to v11
-- Update GitHub Action `actions/checkout` from v4 to v7
-- Update GitHub Action `actions/setup-python` from v5 to v7
-- Update GitHub Action `actions/upload-artifact` from v4 to v7
-- Update GitHub Action `actions/download-artifact` from v4 to v8
-- Overhaul of the CI configuration:
-  - Skip the SonarCloud and Codacy coverage uploads when secrets are not available (Dependabot and fork pull requests)
-    instead of failing
-  - Make the `Finish CI checks` job fail instead of being skipped when one of its dependencies fails
-  - Do not enforce CHANGELOG updates on Dependabot pull requests
-  - Cancel superseded workflow runs on pull requests and restrict default workflow token permissions
-  - Group all Dependabot GitHub Actions updates (now including `actions/*`) into a single pull request
-  - Pin third-party GitHub Actions to full commit SHAs
-  - Enforce HTTPS when downloading `parse-changelog`
-  - Ignore SonarCloud rules about missing lock files and unpinned `pip install` in CI (not applicable to a library)
-- Use GitHub Action `SonarSource/sonarqube-scan-action` v7
-- Update GitHub Action `github/codeql-action` from v3 to v4
-- Update GitHub Action `stefanzweifel/git-auto-commit-action` from v5 to v7
-- Update `github.com/pre-commit/pre-commit-hooks` hook to v6.0.0
-- Update `github.com/Lucas-C/pre-commit-hooks` hook to v1.5.6
-- Update `github.com/codespell-project/codespell` hook to v2.4.3
-- Update `github.com/shellcheck-py/shellcheck-py` hook to v0.11.0.1-1
-- Update `github.com/adrienverge/yamllint.git` hook to v1.38.0
-- Update `github.com/asottile/blacken-docs` hook to 1.20.0
-- Update `github.com/astral-sh/ruff-pre-commit` hook to v0.17.5
-  - Convert `# noqa` comments to the new `# ruff: ignore[...]` syntax
-- Cleanup of the pre-commit configuration:
-  - Remove the `doc8` hook (there are no reStructuredText files in the repository)
-  - Remove unused `ruff` dependency of the `blacken-docs` hook (it only supports black)
-  - Run the `ruff` linter (with fixes) before the `ruff` formatter
-- Cleanup of the linter pragmas in the code:
-  - Remove obsolete `# pylint: disable` comments (pylint is not used anymore)
-  - Replace repeated inline `ruff` suppressions with entries in the `ruff` configuration in `pyproject.toml`
-  - Merge nested `with` statements in `_cmake.py`
+<!-- towncrier release notes start -->
 
 ## [v1.9.6] - 2024-06-02
 
@@ -486,7 +402,6 @@ Initial release with support for:
 - clang-tidy
 - cppcheck
 
-[unreleased]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.9.6...HEAD
 [v1.0.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/20b1113bf223273cda31a14a82c9d573a342de4a...v1.0.0
 [v1.0.1]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.0...v1.0.1
 [v1.1.0]: https://github.com/Takishima/cmake-pre-commit-hooks/compare/v1.0.1...v1.1.0
