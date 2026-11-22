@@ -16,6 +16,7 @@
 
 from __future__ import annotations
 
+import importlib.metadata
 from types import SimpleNamespace
 
 import click
@@ -24,7 +25,8 @@ from click.core import ParameterSource
 from . import _config
 from ._cmake import CMAKE_OPTIONS
 
-_NOT_SETTINGS = ('files', 'hooks_config', 'dump_toml')
+PACKAGE_NAME = 'cmake_pre_commit_hooks'
+_NOT_SETTINGS = ('files', 'hooks_config', 'dump_toml', 'version')
 
 
 def _toml_type(param: click.Parameter) -> type:
@@ -48,6 +50,14 @@ def _load_settings(ctx: click.Context, _param: click.Parameter, value: str | Non
     return value
 
 
+def _package_version() -> str:
+    """Return the version of this package."""
+    try:
+        return importlib.metadata.version(PACKAGE_NAME)
+    except importlib.metadata.PackageNotFoundError:
+        return 'unknown'
+
+
 HOOK_OPTIONS = [
     click.Option(
         ['--all-at-once'],
@@ -59,7 +69,10 @@ HOOK_OPTIONS = [
         is_flag=True,
         help='Run hooks on files found in compile_commands.json (if found and in addition to files specified on CLI)',
     ),
-    click.Option(['--version'], help='Perform a version check'),
+    click.Option(
+        ['--require-version'],
+        help='Fail unless the version of the tool starts with this value, e.g. 18 or 18.1',
+    ),
     click.Option(
         ['--hooks-config'],
         is_eager=True,
@@ -71,6 +84,7 @@ HOOK_OPTIONS = [
         is_flag=True,
         help='Dump the current set of CLI arguments as TOML-formatted output',
     ),
+    click.Option(['--version'], is_flag=True, help='Show the version of cmake-pre-commit-hooks and exit.'),
     click.Argument(['files'], nargs=-1, type=click.UNPROCESSED),
 ]
 
@@ -95,6 +109,10 @@ def parse_args(hook_name: str, args: list[str]) -> tuple[SimpleNamespace, list[s
 
     ctx = COMMAND.make_context(f'cmake-pc-{hook_name}-hook', list(args), obj=hook_name)
     options = SimpleNamespace(**ctx.params)
+
+    if options.version:
+        click.echo(f'cmake-pre-commit-hooks {_package_version()}')
+        ctx.exit(0)
 
     if options.dump_toml:
         click.echo(

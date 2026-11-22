@@ -12,6 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+import importlib.metadata
 from pathlib import Path
 
 from cmake_pc_hooks import _cli
@@ -43,18 +44,18 @@ def test_parse_args_defaults():
     assert not options.all_at_once
     assert not options.read_json_db
     assert not options.dump_toml
-    assert options.version is None
+    assert options.require_version is None
     assert options.hooks_config is None
     assert options.source_dir == Path()
     assert options.build_dir == ()
 
 
 def test_parse_args_hook_options():
-    options, tool_args, files = parse('--all-at-once', '--read-json-db', '--version=18', '-Bbuild', 'file.cpp')
+    options, tool_args, files = parse('--all-at-once', '--read-json-db', '--require-version=18', '-Bbuild', 'file.cpp')
 
     assert options.all_at_once
     assert options.read_json_db
-    assert options.version == '18'
+    assert options.require_version == '18'
     assert options.build_dir == ('build',)
     assert not tool_args
     assert files == ['file.cpp']
@@ -87,6 +88,20 @@ def test_parse_args_help(capsys):
     stdout = capsys.readouterr().out
     assert stdout.startswith('Usage: cmake-pc-lizard-hook [OPTIONS] [FILES]...')
     assert '--hooks-config' in stdout
+
+
+@pytest.mark.parametrize('installed', [False, True])
+def test_parse_args_version(mocker, capsys, installed):
+    if not installed:
+        mocker.patch('importlib.metadata.version', side_effect=importlib.metadata.PackageNotFoundError)
+
+    with pytest.raises(click.exceptions.Exit) as excinfo:
+        parse('--version', 'file.cpp')
+
+    assert excinfo.value.exit_code == 0
+    stdout = capsys.readouterr().out
+    assert stdout.startswith('cmake-pre-commit-hooks ')
+    assert stdout.endswith('unknown\n') == (not installed)
 
 
 def test_parse_args_invalid_value():
@@ -136,6 +151,7 @@ def test_parse_args_hooks_config(project):
         ('not_an_option = true\n', 'unknown option "not_an_option"'),
         ('files = ["file.cpp"]\n', 'unknown option "files"'),
         ('dump_toml = true\n', 'unknown option "dump_toml"'),
+        ('version = "18"\n', 'unknown option "version"'),
         ('hooks_config = "other.toml"\n', 'unknown option "hooks_config"'),
         ('build_dir = "build"\n', 'must be of type list'),
         ('source_dir = "missing"\n', 'does not exist'),

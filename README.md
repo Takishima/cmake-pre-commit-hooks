@@ -196,12 +196,28 @@ In addition to the above CMake options, the hooks also accept the following:
 | `--no-automatic-discovery`   | Disable automatic build directory discovery            | Since v1.9.0 |
 | `--no-cmake-configure`       | Do not call CMake configure                            | Since v1.9.2 |
 | `--read-json-db`             | Append file list from compile database                 | Since v1.7.0 |
+| `--require-version`          | Fail unless the tool version starts with this value    | Unreleased   |
+| `--version`                  | Show the version of the hooks and exit                 | Unreleased   |
 | `--linux`                    | Linux-only CMake options                               | Since v1.3.0 |
 | `--mac`                      | MacOS-only CMake options                               | Since v1.3.0 |
 | `--win`                      | Windows-only CMake options                             | Since v1.3.0 |
 
 NB: by specifying `--all-at-once` the linter/formatter command will only be called once for all the files instead of
 calling the command once per file.
+
+NB: `--require-version=18.1` makes a hook fail unless the version of its tool starts with `18.1`. If the version
+matches, the hook then runs as usual.
+
+**Breaking change (unreleased):** the version check was renamed from `--version` to `--require-version` (`version` to
+`require_version` in TOML files), and a hook no longer stops after a successful check. `--version` now shows the version
+of the hooks:
+
+```yaml
+# Before
+args: [--version=18.1]
+# After
+args: [--require-version=18.1]
+```
 
 NB: the `cpplint` hook accepts the same options and TOML configuration as the other hooks (unreleased).
 

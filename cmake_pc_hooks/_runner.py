@@ -114,8 +114,8 @@ class HookRunner:
                 f'{hook.name} not found',
                 f'Make sure {hook.name} is installed and on your PATH.\nFor more info: {WEBSITE}',
             )
-        if options.version:
-            self._check_version(options.version)
+        if options.require_version:
+            self._check_version(options.require_version)
 
         if hook.double_dash:
             self._split_compiler_args()
@@ -224,7 +224,7 @@ class HookRunner:
             self.args.append(new_arg)
 
     def _check_version(self, expected: str) -> None:
-        """Check the version of the tool and exit: with 0 if it starts with the expected one, with 1 otherwise."""
+        """Exit with an error unless the version of the tool starts with the expected one."""
         executable = self.command
         if self.hook.version_executables:
             executable = find_executable(self.hook.version_executables)
@@ -241,7 +241,6 @@ class HookRunner:
                 f'Expected version: {expected}\nFound version: {version.group(1)}\n'
                 f'Edit your pre-commit config or use a different version of {self.hook.name}.',
             )
-        sys.exit(0)
 
     def _fail(self, problem: str, details: str) -> None:
         """Write a formatted error message to the standard error stream and exit."""

@@ -60,17 +60,15 @@ def test_iwyu_has_errors(mocker, stdout, has_errors):
 
 
 def test_iwyu_version_is_read_from_iwyu(mocker, tool):
-    sys_exit = mocker.patch('sys.exit', side_effect=SystemExit)
+    mocker.patch('cmake_pc_hooks._cmake.locate.get_cmake_command', return_value=['cmake'])
     call_process = mocker.patch(
         'cmake_pc_hooks._call_process.call_process',
         return_value=mocker.Mock(stdout='include-what-you-use 0.21 based on clang', stderr='', returncode=0),
     )
 
-    with pytest.raises(SystemExit):
-        HookRunner(include_what_you_use.HOOK, ['iwyu-tool', '--version=0.21', 'file.cpp'])
+    HookRunner(include_what_you_use.HOOK, ['iwyu-tool', '--require-version=0.21', 'file.cpp'])
 
     call_process.assert_called_once_with(['include-what-you-use', '--version'])
-    sys_exit.assert_called_once_with(0)
 
 
 def test_iwyu_main(mocker):
