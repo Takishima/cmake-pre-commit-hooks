@@ -31,7 +31,7 @@ def _fake_clang_format(mocker, *, stderr='', returncode=0):
 
     def _call_process(args):
         if '-i' in args:
-            Path(args[-1]).write_text(FORMATTED, encoding='utf-8')
+            Path(args[-1]).write_bytes(FORMATTED.encode())
             return mocker.Mock(stdout='', stderr=stderr, returncode=returncode)
         return mocker.Mock(stdout=FORMATTED, stderr=stderr, returncode=returncode)
 
@@ -42,8 +42,8 @@ def _fake_clang_format(mocker, *, stderr='', returncode=0):
 def source_files(mocker, tmp_path):
     mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
     good, bad = tmp_path / 'good.cpp', tmp_path / 'bad.cpp'
-    good.write_text(FORMATTED, encoding='utf-8')
-    bad.write_text(UNFORMATTED, encoding='utf-8')
+    good.write_bytes(FORMATTED.encode())
+    bad.write_bytes(UNFORMATTED.encode())
     return str(good), str(bad)
 
 
@@ -79,7 +79,7 @@ def test_clang_format_unformatted_files(mocker, capsys, source_files):
     assert '-int  main( ){' in stdout
     assert '+int main() {' in stdout
     assert good not in stdout
-    assert Path(bad).read_text(encoding='utf-8') == UNFORMATTED
+    assert Path(bad).read_bytes().decode() == UNFORMATTED
 
 
 def test_clang_format_no_diff(mocker, capsys, source_files):
@@ -107,7 +107,7 @@ def test_clang_format_edit_in_place(mocker, capsys, source_files):
     command.run()
 
     sys_exit.assert_called_once_with(1)
-    assert Path(bad).read_text(encoding='utf-8') == FORMATTED
+    assert Path(bad).read_bytes().decode() == FORMATTED
     assert bad in capsys.readouterr().out
 
 
