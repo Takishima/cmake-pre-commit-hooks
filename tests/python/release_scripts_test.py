@@ -75,6 +75,20 @@ def test_latest_version_not_found():
 
 
 @pytest.mark.parametrize(
+    ('types', 'expected'),
+    [
+        (set(), None),
+        ({'repository'}, None),
+        ({'fixed', 'repository'}, 'patch'),
+        ({'fixed', 'added'}, 'minor'),
+        ({'fixed', 'added', 'breaking'}, 'major'),
+    ],
+)
+def test_largest_bump(types, expected):
+    assert release_version.largest_bump(types) == expected
+
+
+@pytest.mark.parametrize(
     ('request_', 'types', 'expected'),
     [
         ('auto', {'fixed', 'repository'}, '1.5.1'),

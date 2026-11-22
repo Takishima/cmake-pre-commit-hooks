@@ -63,6 +63,12 @@ def latest_version(changelog: str) -> tuple[int, int, int]:
     return major, minor, patch
 
 
+def largest_bump(types: set[str]) -> str | None:
+    """Return the largest version bump that some fragment types call for, or None if they call for none."""
+    bumps = {BUMPS[kind] for kind in types if kind in BUMPS}
+    return next((bump for bump in ('major', 'minor', 'patch') if bump in bumps), None)
+
+
 def next_version(request: str, types: set[str], latest: tuple[int, int, int]) -> str | None:
     """Return the version to release, or None if a scheduled run has nothing worth releasing."""
     # The request is `auto`, `scheduled`, `patch`, `minor`, `major` or an explicit version. The bump for `auto` and
@@ -78,10 +84,10 @@ def next_version(request: str, types: set[str], latest: tuple[int, int, int]) ->
         raise ValueError(msg)
 
     if request in {'auto', 'scheduled'}:
-        bumps = {BUMPS[kind] for kind in types if kind in BUMPS}
-        if scheduled and not bumps:
+        bump = largest_bump(types)
+        if scheduled and bump is None:
             return None  # only repository maintenance: not worth a release
-        request = 'major' if 'major' in bumps else 'minor' if 'minor' in bumps else 'patch'
+        request = bump or 'patch'
 
     major, minor, patch = latest
     if request == 'major':
