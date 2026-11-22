@@ -72,14 +72,21 @@ def _read_compile_commands_json(compile_db: Path) -> list[str]:
     return []
 
 
-def _resolve_compilation_database(cmake_build_dir: Path | None, build_dir_list: list[str]) -> Path | None:
-    """Locate a compilation database in the CMake build directory or else in a list of directories."""
-    if cmake_build_dir and cmake_build_dir / CMakeCommand.COMPILE_DB_NAME:
+def _resolve_compilation_database(
+    cmake_build_dir: Path | None, build_dir_list: list[str], *, will_configure: bool
+) -> Path | None:
+    """
+    Locate the compilation database.
+
+    If CMake is going to run, the result is the file it will create in its build directory. Otherwise, it is the
+    first existing file found in the CMake build directory or else in a list of directories.
+    """
+    if cmake_build_dir and will_configure:
         return cmake_build_dir / CMakeCommand.COMPILE_DB_NAME
 
-    for build_dir in (Path(path) for path in build_dir_list):
+    for build_dir in (*([cmake_build_dir] if cmake_build_dir else []), *(Path(path) for path in build_dir_list)):
         path = build_dir / CMakeCommand.COMPILE_DB_NAME
-        if build_dir.exists() and path.exists():
+        if path.exists():
             log.debug('Located valid compilation database at: %s', path)
             return path
     log.debug('No valid compilation database located')
@@ -139,7 +146,9 @@ class HookRunner:
         """Set up CMake and tell the tool where the compilation database is."""
         self.cmake = CMakeCommand(CMakeOptions.from_namespace(options))
         self.compile_db = _resolve_compilation_database(
-            self.cmake.build_dir, ['.', CMakeCommand.DEFAULT_BUILD_DIR, *options.build_dir]
+            self.cmake.build_dir,
+            ['.', CMakeCommand.DEFAULT_BUILD_DIR, *options.build_dir],
+            will_configure=not options.no_cmake_configure,
         )
         if self.hook.compile_db_arg and self.compile_db:
             self._add_if_missing(self.hook.compile_db_arg.format(self.compile_db))

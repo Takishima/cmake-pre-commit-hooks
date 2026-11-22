@@ -4,4 +4,4 @@ include README.md
 include setup.py
 include pyproject.toml
 
-include cmake_pc_hook/*.py
+recursive-include cmake_pc_hooks *.py
