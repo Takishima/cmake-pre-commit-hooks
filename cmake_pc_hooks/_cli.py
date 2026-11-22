@@ -27,13 +27,16 @@ from ._cmake import CMAKE_OPTIONS
 _NOT_SETTINGS = ('files', 'hooks_config', 'dump_toml')
 
 
+def _toml_type(param: click.Parameter) -> type:
+    """Give the type of the TOML value expected for an option."""
+    if param.multiple:
+        return list
+    return bool if param.is_flag else str
+
+
 def _option_types(command: click.Command) -> dict[str, type]:
     """Give the type of the TOML value expected for each option that can be set from a TOML file."""
-    types = {}
-    for param in command.params:
-        if param.name not in _NOT_SETTINGS:
-            types[param.name] = list if param.multiple else bool if param.is_flag else str
-    return types
+    return {param.name: _toml_type(param) for param in command.params if param.name not in _NOT_SETTINGS}
 
 
 def _load_settings(ctx: click.Context, _param: click.Parameter, value: str | None) -> str | None:

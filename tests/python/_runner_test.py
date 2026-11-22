@@ -502,8 +502,10 @@ def test_make_main_command_line_errors(mocker, tool, capsys, monkeypatch, tmp_pa
     monkeypatch.chdir(tmp_path)
     sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
 
+    main = _runner.make_main(Hook(TOOL))
+
     with pytest.raises(ExitError):
-        _runner.make_main(Hook(TOOL))([TOOL, *args, 'one.cpp'])
+        main([TOOL, *args, 'one.cpp'])
 
     sys_exit.assert_called_once_with(returncode)
     captured = capsys.readouterr()
