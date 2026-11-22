@@ -12,6 +12,7 @@ changelog.d/+<short-description>.<type>.md         (when there is no number yet)
 
 | Type         | Use it for                                                        |
 | ------------ | ----------------------------------------------------------------- |
+| `breaking`   | Changes that require users to update their configuration          |
 | `added`      | New hooks, options or other features                              |
 | `changed`    | Changes in existing behaviour (including dropped Python versions) |
 | `deprecated` | Features that will be removed in a future release                 |

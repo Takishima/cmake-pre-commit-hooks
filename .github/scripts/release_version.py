@@ -32,6 +32,7 @@ CHANGELOG = Path('CHANGELOG.md')
 
 # Fragment types (see [tool.towncrier] in pyproject.toml) that users notice, and the version bump they call for
 BUMPS = {
+    'breaking': 'major',
     'added': 'minor',
     'changed': 'minor',
     'deprecated': 'minor',
@@ -80,7 +81,7 @@ def next_version(request: str, types: set[str], latest: tuple[int, int, int]) ->
         bumps = {BUMPS[kind] for kind in types if kind in BUMPS}
         if scheduled and not bumps:
             return None  # only repository maintenance: not worth a release
-        request = 'minor' if 'minor' in bumps else 'patch'
+        request = 'major' if 'major' in bumps else 'minor' if 'minor' in bumps else 'patch'
 
     major, minor, patch = latest
     if request == 'major':

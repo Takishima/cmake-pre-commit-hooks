@@ -246,6 +246,11 @@ title_format = '## [v{version}](https://github.com/Takishima/cmake-pre-commit-ho
 issue_format = '[#{issue}](https://github.com/Takishima/cmake-pre-commit-hooks/issues/{issue})'
 
 [[tool.towncrier.type]]
+directory = 'breaking'
+name = 'Breaking changes'
+showcontent = true
+
+[[tool.towncrier.type]]
 directory = 'added'
 name = 'Added'
 showcontent = true
