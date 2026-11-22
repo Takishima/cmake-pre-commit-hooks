@@ -137,6 +137,45 @@ def test_runner_compile_db_from_build_dir_list(tool, monkeypatch, compile_comman
     assert runner.args == [f'-p={path}']
 
 
+@pytest.mark.parametrize('other_has_compile_db', [False, True])
+def test_runner_build_dir_without_compile_db(tool, monkeypatch, tmp_path, other_has_compile_db):
+    monkeypatch.chdir(tmp_path)
+    build_dir, other_dir = tmp_path / 'build', tmp_path / 'other'
+    build_dir.mkdir()
+    other_dir.mkdir()
+    (build_dir / 'CMakeCache.txt').write_bytes(b'')
+    if other_has_compile_db:
+        (other_dir / 'compile_commands.json').write_bytes(b'[]')
+
+    runner = _runner.HookRunner(
+        Hook(TOOL, compile_db_arg='-p={}'),
+        [TOOL, f'-B{build_dir}', f'-B{other_dir}', '--no-cmake-configure', 'one.cpp'],
+    )
+
+    assert runner.cmake.build_dir == build_dir
+    if other_has_compile_db:
+        assert runner.compile_db == other_dir / 'compile_commands.json'
+        assert runner.args == [f'-p={runner.compile_db}']
+    else:
+        assert runner.compile_db is None
+        assert not runner.args
+
+
+def test_runner_build_dir_with_compile_db(tool, monkeypatch, tmp_path):
+    monkeypatch.chdir(tmp_path)
+    build_dir = tmp_path / 'build'
+    build_dir.mkdir()
+    (build_dir / 'CMakeCache.txt').write_bytes(b'')
+    (build_dir / 'compile_commands.json').write_bytes(b'[]')
+    (tmp_path / 'compile_commands.json').write_bytes(b'[]')
+
+    runner = _runner.HookRunner(
+        Hook(TOOL, compile_db_arg='-p={}'), [TOOL, f'-B{build_dir}', '--no-cmake-configure', 'one.cpp']
+    )
+
+    assert runner.compile_db == build_dir / 'compile_commands.json'
+
+
 def test_runner_preset_requires_build_dir(tool, tmp_path):
     with pytest.raises(_runner.CMakePresetError, match='pass --preset as a CMake argument'):
         _runner.HookRunner(Hook(TOOL), [TOOL, f'-S{tmp_path}', '--preset=default', 'one.cpp'])
