@@ -1,1 +1,0 @@
-Fix SonarCloud violations (return type annotation of `_load_from_toml`, cognitive complexity of `_cmake.py` and `_cmake_test.py`, variable naming in the tests, user-controlled data and unvalidated `workflow_dispatch` inputs in the GitHub workflows, shell script issues in `run_tests.sh`)
