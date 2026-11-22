@@ -26,12 +26,14 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from . import _argparse, _call_process
-from ._cmake import CMakeCommand, CMakeOptions, add_cmake_arguments_to_parser
+import click
+
+from . import _call_process, _cli
+from ._cmake import CMakeCommand, CMakeOptions
 
 if TYPE_CHECKING:
-    import argparse
     from collections.abc import Callable, Sequence
+    from types import SimpleNamespace
 
     from ._hook import Hook
 
@@ -43,7 +45,7 @@ log = logging.getLogger(__name__)
 WEBSITE = 'https://github.com/Takishima/cmake-pre-commit-hooks#using-the-hooks'
 
 
-class CMakePresetError(Exception):
+class CMakePresetError(click.UsageError):
     """Exception raised if a command line incompatibility with --preset is detected."""
 
     def __init__(self) -> None:
@@ -84,41 +86,16 @@ def _resolve_compilation_database(cmake_build_dir: Path | None, build_dir_list: 
     return None
 
 
-def _parse_args(args: list[str]) -> tuple[argparse.Namespace, list[str]]:
-    """Parse the options of the hooks and return them along with the arguments meant for the tool."""
-    parser = _argparse.ArgumentParser(
-        default_config_name='cmake_pc_hooks.toml',
-        pyproject_section_name='tool.cmake_pc_hooks',
-        args_groups=[{'title': 'Hook options'}],
-    )
-    add_cmake_arguments_to_parser(parser)
-    hook_options = parser.groups[0]
-    hook_options.add_argument(
-        '--all-at-once',
-        action='store_true',
-        help='Pass all filenames at once to the linter/formatter instead of calling the command once for each file',
-    )
-    hook_options.add_argument(
-        '--read-json-db',
-        action='store_true',
-        help='Run hooks on files found in compile_commands.json (if found and in addition to files specified on CLI)',
-    )
-    hook_options.add_argument('--version', type=str, help='Perform a version check')
-    hook_options.add_argument('positionals', metavar='filenames', nargs='*', help='Filenames to check')
-    return parser.parse_known_args(args)
-
-
 class HookRunner:
     """Run the tool of a hook."""
 
     def __init__(self, hook: Hook, argv: list[str]) -> None:
         """Parse the command line `argv` (which starts with the program name) and prepare the call to the tool."""
         self.hook = hook
-        options, self.args = _parse_args(argv[1:])
+        options, self.args, self.files = _cli.parse_args(hook.name, argv[1:])
         if options.preset and not options.build_dir:
             raise CMakePresetError
 
-        self.files = options.positionals
         self.compiler_args = []
         self.all_at_once = options.all_at_once
         self.read_json_db = options.read_json_db
@@ -158,15 +135,11 @@ class HookRunner:
         if self._format() if self.hook.formatter else self._analyze():
             sys.exit(1)
 
-    def _setup_cmake(self, options: argparse.Namespace) -> None:
+    def _setup_cmake(self, options: SimpleNamespace) -> None:
         """Set up CMake and tell the tool where the compilation database is."""
         self.cmake = CMakeCommand(CMakeOptions.from_namespace(options))
-        if not self.cmake.source_dir.exists() and not self.cmake.source_dir.is_dir():
-            sys.stderr.write(f'{self.cmake.source_dir} is not a valid source directory\n')
-            sys.exit(1)
-
         self.compile_db = _resolve_compilation_database(
-            self.cmake.build_dir, ['.', CMakeCommand.DEFAULT_BUILD_DIR, *(options.build_dir or [])]
+            self.cmake.build_dir, ['.', CMakeCommand.DEFAULT_BUILD_DIR, *options.build_dir]
         )
         if self.hook.compile_db_arg and self.compile_db:
             self._add_if_missing(self.hook.compile_db_arg.format(self.compile_db))
@@ -272,6 +245,12 @@ def make_main(hook: Hook) -> Callable[[list[str] | None], None]:
 
     def main(argv: list[str] | None = None) -> None:
         """Run the hook with the given list of arguments (sys.argv by default)."""
-        HookRunner(hook, sys.argv if argv is None else argv).run()
+        try:
+            HookRunner(hook, sys.argv if argv is None else argv).run()
+        except click.exceptions.Exit as err:
+            sys.exit(err.exit_code)
+        except click.ClickException as err:
+            err.show()
+            sys.exit(err.exit_code)
 
     return main

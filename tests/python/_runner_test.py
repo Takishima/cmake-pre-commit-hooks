@@ -19,6 +19,7 @@ from cmake_pc_hooks._call_process import History
 from cmake_pc_hooks._cmake import CMakeCommand
 from cmake_pc_hooks._hook import Hook, has_failed, has_failed_quiet_on_success
 
+import click
 import pytest
 from _test_utils import ExitError, run_command_default_assertions
 
@@ -141,14 +142,9 @@ def test_runner_preset_requires_build_dir(tool, tmp_path):
         _runner.HookRunner(Hook(TOOL), [TOOL, f'-S{tmp_path}', '--preset=default', 'one.cpp'])
 
 
-def test_runner_invalid_source_dir(mocker, tool, capsys, tmp_path):
-    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
-
-    with pytest.raises(ExitError):
-        _runner.HookRunner(Hook(TOOL, compile_db_arg='-p={}'), [TOOL, f'-S{tmp_path / "other"}', 'one.cpp'])
-
-    sys_exit.assert_called_once_with(1)
-    assert 'is not a valid source directory' in capsys.readouterr().err
+def test_runner_invalid_source_dir(tool, tmp_path):
+    with pytest.raises(click.UsageError, match='does not exist'):
+        _runner.HookRunner(Hook(TOOL), [TOOL, f'-S{tmp_path / "other"}', 'one.cpp'])
 
 
 def test_runner_tool_not_found(mocker, capsys):
@@ -490,6 +486,31 @@ def test_make_main(mocker):
     mocker.patch('sys.argv', [TOOL, 'two.cpp'])
     main()
     hook_runner.assert_called_with(hook, [TOOL, 'two.cpp'])
+
+
+@pytest.mark.parametrize(
+    ('args', 'returncode', 'stdout', 'stderr'),
+    [
+        (['--help'], 0, 'Usage: cmake-pc-test-exec-hook', ''),
+        (['--dump-toml', '--all-at-once'], 0, 'all_at_once = true', ''),
+        (['-S', 'missing'], 2, '', "Error: Invalid value for '-S' / '--source-dir'"),
+        (['--preset=default'], 2, '', 'Error: You *must* specify -B|--build-dir'),
+    ],
+    ids=['help', 'dump_toml', 'invalid_option', 'preset_without_build_dir'],
+)
+def test_make_main_command_line_errors(mocker, tool, capsys, monkeypatch, tmp_path, args, returncode, stdout, stderr):
+    monkeypatch.chdir(tmp_path)
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+
+    main = _runner.make_main(Hook(TOOL))
+
+    with pytest.raises(ExitError):
+        main([TOOL, *args, 'one.cpp'])
+
+    sys_exit.assert_called_once_with(returncode)
+    captured = capsys.readouterr()
+    assert stdout in captured.out
+    assert stderr in captured.err
 
 
 # ==============================================================================

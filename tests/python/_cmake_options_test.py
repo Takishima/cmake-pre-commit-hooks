@@ -12,21 +12,21 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-import argparse
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
-from cmake_pc_hooks._cmake import CMakeOptions, add_cmake_arguments_to_parser
+from cmake_pc_hooks._cmake import CMAKE_OPTIONS, CMakeOptions
 
+import click
 import pytest
 
 # ==============================================================================
 
 
-@pytest.fixture(scope='module')
-def parser():
-    parser = argparse.ArgumentParser()
-    add_cmake_arguments_to_parser(parser)
-    return parser
+def parse(args):
+    command = click.Command('test', params=CMAKE_OPTIONS)
+    return SimpleNamespace(**command.make_context('test', list(args)).params)
 
 
 # ==============================================================================
@@ -37,62 +37,97 @@ def parser():
     [
         ([], 'automatic_discovery', True),
         (['--no-automatic-discovery'], 'automatic_discovery', False),
+        ([], 'detect_configured_files', False),
         (['--detect-configured-files'], 'detect_configured_files', True),
-        ([], 'build_targets', []),
-        (['--cmake-build-target=one'], 'build_targets', ['one']),
-        (['--cmake-build-target=one', '--cmake-build-target', 'two'], 'build_targets', ['one', 'two']),
+        ([], 'build_targets', ()),
+        (['--cmake-build-target=one'], 'build_targets', ('one',)),
+        (['--cmake-build-target=one', '--cmake-build-target', 'two'], 'build_targets', ('one', 'two')),
         ([], 'codegen', False),
         (['--codegen'], 'codegen', True),
-        (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ['"-DCMAKE_CXX_COMPILER=g++"']),
-        (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ['"-DCMAKE_CXX_COMPILER=clang++"']),
-        (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ['"-DCMAKE_CXX_COMPILER=cl"']),
-        (['-S/path/to/source'], 'source_dir', '/path/to/source'),
-        (['-B/path/to/build'], 'build_dir', ['/path/to/build']),
-        (['-B/path/to/build', '-B/other'], 'build_dir', ['/path/to/build', '/other']),
-        (['-DONE'], 'defines', ['ONE']),
-        (['-DONE', '-DTWO'], 'defines', ['ONE', 'TWO']),
-        (['-UONE'], 'undefines', ['ONE']),
-        (['-UONE', '-UTWO'], 'undefines', ['ONE', 'TWO']),
+        (['--clean'], 'clean', True),
+        (['--no-cmake-configure'], 'no_cmake_configure', True),
+        (['--unix="-DCMAKE_CXX_COMPILER=clang++"'], 'unix', ('"-DCMAKE_CXX_COMPILER=clang++"',)),
+        (['--linux="-DCMAKE_CXX_COMPILER=g++"'], 'linux', ('"-DCMAKE_CXX_COMPILER=g++"',)),
+        (['--mac="-DCMAKE_CXX_COMPILER=clang++"'], 'mac', ('"-DCMAKE_CXX_COMPILER=clang++"',)),
+        (['--win="-DCMAKE_CXX_COMPILER=cl"'], 'win', ('"-DCMAKE_CXX_COMPILER=cl"',)),
+        ([], 'source_dir', Path()),
+        ([], 'build_dir', ()),
+        (['-B/path/to/build'], 'build_dir', ('/path/to/build',)),
+        (['-B', '/path/to/build', '--build-dir=/other'], 'build_dir', ('/path/to/build', '/other')),
+        (['-DONE'], 'defines', ('ONE',)),
+        (['-DONE', '-D', 'TWO=2'], 'defines', ('ONE', 'TWO=2')),
+        (['-UONE', '-UTWO'], 'undefines', ('ONE', 'TWO')),
         (['-GMakefiles'], 'generator', 'Makefiles'),
         (['-Tclang'], 'toolset', 'clang'),
         (['-A64'], 'platform', '64'),
-        (['-Werror=dev'], 'errors', 'dev'),
-        (['-Wno-error=dev'], 'no_errors', 'dev'),
+        (['-Werror=dev'], 'errors', ('dev',)),
+        (['-Wno-error=dev'], 'no_errors', ('dev',)),
         (['--preset=/path/to/file.cmake'], 'preset', '/path/to/file.cmake'),
         (['-Wdev'], 'dev_warnings', True),
         (['-Wno-dev'], 'no_dev_warnings', True),
+        ([], 'cmake', None),
     ],
 )
-def test_parser(parser, args, opt_name, opt_value):
-    assert getattr(parser.parse_args(args), opt_name) == opt_value
+def test_parser(args, opt_name, opt_value):
+    assert getattr(parse(args), opt_name) == opt_value
 
 
-def test_parser_unix_applies_to_linux_and_mac(parser):
-    known_args = parser.parse_args(['--unix="-DCMAKE_CXX_COMPILER=clang++"'])
+def test_parser_source_dir_must_be_a_directory(tmp_path):
+    file = tmp_path / 'file.txt'
+    file.write_bytes(b'')
 
-    assert known_args.unix == ['"-DCMAKE_CXX_COMPILER=clang++"']
-    assert known_args.linux == known_args.unix
-    assert known_args.mac == known_args.unix
-    assert known_args.win is None
+    assert parse([f'-S{tmp_path}']).source_dir == tmp_path
+    with pytest.raises(click.BadParameter, match='is a file'):
+        parse([f'-S{file}'])
+    with pytest.raises(click.BadParameter, match='does not exist'):
+        parse([f'-S{tmp_path / "missing"}'])
+
+
+def test_parser_cmake_must_be_an_executable_file(tmp_path):
+    cmake = tmp_path / 'cmake'
+    cmake.write_bytes(b'')
+    cmake.chmod(0o755)
+
+    assert parse([f'--cmake={cmake}']).cmake == cmake
+    with pytest.raises(click.BadParameter):
+        parse([f'--cmake={tmp_path}'])
+    with pytest.raises(click.BadParameter):
+        parse([f'--cmake={tmp_path / "missing"}'])
+
+
+@pytest.mark.skipif(sys.platform == 'win32', reason='all files are executable on Windows')
+def test_parser_cmake_rejects_non_executable_file(tmp_path):
+    cmake = tmp_path / 'cmake'
+    cmake.write_bytes(b'')
+    cmake.chmod(0o644)
+
+    with pytest.raises(click.BadParameter):
+        parse([f'--cmake={cmake}'])
+
+
+@pytest.mark.parametrize('args', [['-Werror=other'], ['-Wno-error=other']])
+def test_parser_invalid_choice(args):
+    with pytest.raises(click.BadParameter):
+        parse(args)
 
 
 # ==============================================================================
 
 
-def test_options_defaults(parser):
-    assert CMakeOptions.from_namespace(parser.parse_args([])) == CMakeOptions(source_dir=Path())
+def test_options_defaults():
+    assert CMakeOptions.from_namespace(parse([])) == CMakeOptions(source_dir=Path())
     assert CMakeOptions() == CMakeOptions(source_dir=Path())
 
 
-def test_options_from_namespace(parser, tmp_path):
+def test_options_from_namespace(tmp_path):
     cmake = tmp_path / 'cmake'
     cmake.write_bytes(b'')
     cmake.chmod(0o755)
 
     options = CMakeOptions.from_namespace(
-        parser.parse_args(
+        parse(
             [
-                '-S/path/to/source',
+                f'-S{tmp_path}',
                 '-Bone',
                 '-Btwo',
                 f'--cmake={cmake}',
@@ -106,7 +141,7 @@ def test_options_from_namespace(parser, tmp_path):
     )
 
     assert options == CMakeOptions(
-        source_dir=Path('/path/to/source'),
+        source_dir=tmp_path,
         build_dirs=['one', 'two'],
         cmake=cmake,
         no_cmake_configure=True,
@@ -117,12 +152,22 @@ def test_options_from_namespace(parser, tmp_path):
     )
 
 
-def test_options_cmake_args(parser):
-    args = parser.parse_args(
-        ['-DONE', '-DTWO=2', '-UTHREE', '-Werror=dev', '-Wno-error=dev', '-GNinja', '-Tclang', '-Ax64']
+def test_options_cmake_args():
+    args = parse(
+        [
+            '-DONE',
+            '-DTWO=2',
+            '-UTHREE',
+            '-Werror=dev',
+            '-Wno-error=dev',
+            '-GNinja',
+            '-Tclang',
+            '-Ax64',
+            '--preset=default',
+            '-Wdev',
+            '-Wno-dev',
+        ]
     )
-    args.preset = 'default'
-    args.dev_warnings = args.no_dev_warnings = True
 
     assert CMakeOptions.from_namespace(args).cmake_args == [
         '-DONE',
@@ -139,14 +184,6 @@ def test_options_cmake_args(parser):
     ]
 
 
-def test_options_cmake_args_from_toml_lists(parser):
-    args = parser.parse_args([])
-    args.errors = ['dev']
-    args.linux = None
-
-    assert CMakeOptions.from_namespace(args).cmake_args == ['-Werror=dev']
-
-
 @pytest.mark.parametrize(
     ('system', 'expected'),
     [
@@ -156,10 +193,9 @@ def test_options_cmake_args_from_toml_lists(parser):
         ('Other', []),
     ],
 )
-def test_options_platform_specific_cmake_args(mocker, parser, system, expected):
+def test_options_platform_specific_cmake_args(mocker, system, expected):
     mocker.patch('platform.system', return_value=system)
-    args = parser.parse_args(['--unix=-DUNIX=1', '--linux=-DLINUX=1', '--mac=-DMAC=1', '--win=-DWIN=1'])
-    args.win.append('"-DQUOTED=1"')
+    args = parse(['--unix=-DUNIX=1', '--linux=-DLINUX=1', '--mac=-DMAC=1', '--win=-DWIN=1', '--win="-DQUOTED=1"'])
 
     assert CMakeOptions.from_namespace(args).cmake_args == expected
 

@@ -15,6 +15,6 @@
 """CMake related functions and classes."""
 
 from .configure import CMakeCommand
-from .options import CMakeOptions, add_cmake_arguments_to_parser
+from .options import CMAKE_OPTIONS, CMakeOptions
 
-__all__ = ['CMakeCommand', 'CMakeOptions', 'add_cmake_arguments_to_parser']
+__all__ = ['CMAKE_OPTIONS', 'CMakeCommand', 'CMakeOptions']

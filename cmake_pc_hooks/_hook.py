@@ -25,6 +25,9 @@ if TYPE_CHECKING:
     from ._call_process import History
 
 
+HOOK_NAMES = ('clang-format', 'clang-tidy', 'cppcheck', 'cpplint', 'include-what-you-use', 'lizard')
+
+
 def has_failed(result: History) -> bool:
     """Tell whether a tool failed by looking at its return code."""
     return result.returncode != 0
