@@ -92,17 +92,18 @@ jobs:
       name: pypi
       url: https://pypi.org/project/cmake-pre-commit-hooks/${{ needs.build.outputs.version }}
     permissions:
-      id-token: write  # for PyPI trusted publishing (used when no API token is configured)
+      id-token: write  # for PyPI trusted publishing and the provenance attestations uploaded with it
     steps:
       - uses: actions/download-artifact@v8
         with:
           name: release
 
+      # No API token on purpose: PyPI only accepts provenance attestations from trusted publishing
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
-          password: ${{ secrets.pypi_password }}
           packages-dir: dist/
+          attestations: true
 
   github-release:
     name: Create GitHub release
