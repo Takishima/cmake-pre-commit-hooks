@@ -68,23 +68,26 @@ def get_iwyu_command(iwyu_names=None):
 class IWYUToolCmd(ClangAnalyzerCmd):
     """Class for the iwyu_tool.py command."""
 
-    command = None
-    command_for_version = None
     lookbehind = 'include-what-you-use '
 
     def __init__(self, args):
-        """Initialize an IWYUToolCmd object."""
-        IWYUToolCmd.command = get_iwyu_tool_command()
-        IWYUToolCmd.command_for_version = get_iwyu_command()
+        """
+        Initialize an IWYUToolCmd object.
 
-        if IWYUToolCmd.command is None:
+        The version is read from include-what-you-use since iwyu-tool does not have one.
+        """
+        command = get_iwyu_tool_command()
+        if command is None:
             msg = 'Unable to locate path to iwyu-tool'
             raise FileNotFoundError(msg)
-        if IWYUToolCmd.command_for_version is None:
+
+        version_command = get_iwyu_command()
+        if version_command is None:
             msg = 'Unable to locate path to include-what-you-use executable!'
             raise FileNotFoundError(msg)
 
-        super().__init__(self.command, self.lookbehind, args)
+        super().__init__(command, self.lookbehind, args)
+        self.version_command = version_command
         self.check_installed()
         self.parse_args(args)
         self.handle_ddash_args()
@@ -94,14 +97,6 @@ class IWYUToolCmd(ClangAnalyzerCmd):
         compile_db = self._resolve_compilation_database(self.cmake.build_dir, self.build_dir_list)
         if compile_db:
             self.add_if_missing([f'-p={compile_db}'])
-
-    def get_version_str(self):
-        """Get the version string of include-what-you-use (iwyu-tool itself does not have any)."""
-        command, self.command = self.command, self.command_for_version
-        try:
-            return super().get_version_str()
-        finally:
-            self.command = command
 
     def _parse_output(self, result):
         """

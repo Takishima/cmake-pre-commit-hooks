@@ -38,7 +38,7 @@ class ClangFormatCmd(FormatterCmd):
         for filename in self.files:
             self.compare_to_formatted(filename)
         if self.returncode != 0:
-            sys.stdout.buffer.write(self.stderr)
+            sys.stdout.write(self.diff)
             sys.exit(self.returncode)
 
 

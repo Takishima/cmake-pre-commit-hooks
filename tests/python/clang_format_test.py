@@ -12,53 +12,154 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+from pathlib import Path
+
 from cmake_pc_hooks import clang_format
 
 import pytest
-from _test_utils import command_main_asserts
+from _test_utils import ExitError, command_main_asserts
 
 # ==============================================================================
 
 
-@pytest.mark.parametrize('format_success', [False, True])
-def test_clang_format_command(mocker, tmp_path, format_success):
-    mocker.patch('hooks.utils.Command.check_installed', return_value=True)
+UNFORMATTED = 'int  main( ){\n  return 0;}\n'
+FORMATTED = 'int main() {\n  return 0;\n}\n'
 
-    return_values = [f'{char * 3}'.encode() for char in (chr(n) for n in range(ord('a'), ord('z') + 1))]
 
-    def _get_filelines(filename_str):
-        if format_success:
-            return [return_values[-1]]
-        return [return_values.pop()]
+def _fake_clang_format(mocker, *, stderr='', returncode=0):
+    """Mock call_process() with a formatter that always produces FORMATTED (and writes it to the file with -i)."""
 
-    def _get_formatted_lines(filename_str):
-        if format_success:
-            return [return_values[-1]]
-        return [return_values.pop()]
+    def _call_process(args):
+        if '-i' in args:
+            Path(args[-1]).write_text(FORMATTED, encoding='utf-8')
+            return mocker.Mock(stdout='', stderr=stderr, returncode=returncode)
+        return mocker.Mock(stdout=FORMATTED, stderr=stderr, returncode=returncode)
 
-    mocker.patch('hooks.utils.FormatterCmd.get_filelines', side_effect=_get_filelines)
-    mocker.patch('hooks.utils.FormatterCmd.get_formatted_lines', side_effect=_get_formatted_lines)
-    mocker.patch('cmake_pc_hooks._utils.FormatterCmd.get_formatted_lines', side_effect=_get_formatted_lines)
+    return mocker.patch('cmake_pc_hooks._call_process.call_process', side_effect=_call_process)
+
+
+@pytest.fixture
+def source_files(mocker, tmp_path):
+    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
+    good, bad = tmp_path / 'good.cpp', tmp_path / 'bad.cpp'
+    good.write_text(FORMATTED, encoding='utf-8')
+    bad.write_text(UNFORMATTED, encoding='utf-8')
+    return str(good), str(bad)
+
+
+# ==============================================================================
+
+
+def test_clang_format_formatted_file(mocker, capsys, source_files):
+    good, _ = source_files
     sys_exit = mocker.patch('sys.exit')
+    call_process = _fake_clang_format(mocker)
 
-    command_name = 'clang-format'
-    file_list = [tmp_path / 'file1.cpp', tmp_path / 'file2.cpp']
-    for file in file_list:
-        file.write_text('')
-
-    args = [f'{command_name}', '--no-diff', '-i', *[str(fname) for fname in file_list]]
-    command = clang_format.ClangFormatCmd(args=args)
-    assert command.no_diff_flag
-    assert '--no-diff' not in command.args
-    assert command.edit_in_place
-    assert command.files == [str(fname) for fname in file_list]
-
+    command = clang_format.ClangFormatCmd(args=['clang-format', '--style=Google', good])
+    assert command.files == [good]
+    assert not command.edit_in_place
     command.run()
 
-    if format_success:
-        sys_exit.assert_not_called()
-    else:
-        sys_exit.assert_called_once_with(1)
+    call_process.assert_called_once_with(['clang-format', '--style=Google', good])
+    sys_exit.assert_not_called()
+    assert not capsys.readouterr().out
+
+
+def test_clang_format_unformatted_files(mocker, capsys, source_files):
+    good, bad = source_files
+    sys_exit = mocker.patch('sys.exit')
+    _fake_clang_format(mocker)
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', good, bad])
+    command.run()
+
+    sys_exit.assert_called_once_with(1)
+    stdout = capsys.readouterr().out
+    assert stdout.startswith(f'{bad}\n{"=" * 20}\n--- original\n+++ formatted\n')
+    assert '-int  main( ){' in stdout
+    assert '+int main() {' in stdout
+    assert good not in stdout
+    assert Path(bad).read_text(encoding='utf-8') == UNFORMATTED
+
+
+def test_clang_format_no_diff(mocker, capsys, source_files):
+    _, bad = source_files
+    sys_exit = mocker.patch('sys.exit')
+    call_process = _fake_clang_format(mocker)
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', '--no-diff', bad])
+    assert command.no_diff_flag
+    assert '--no-diff' not in command.args
+    command.run()
+
+    call_process.assert_called_once_with(['clang-format', bad])
+    sys_exit.assert_called_once_with(1)
+    assert not capsys.readouterr().out
+
+
+def test_clang_format_edit_in_place(mocker, capsys, source_files):
+    good, bad = source_files
+    sys_exit = mocker.patch('sys.exit')
+    _fake_clang_format(mocker)
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', '-i', good, bad])
+    assert command.edit_in_place
+    command.run()
+
+    sys_exit.assert_called_once_with(1)
+    assert Path(bad).read_text(encoding='utf-8') == FORMATTED
+    assert bad in capsys.readouterr().out
+
+
+@pytest.mark.parametrize(('stderr', 'returncode'), [('some warning', 0), ('', 1)], ids=['stderr', 'returncode'])
+def test_clang_format_dry_run_or_failure(mocker, capsys, source_files, stderr, returncode):
+    _, bad = source_files
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+    _fake_clang_format(mocker, stderr=stderr, returncode=returncode)
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', '-n', bad])
+    assert command.dry_run
+    with pytest.raises(ExitError):
+        command.run()
+
+    sys_exit.assert_called_once_with(1)
+    assert 'Unexpected Stderr/return code received' in capsys.readouterr().err
+
+
+def test_clang_format_dry_run_success(mocker, capsys, source_files):
+    good, _ = source_files
+    sys_exit = mocker.patch('sys.exit')
+    _fake_clang_format(mocker)
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', '--dry-run', good])
+    command.run()
+
+    sys_exit.assert_not_called()
+    assert not capsys.readouterr().out
+
+
+def test_clang_format_empty_output(mocker, source_files, tmp_path):
+    mocker.patch('sys.exit')
+    mocker.patch(
+        'cmake_pc_hooks._call_process.call_process', return_value=mocker.Mock(stdout='', stderr='', returncode=0)
+    )
+    empty = tmp_path / 'empty.cpp'
+    empty.write_text('', encoding='utf-8')
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', str(empty)])
+    assert command.get_formatted_lines(str(empty)) == []
+
+
+def test_clang_format_missing_file(mocker, capsys, source_files, tmp_path):
+    sys_exit = mocker.patch('sys.exit', side_effect=ExitError)
+    missing = str(tmp_path / 'missing.cpp')
+
+    command = clang_format.ClangFormatCmd(args=['clang-format', missing])
+    with pytest.raises(ExitError):
+        command.run()
+
+    sys_exit.assert_called_once_with(1)
+    assert f'File {missing} not found' in capsys.readouterr().err
 
 
 # ==============================================================================

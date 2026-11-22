@@ -205,6 +205,9 @@ In addition to the above CMake options, the hooks also accept the following:
 NB: by specifying `--all-at-once` the linter/formatter command will only be called once for all the files instead of
 calling the command once per file.
 
+NB: the `cpplint` hook accepts the same options and TOML configuration as the other hooks (unreleased). As a
+consequence, `--config` now refers to a TOML configuration file for the hooks and is no longer passed on to `cpplint`.
+
 NB: Since v1.6.0, the `--debug` command line argument has been removed. Use the `LOGLEVEL` environment variable instead
 to control the level of verbosity of each of the commands. To show all debug messages, set `LOGLEVEL=DEBUG` in your
 environment variables when running the hooks.

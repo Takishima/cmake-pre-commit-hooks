@@ -14,7 +14,43 @@
 
 """Wrapper script for cpplint."""
 
-from hooks.cpplint import main
+import sys
+
+from . import _call_process
+from ._utils import StaticAnalyzerCmd
+
+
+class CpplintCmd(StaticAnalyzerCmd):
+    """Class for the cpplint command."""
+
+    command = 'cpplint'
+    lookbehind = 'cpplint '
+
+    def __init__(self, args):
+        """Initialize a CpplintCmd object."""
+        super().__init__(self.command, self.lookbehind, args)
+        self.check_installed()
+        self.parse_args(args)
+        self.add_if_missing(['--verbose=0'])
+
+    def run_command(self, filenames):
+        """Run the command with the options before the filenames, as cpplint requires."""
+        self.history.append(_call_process.call_process([self.command, *self.args, *filenames]))
+
+
+def main(argv=None):
+    """
+    Run command.
+
+    Args:
+        argv (:obj:`list` of :obj:`str`): list of arguments
+    """
+    if argv is None:
+        argv = sys.argv
+
+    cmd = CpplintCmd(argv)
+    cmd.run()
+
 
 if __name__ == '__main__':  # pragma: nocover
     main()
