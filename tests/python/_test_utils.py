@@ -24,62 +24,48 @@ class ExitError(Exception):
 # ==============================================================================
 
 
-def run_command_default_assertions(  # ruff: ignore[complex-structure]
+def run_command_default_assertions(
     *,
+    runner,
     read_json_db,
     json_db_file_list,
     file_list,
-    command,
     all_at_once,
-    no_cmake_configure,
     create_compilation_db,
     configure,
     call_process,
     returncode,
     sys_exit,
     exit_success=None,
-    do_configure_test=True,
-    detect_configured_files=False,
+    uses_cmake=True,
     **kwargs,
 ):
-    assert set(command.files) == {str(fname) for fname in file_list}
+    assert set(runner.files) == {str(fname) for fname in file_list}
 
     with contextlib.suppress(ExitError):
-        command.run()
+        runner.run()
 
-    if do_configure_test and not no_cmake_configure:
-        configure.assert_called_once_with(command.command, clean_build=False)
+    if uses_cmake:
+        configure.assert_called_once_with(runner.hook.name, clean_build=False)
+    else:
+        assert runner.cmake is None
+        configure.assert_not_called()
 
-    if exit_success is None:
-        exit_success = returncode == 0
-
-    n_files = len(file_list)
-
+    expected_files = {str(fname) for fname in file_list}
     if read_json_db and create_compilation_db:
-        n_files += len(json_db_file_list)
-    if detect_configured_files and not no_cmake_configure:
-        n_files += len(command.cmake.cmake_configured_files)
-
-    assert len(command.files) == n_files
-
-    for fname in file_list:
-        assert str(fname) in command.files
-
-    if read_json_db and create_compilation_db:
-        for fname in json_db_file_list:
-            assert str(fname) in command.files
-
-    for fname in command.cmake.cmake_configured_files:
-        assert str(fname) in command.files
+        expected_files |= {str(fname) for fname in json_db_file_list}
+    if runner.cmake:
+        expected_files |= set(runner.cmake.cmake_configured_files)
+    assert set(runner.files) == expected_files
+    assert len(runner.files) == len(expected_files)
 
     if all_at_once:
         call_process.assert_called_once()
     else:
-        call_process.assert_called()
-        assert call_process.call_count == len(command.files)  # NB: CMake call does not occur
+        assert call_process.call_count == len(runner.files)
 
-    assert all(result.returncode == returncode for result in command.history)
-
+    if exit_success is None:
+        exit_success = returncode == 0
     if exit_success:
         sys_exit.assert_not_called()
     else:
@@ -89,18 +75,17 @@ def run_command_default_assertions(  # ruff: ignore[complex-structure]
 # ==============================================================================
 
 
-def command_main_asserts(mocker, submodule, main, argv):
-    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
-    run = mocker.patch(f'cmake_pc_hooks.{submodule}.run')
+def command_main_asserts(mocker, module, argv):
+    hook_runner = mocker.patch('cmake_pc_hooks._runner.HookRunner')
 
-    main(argv)
-    run.assert_called_once_with()
+    module.main(argv)
+    hook_runner.assert_called_once_with(module.HOOK, argv)
+    hook_runner.return_value.run.assert_called_once_with()
 
-    mocker.patch('sys.argv', return_value=argv)
-
-    main()
-    assert run.call_count == 2
-    run.assert_called_with()
+    mocker.patch('sys.argv', argv)
+    module.main()
+    assert hook_runner.call_count == 2
+    assert hook_runner.return_value.run.call_count == 2
 
 
 # ==============================================================================

@@ -12,8 +12,8 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
 from cmake_pc_hooks import include_what_you_use
+from cmake_pc_hooks._runner import HookRunner
 
 import pytest
 from _test_utils import command_main_asserts, run_command_default_assertions
@@ -21,73 +21,21 @@ from _test_utils import command_main_asserts, run_command_default_assertions
 # ==============================================================================
 
 
-def test_get_iwyu_tool_command(mocker):
-    iwyu_tool_fname = 'iwyu_tool'
-    shutil_which = mocker.patch('shutil.which', return_value=iwyu_tool_fname)
-    assert include_what_you_use.get_iwyu_tool_command() == iwyu_tool_fname
-    assert include_what_you_use.get_iwyu_tool_command([iwyu_tool_fname]) == iwyu_tool_fname
-
-    shutil_which.configure_mock(return_value=None)
-    assert include_what_you_use.get_iwyu_tool_command() is None
-
-
-def test_get_iwyu_command(mocker):
-    iwyu_fname = 'include-what-you-use'
-    shutil_which = mocker.patch('shutil.which', return_value=iwyu_fname)
-    assert include_what_you_use.get_iwyu_command() == iwyu_fname
-    assert include_what_you_use.get_iwyu_command([iwyu_fname]) == iwyu_fname
-
-    shutil_which.configure_mock(return_value=None)
-    assert include_what_you_use.get_iwyu_command() is None
-
-
-# ==============================================================================
-
-
-def test_get_iwyu_invalid_init(mocker):
-    get_iwyu_tool_command = mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value=None)
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value=None)
-
-    with pytest.raises(FileNotFoundError, match='path to iwyu-tool'):
-        include_what_you_use.IWYUToolCmd(args=[])
-
-    get_iwyu_tool_command.configure_mock(return_value='iwyu-tool')
-
-    with pytest.raises(FileNotFoundError, match='path to include-what-you-use'):
-        include_what_you_use.IWYUToolCmd(args=[])
-
-
 def test_iwyu_command(mocker, setup_command):
     path = setup_command.compile_db_path
-    call_process = setup_command.call_process
     returncode = setup_command.returncode
-
-    # ----------------------------------
-
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value='iwyu-tool')
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value='iwyu')
-    mocker.patch('cmake_pc_hooks.include_what_you_use.IWYUToolCmd.get_version_str', return_value='0.19')
-
-    call_process.configure_mock(
+    setup_command.call_process.configure_mock(
         return_value=mocker.Mock(
             stdout='has correct #includes/fwd-decls' if returncode == 0 else 'aaa', stderr='', returncode=returncode
         ),
     )
 
-    command_name = 'iwyu-tool'
-    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
-
-    command = include_what_you_use.IWYUToolCmd(args=args)
+    runner = HookRunner(include_what_you_use.HOOK, ['iwyu-tool', f'-B{path.parent}', *setup_command.cmd_args])
+    assert runner.command == 'iwyu_tool.py'
     if not setup_command.no_cmake_configure:
-        assert f'-p={path}' in command.args
+        assert f'-p={path}' in runner.args
 
-    run_command_default_assertions(
-        command=command,
-        **setup_command._asdict(),
-    )
-
-
-# ==============================================================================
+    run_command_default_assertions(runner=runner, **setup_command._asdict())
 
 
 @pytest.mark.parametrize(
@@ -107,39 +55,26 @@ def test_iwyu_command(mocker, setup_command):
     ],
     ids=['empty', 'correct', 'incorrect', 'correct_and_incorrect', 'other'],
 )
-def test_iwyu_parse_output(mocker, tmp_path, stdout, has_errors):
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value='iwyu-tool')
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value='iwyu')
-    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
-
-    command = include_what_you_use.IWYUToolCmd(args=['iwyu-tool', f'-B{tmp_path}', '--no-cmake-configure'])
-
-    assert command._parse_output(mocker.Mock(stdout=stdout, stderr='', returncode=1)) == has_errors
+def test_iwyu_has_errors(mocker, stdout, has_errors):
+    assert include_what_you_use.has_errors(mocker.Mock(stdout=stdout, stderr='', returncode=1)) == has_errors
 
 
-def test_iwyu_version_is_read_from_iwyu(mocker, tmp_path):
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value='iwyu-tool')
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value='iwyu')
-    mocker.patch('cmake_pc_hooks._utils.Command.check_installed', return_value=True)
-    command = include_what_you_use.IWYUToolCmd(args=['iwyu-tool', f'-B{tmp_path}', '--no-cmake-configure'])
+def test_iwyu_version_is_read_from_iwyu(mocker, tool):
+    sys_exit = mocker.patch('sys.exit', side_effect=SystemExit)
     call_process = mocker.patch(
         'cmake_pc_hooks._call_process.call_process',
         return_value=mocker.Mock(stdout='include-what-you-use 0.21 based on clang', stderr='', returncode=0),
     )
 
-    assert command.get_version_str() == '0.21'
-    call_process.assert_called_once_with(['iwyu', '--version'])
-    assert command.command == 'iwyu-tool'
+    with pytest.raises(SystemExit):
+        HookRunner(include_what_you_use.HOOK, ['iwyu-tool', '--version=0.21', 'file.cpp'])
 
-
-# ==============================================================================
+    call_process.assert_called_once_with(['include-what-you-use', '--version'])
+    sys_exit.assert_called_once_with(0)
 
 
 def test_iwyu_main(mocker):
-    argv = ['iwyu-tool', 'file.txt']
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_tool_command', return_value='iwyu-tool')
-    mocker.patch('cmake_pc_hooks.include_what_you_use.get_iwyu_command', return_value='iwyu')
-    command_main_asserts(mocker, 'include_what_you_use.IWYUToolCmd', include_what_you_use.main, argv)
+    command_main_asserts(mocker, include_what_you_use, ['iwyu-tool', 'file.txt'])
 
 
 # ==============================================================================

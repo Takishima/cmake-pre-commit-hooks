@@ -12,54 +12,46 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-
 from cmake_pc_hooks import cppcheck
+from cmake_pc_hooks._runner import HookRunner
 
+import pytest
 from _test_utils import command_main_asserts, run_command_default_assertions
 
 # ==============================================================================
 
 
-def test_cppcheck_command(mocker, setup_command):
+def test_cppcheck_command(setup_command):
     path = setup_command.compile_db_path
-    call_process = setup_command.call_process
-    returncode = setup_command.returncode
 
-    cppcheck_useless_error_msg = 'Cppcheck cannot find all the include files'
-
-    def _call_process(*args, **kwargs):
-        return mocker.Mock(stdout='aaa\nbbb', stderr=f'{cppcheck_useless_error_msg} aaa\nbbb', returncode=returncode)
-
-    call_process.reset_mock(return_value=True, side_effect=True)
-    call_process.configure_mock(
-        side_effect=_call_process,
-    )
-
-    command_name = 'cppcheck'
-    args = [f'{command_name}', f'-B{path.parent}', *setup_command.cmd_args]
-
-    command = cppcheck.CppcheckCmd(args=args)
-    assert '-q' in command.args
-    assert '--error-exitcode=1' in command.args
-    assert '--enable=all' in command.args
+    runner = HookRunner(cppcheck.HOOK, ['cppcheck', f'-B{path.parent}', *setup_command.cmd_args])
+    assert runner.args[:3] == ['-q', '--error-exitcode=1', '--enable=all']
     if not setup_command.no_cmake_configure:
-        assert f'--project={path}' in command.args
+        assert f'--project={path}' in runner.args
 
-    run_command_default_assertions(
-        command=command,
-        **setup_command._asdict(),
+    run_command_default_assertions(runner=runner, **setup_command._asdict())
+
+    for call in setup_command.call_process.call_args_list:
+        file_args = [arg for arg in call.args[0] if arg.startswith('--file-filter=')]
+        assert len(file_args) == (len(runner.files) if setup_command.all_at_once else 1)
+        assert not any(arg in runner.files for arg in call.args[0])
+
+
+def test_cppcheck_file_filter():
+    assert cppcheck.file_filter('/path/to/src/file.cpp') == '--file-filter=*src/file.cpp'
+
+
+@pytest.mark.parametrize('returncode', [0, 1])
+def test_cppcheck_hides_useless_error(mocker, returncode):
+    result = mocker.Mock(
+        stdout='', stderr='aaa\nnofile:0: Cppcheck cannot find all the include files\nbbb\n', returncode=returncode
     )
-
-    assert command.history
-    assert not any(cppcheck_useless_error_msg in result.stderr for result in command.history)
-
-
-# ==============================================================================
+    assert cppcheck.has_errors(result) == bool(returncode)
+    assert result.stderr == 'aaa\nbbb\n'
 
 
 def test_cppcheck_main(mocker):
-    argv = ['cppcheck', 'file.txt']
-    command_main_asserts(mocker, 'cppcheck.CppcheckCmd', cppcheck.main, argv)
+    command_main_asserts(mocker, cppcheck, ['cppcheck', 'file.txt'])
 
 
 # ==============================================================================
