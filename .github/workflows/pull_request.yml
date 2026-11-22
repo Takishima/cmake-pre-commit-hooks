@@ -68,7 +68,7 @@ jobs:
           PR_NUMBER: ${{ github.event.pull_request.number }}
           HEAD_REF: ${{ github.event.pull_request.head.ref }}
           # Keep in sync with the types defined in the [tool.towncrier] section of pyproject.toml
-          FRAGMENT_TYPES: added|changed|deprecated|removed|fixed|security|repository
+          FRAGMENT_TYPES: breaking|added|changed|deprecated|removed|fixed|security|repository
         run: |
           if [[ "${HEAD_REF}" == release/* || "${HEAD_REF}" == hotfix/* ]]; then
               echo "Release pull request: the fragments are collected into CHANGELOG.md here"

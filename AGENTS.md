@@ -5,7 +5,7 @@
 Do not edit `CHANGELOG.md`. Add a new file in `changelog.d/` instead. CI fails without one. Dependabot and release pull requests do not need one.
 
 - **Name:** `changelog.d/+<short-description>.<type>.md`
-- **Type:** `added`, `changed`, `deprecated`, `removed`, `fixed`, `security`, or `repository` (CI, tooling, tests, docs)
+- **Type:** `breaking`, `added`, `changed`, `deprecated`, `removed`, `fixed`, `security`, or `repository` (CI, tooling, tests, docs)
 - **Content:** one sentence on one line, with no heading and no leading `- `
 
 Example, `changelog.d/+lizard-exit-code.fixed.md`:

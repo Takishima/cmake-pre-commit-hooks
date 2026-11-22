@@ -75,6 +75,20 @@ def test_latest_version_not_found():
 
 
 @pytest.mark.parametrize(
+    ('types', 'expected'),
+    [
+        (set(), None),
+        ({'repository'}, None),
+        ({'fixed', 'repository'}, 'patch'),
+        ({'fixed', 'added'}, 'minor'),
+        ({'fixed', 'added', 'breaking'}, 'major'),
+    ],
+)
+def test_largest_bump(types, expected):
+    assert release_version.largest_bump(types) == expected
+
+
+@pytest.mark.parametrize(
     ('request_', 'types', 'expected'),
     [
         ('auto', {'fixed', 'repository'}, '1.5.1'),
@@ -84,12 +98,16 @@ def test_latest_version_not_found():
         ('auto', {'changed'}, '1.6.0'),
         ('auto', {'deprecated'}, '1.6.0'),
         ('auto', {'removed'}, '1.6.0'),
+        ('auto', {'breaking'}, '2.0.0'),
+        ('auto', {'breaking', 'added', 'fixed'}, '2.0.0'),
         ('scheduled', {'fixed'}, '1.5.1'),
         ('scheduled', {'added', 'repository'}, '1.6.0'),
+        ('scheduled', {'breaking', 'repository'}, '2.0.0'),
         ('scheduled', {'repository'}, None),
         ('scheduled', set(), None),
         ('patch', {'added'}, '1.5.1'),
         ('MINOR', {'fixed'}, '1.6.0'),
+        ('minor', {'breaking'}, '1.6.0'),
         ('major', {'fixed'}, '2.0.0'),
         ('2.0.0', {'fixed'}, '2.0.0'),
         ('v2.0.0', {'fixed'}, '2.0.0'),
