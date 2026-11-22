@@ -7,7 +7,6 @@ on:  # yamllint disable-line rule:truthy
 
 permissions:
   contents: read
-  pull-requests: read
 
 # Bots add several labels right after opening a pull request, each of which triggers this workflow: only keep the
 # latest of those runs. The runs for the 'opened' and 'synchronize' events have their own group since they may push
@@ -54,6 +53,8 @@ jobs:
     needs: update-changelog
     runs-on: ubuntu-latest
     name: Changelog fragment
+    permissions:
+      pull-requests: read  # required to list the files of the pull request
     # Dependabot pull requests cannot add a fragment themselves; these get documented when merging them
     if: >-
       !cancelled()
