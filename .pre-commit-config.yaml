@@ -51,7 +51,7 @@ repos:
         args: [--line-length=120]
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.17.5
+    rev: v0.17.6
     hooks:
       # NB: lint (with fixes) before formatting, since fixes may produce code that needs re-formatting
       - id: ruff-check
